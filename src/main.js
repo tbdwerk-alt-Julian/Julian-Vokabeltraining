@@ -767,17 +767,17 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
     wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const hunting = inWorld && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.1; const dm = w.userData.alpha ? 16 : w.userData.weapon === 'axe' ? 12 : w.userData.weapon === 'spear' ? 9 : 8; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > 420) c.position.x = -420; });
-    for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true;
-    const fpos = fireflies.geometry.attributes.position; for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = .5 + Math.sin(clock.t * 4) * .3;
-    butterflies.forEach((b, i) => { const u = b.userData; const t = clock.t * .5 + u.ph; const x = player.position.x * .6 + u.ax + Math.sin(t) * 6, z = player.position.z * .6 + u.az + Math.cos(t * .8) * 6; b.position.set(x, groundY(x, z) + 1.4 + Math.sin(t * 3) * .4, z); b.rotation.y = Math.atan2(Math.cos(t), -Math.sin(t * .8)); const f = Math.sin(clock.t * 18 + i) * .9; u.wl.rotation.y = f; u.wr.rotation.y = -f; });
-    const lpos = leaves.geometry.attributes.position; for (let i = 0; i < lpos.count; i++) { let y = lpos.getY(i) - dt * (.6 + (i % 5) * .2); let x = lpos.getX(i) + Math.sin(clock.t + i) * dt * .8, z = lpos.getZ(i); if (y < groundY(x, z) + .1 || Math.hypot(x - player.position.x, z - player.position.z) > 55) { x = player.position.x + rng(-50, 50); z = player.position.z + rng(-50, 50); y = groundY(x, z) + 6 + Math.random() * 8; } lpos.setXYZ(i, x, y, z); } lpos.needsUpdate = true;
+    if (settings.quality >= 2) { for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true; }
+    const fpos = fireflies.geometry.attributes.position; if (settings.quality >= 2) for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = .5 + Math.sin(clock.t * 4) * .3;
+    if (settings.quality >= 1) butterflies.forEach((b, i) => { const u = b.userData; const t = clock.t * .5 + u.ph; const x = player.position.x * .6 + u.ax + Math.sin(t) * 6, z = player.position.z * .6 + u.az + Math.cos(t * .8) * 6; b.position.set(x, groundY(x, z) + 1.4 + Math.sin(t * 3) * .4, z); b.rotation.y = Math.atan2(Math.cos(t), -Math.sin(t * .8)); const f = Math.sin(clock.t * 18 + i) * .9; u.wl.rotation.y = f; u.wr.rotation.y = -f; });
+    const lpos = leaves.geometry.attributes.position; if (settings.quality >= 2) for (let i = 0; i < lpos.count; i++) { let y = lpos.getY(i) - dt * (.6 + (i % 5) * .2); let x = lpos.getX(i) + Math.sin(clock.t + i) * dt * .8, z = lpos.getZ(i); if (y < groundY(x, z) + .1 || Math.hypot(x - player.position.x, z - player.position.z) > 55) { x = player.position.x + rng(-50, 50); z = player.position.z + rng(-50, 50); y = groundY(x, z) + 6 + Math.random() * 8; } lpos.setXYZ(i, x, y, z); } lpos.needsUpdate = true;
 
     if (hud.classList.contains('on')) {
       if (moving && dragId === null) camYaw *= Math.pow(.15, dt);
       const cd = settings.camDist, cy = heading + camYaw, ch = cd * (.5 + camPitch);
       const camTarget = new THREE.Vector3(player.position.x - Math.sin(cy) * cd * Math.cos(camPitch), Math.max(player.position.y + ch, WATER_Y + 1.5), player.position.z - Math.cos(cy) * cd * Math.cos(camPitch));
       camera.position.lerp(camTarget, 1 - Math.pow(.002, dt)); camera.lookAt(player.position.x, player.position.y + 1.8, player.position.z);
-      drawMinimap(); updateLabels();
+      drawMinimap(); if (frames % 2 === 0) updateLabels();
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     sun.position.set(player.position.x - 40, 50, player.position.z - 60); sun.target.position.copy(player.position); sun.target.updateMatrixWorld();
     renderer.render(scene, camera); renderInv();
@@ -904,13 +904,15 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   function applyQuality(q, silent) {
     settings.quality = q; $('quality').value = String(q);
     renderer.shadowMap.enabled = q >= 1; sun.castShadow = q >= 1; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
-    renderer.setPixelRatio(q === 0 ? Math.min(1, devicePixelRatio) * .8 : q === 1 ? 1 : Math.min(devicePixelRatio, 1.5));
+    renderer.setPixelRatio(q === 0 ? .6 : q === 1 ? .85 : q === 2 ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 1.5));
     water.material.roughness = q >= 2 ? .06 : .5; clouds.forEach(c => c.visible = q >= 1); fireflies.visible = q >= 2; leaves.visible = q >= 2; butterflies.forEach(b => b.visible = q >= 1);
     grass.count = q === 0 ? Math.floor(GRASS / 4) : q === 1 ? Math.floor(GRASS / 2) : GRASS;
     document.body.classList.toggle('fx', q >= 2); // CSS-Filter auf dem Canvas nur bei hoher Qualität
     if (!silent) toast('Grafik: ' + ['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][q] + ' · Sichtweite unverändert');
   }
   $('quality').onchange = e => applyQuality(+e.target.value);
+  // Startqualität nach Grafikkarte: integrierte Intel-Grafik → Mittel, Software-Renderer → Niedrig
+  (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__vq.gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Intel|Iris|UHD|Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; } catch (e) { } })();
   applyQuality(settings.quality, true);
   // Automatik: bei dauerhaft niedriger Bildrate eine Stufe runter
   let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0;
