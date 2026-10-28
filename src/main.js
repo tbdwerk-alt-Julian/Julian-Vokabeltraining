@@ -11,7 +11,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Spielzustand ----------
   const state = { level: 1, xp: 0, xpNeed: 100, hp: 100, maxHp: 100, hearts: 5, maxHearts: 5, coins: 0, stamina: 100, air: 100, mounted: true, charIdx: 0, name: 'Held', hot: 0, quests: { wolves: 0, chest: false, accepted: {} }, wolvesKilled: 0 };
-  const settings = { sens: 1, camDist: 8.5, joy: 120, invert: 0, quality: 3, fps: 0, showFps: 0 };
+  const settings = { sens: 1, camDist: 8.5, joy: 120, invert: 0, quality: 2, fps: 0, showFps: 0 };
   const prefs = { kurs: 'E', modus: 'S', tier: 'horse' };
   const CHARS = [
     { name: 'Kai', hair: 0x2a1a12, cloth: 0x2d6fd6, cloth2: 0x1f2a44, cape: 0x8b1f3a, style: 'spiky' },
@@ -22,8 +22,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // ---------- Renderer & Szene ----------
   const stage = $('stage');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   stage.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
@@ -48,7 +48,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   (function () { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const c = cv.getContext('2d'); const gr = c.createRadialGradient(128, 128, 10, 128, 128, 128); gr.addColorStop(0, 'rgba(255,250,230,1)'); gr.addColorStop(.18, 'rgba(255,235,180,.9)'); gr.addColorStop(.5, 'rgba(255,200,120,.25)'); gr.addColorStop(1, 'rgba(255,180,100,0)'); c.fillStyle = gr; c.fillRect(0, 0, 256, 256); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, fog: false })); sp.scale.set(220, 220, 1); sp.position.set(-.5, .35, -.78).normalize().multiplyScalar(700); scene.add(sp); })();
   const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x3b5a2a, 0.75); scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff0d0, 2.0); sun.castShadow = true;
-  sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0003; sun.shadow.normalBias = .02; sun.shadow.radius = 2;
+  sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0003; sun.shadow.normalBias = .02; sun.shadow.radius = 2;
   Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 220 }); sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun); scene.add(sun.target);
 
@@ -78,7 +78,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     return y;
   }
   const inWater = (x, z) => groundY(x, z) < WATER_Y - .45;
-  const groundGeo = new THREE.PlaneGeometry(WORLD, WORLD, 180, 180); groundGeo.rotateX(-Math.PI / 2);
+  const groundGeo = new THREE.PlaneGeometry(WORLD, WORLD, 140, 140); groundGeo.rotateX(-Math.PI / 2);
   const gp = groundGeo.attributes.position, gcol = [];
   for (let i = 0; i < gp.count; i++) {
     const x = gp.getX(i), z = gp.getZ(i), y = groundY(x, z); gp.setY(i, y);
@@ -98,7 +98,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, map: makeGroundTex() })); ground.receiveShadow = true; scene.add(ground);
 
   // Wasser (See + Fluss), leichte Wellen
-  const waterGeo = new THREE.PlaneGeometry(WORLD, WORLD, 90, 90); waterGeo.rotateX(-Math.PI / 2);
+  const waterGeo = new THREE.PlaneGeometry(WORLD, WORLD, 60, 60); waterGeo.rotateX(-Math.PI / 2);
   const wp = waterGeo.attributes.position, wcol = [];
   for (let i = 0; i < wp.count; i++) {
     const depth = WATER_Y - groundY(wp.getX(i), wp.getZ(i));
@@ -138,7 +138,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   })();
   const grassMat = new THREE.MeshStandardMaterial({ color: 0x79c75a, roughness: .95, side: THREE.DoubleSide, vertexColors: true });
   grassMat.onBeforeCompile = sh => { sh.uniforms.t = { value: 0 }; grassMat.userData.u = sh.uniforms.t; sh.vertexShader = 'uniform float t;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float ph = instanceMatrix[3][0] * .6 + instanceMatrix[3][2] * .4; transformed.x += sin(t * 1.8 + ph) * .18 * position.y; transformed.z += cos(t * 1.3 + ph) * .1 * position.y;'); };
-  const GRASS = 16000, GR = 46;
+  const GRASS = 11000, GR = 42;
   const grass = new THREE.InstancedMesh(bladeGeo, grassMat, GRASS); grass.receiveShadow = true; scene.add(grass);
   const dummy = new THREE.Object3D(), gcolor = new THREE.Color();
   let grassCenter = { x: 1e9, z: 1e9 };
@@ -156,45 +156,80 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   placeGrass(0, 0);
 
   // Bäume (realistischer: Stamm mit Ästen, viele Blätterballen, hellere Spitzen)
-  function conifer(x, z, s) {
-    const g = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.16 * s, .34 * s, 2.4 * s, 7), barkMat); trunk.position.y = 1.2 * s; trunk.castShadow = true; g.add(trunk);
-    const base = new THREE.Color().setHSL(.36 + Math.random() * .04, .5, .3);
-    for (let i = 0; i < 6; i++) { const r = (2.1 - i * .3) * s, h = 1.5 * s; const c = new THREE.Mesh(new THREE.ConeGeometry(r, h, 9), mat(base.clone().offsetHSL(0, 0, i * .035))); c.position.y = (1.9 + i * .85) * s; c.rotation.y = i * .4; c.castShadow = true; c.receiveShadow = true; g.add(c); }
-    const shd = new THREE.Mesh(new THREE.CircleGeometry(1.9 * s, 14), treeShadowMat); shd.rotation.x = -Math.PI / 2; shd.position.y = .18; g.add(shd);
-    g.position.set(x, groundY(x, z) - .15, z); g.rotation.y = Math.random() * 6; scene.add(g);
-  }
-  function broadleaf(x, z, s) {
-    const g = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.22 * s, .45 * s, 3 * s, 8), barkMat2); trunk.position.y = 1.5 * s; trunk.castShadow = true; g.add(trunk);
-    for (let b = 0; b < 4; b++) { const br = new THREE.Mesh(new THREE.CylinderGeometry(.06 * s, .14 * s, 1.8 * s, 5), barkMat2); const a = b * 1.6; br.position.set(Math.cos(a) * .6 * s, 3.1 * s, Math.sin(a) * .6 * s); br.rotation.z = Math.cos(a) * .9; br.rotation.x = Math.sin(a) * .9; g.add(br); }
-    const base = new THREE.Color().setHSL(.25 + Math.random() * .1, .55, .36);
-    const n = 12;
-    for (let i = 0; i < n; i++) {
-      const a = i / n * Math.PI * 2, rad = i < 8 ? 1.1 * s : .5 * s, yy = (3.6 + (i < 8 ? Math.random() * .6 : 1.0 + Math.random() * .6)) * s;
-      const col = base.clone().offsetHSL(0, 0, (yy / s - 3.6) * .06 + (Math.random() - .5) * .08);
-      const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry((.85 + Math.random() * .6) * s, 1), mat(col));
-      leaf.position.set(Math.cos(a) * rad, yy, Math.sin(a) * rad); leaf.castShadow = true; leaf.receiveShadow = true; g.add(leaf);
-    }
-    const shd = new THREE.Mesh(new THREE.CircleGeometry(2.3 * s, 14), treeShadowMat); shd.rotation.x = -Math.PI / 2; shd.position.y = .18; g.add(shd);
-    g.position.set(x, groundY(x, z) - .15, z); g.rotation.y = Math.random() * 6; scene.add(g);
-  }
-  function bush(x, z, s) { for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.5 * s, 1), mat(0x2f8a45)); b.position.set(x + rng(-.4, .4) * s, groundY(x, z) + .35 * s, z + rng(-.4, .4) * s); b.castShadow = true; scene.add(b); } }
-  const treeSpots = [];
-  for (let i = 0; i < 520; i++) {
+  // ===== Vegetation: instanziiert (ein Draw-Call pro Bauteil statt tausender Einzel-Meshes) =====
+  const CAVE = { x: 36, z: -6, r: 13 };
+  const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [];
+  for (let i = 0; i < 600; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF);
-    if (Math.hypot(x, z) < 11 || inWater(x, z) || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - 24, z + 4) < 8 || Math.hypot(x - 60, z - 30) < 6) continue;
-    (Math.random() < .5 ? conifer : broadleaf)(x, z, rng(.9, 1.9)); treeSpots.push([x, z]);
+    if (Math.hypot(x, z) < 11 || inWater(x, z) || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || Math.hypot(x - 60, z - 30) < 6) continue;
+    const it = { x, z, s: rng(.9, 1.9), rot: Math.random() * 6, hue: Math.random() }; (Math.random() < .5 ? con : broad).push(it); treeSpots.push([x, z]);
   }
-  for (let i = 0; i < 160; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6) continue; bush(x, z, rng(.7, 1.5)); }
-  for (let i = 0; i < 120; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.3, 1.3), 0), mat(0x8d9793)); const x = rng(-HALF, HALF), z = rng(-HALF, HALF); r.position.set(x, groundY(x, z) + .15, z); r.rotation.set(Math.random(), Math.random(), 0); r.castShadow = true; r.receiveShadow = true; scene.add(r); }
+  for (let i = 0; i < 220; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
+  for (let i = 0; i < 160; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; rocks.push({ x, z, s: rng(.3, 1.3), rx: Math.random(), ry: Math.random() }); }
   const flowerCols = [0xff6b9a, 0xffd166, 0xb48cff, 0xffffff, 0xff8c42];
-  for (let i = 0; i < 400; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; const head = new THREE.Mesh(new THREE.IcosahedronGeometry(.11, 0), mat(flowerCols[i % 5])); head.position.set(x, groundY(x, z) + .5, z); scene.add(head); const stem = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .5, 4), smooth(0x3f8f3a)); stem.position.set(x, groundY(x, z) + .25, z); scene.add(stem); }
-  for (let i = 0; i < 30; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; const cap = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6, 0, 6.3, 0, 1.6), smooth(0xd8402c)); cap.position.set(x, groundY(x, z) + .22, z); scene.add(cap); const st = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, .25, 6), smooth(0xf1e6d2)); st.position.set(x, groundY(x, z) + .12, z); scene.add(st); }
-  // Schilf am See
-  for (let i = 0; i < 140; i++) { const a = Math.random() * Math.PI * 2, r = LAKE.r * (0.86 + Math.random() * .12); const x = LAKE.x + Math.cos(a) * r, z = LAKE.z + Math.sin(a) * r; const reed = new THREE.Mesh(new THREE.CylinderGeometry(.03, .05, rng(1.2, 2), 4), smooth(0x6f8f3a)); reed.position.set(x, groundY(x, z) + .8, z); reed.rotation.z = rng(-.15, .15); scene.add(reed); }
+  for (let i = 0; i < 700; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
+  for (let i = 0; i < 60; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; shrooms.push({ x, z }); }
+  for (let i = 0; i < 200; i++) { const a = Math.random() * Math.PI * 2, r = LAKE.r * (0.86 + Math.random() * .12); reeds.push({ x: LAKE.x + Math.cos(a) * r, z: LAKE.z + Math.sin(a) * r, h: rng(1.2, 2), rz: rng(-.15, .15) }); }
+
+  function instanced(geo, material, n, fill, shadow = true) {
+    const m = new THREE.InstancedMesh(geo, material, n); const d = new THREE.Object3D(), col = new THREE.Color(); let k = 0;
+    fill((px, py, pz, rx, ry, rz, sx, sy, sz, c) => { d.position.set(px, py, pz); d.rotation.set(rx, ry, rz); d.scale.set(sx, sy, sz); d.updateMatrix(); m.setMatrixAt(k, d.matrix); if (c !== undefined) m.setColorAt(k, col.set(c)); k++; });
+    m.count = k; m.castShadow = shadow; m.receiveShadow = shadow; m.frustumCulled = false; scene.add(m); return m;
+  }
+  const white = (o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: 0xffffff, roughness: .9, flatShading: true }, o));
+  const tmpC = new THREE.Color();
+  // Nadelbäume: Stamm + 6 Kronenstufen
+  instanced(new THREE.CylinderGeometry(.16, .34, 2.4, 7), barkMat, con.length, put => con.forEach(t => put(t.x, groundY(t.x, t.z) - .15 + 1.2 * t.s, t.z, 0, t.rot, 0, t.s, t.s, t.s)));
+  for (let i = 0; i < 6; i++) instanced(new THREE.ConeGeometry(2.1 - i * .3, 1.5, 9), white(), con.length, put => con.forEach(t => { tmpC.setHSL(.36 + t.hue * .04, .5, .3 + i * .035); put(t.x, groundY(t.x, t.z) - .15 + (1.9 + i * .85) * t.s, t.z, 0, t.rot + i * .4, 0, t.s, t.s, t.s, tmpC.getHex()); }));
+  // Laubbäume: Stamm + 4 Äste + 12 Blätterballen
+  instanced(new THREE.CylinderGeometry(.22, .45, 3, 8), barkMat2, broad.length, put => broad.forEach(t => put(t.x, groundY(t.x, t.z) - .15 + 1.5 * t.s, t.z, 0, t.rot, 0, t.s, t.s, t.s)));
+  instanced(new THREE.CylinderGeometry(.06, .14, 1.8, 5), barkMat2, broad.length * 4, put => broad.forEach(t => { for (let b = 0; b < 4; b++) { const a = b * 1.6 + t.rot; put(t.x + Math.cos(a) * .6 * t.s, groundY(t.x, t.z) - .15 + 3.1 * t.s, t.z + Math.sin(a) * .6 * t.s, Math.sin(a) * .9, 0, Math.cos(a) * .9, t.s, t.s, t.s); } }), false);
+  instanced(new THREE.IcosahedronGeometry(1, 0), white(), broad.length * 12, put => broad.forEach(t => { const base = new THREE.Color().setHSL(.25 + t.hue * .1, .55, .36); for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + t.rot, rad = i < 8 ? 1.1 * t.s : .5 * t.s, yy = (3.6 + (i < 8 ? Math.random() * .6 : 1.0 + Math.random() * .6)) * t.s, r = (.85 + Math.random() * .6) * t.s; tmpC.copy(base).offsetHSL(0, 0, (yy / t.s - 3.6) * .06 + (Math.random() - .5) * .08); put(t.x + Math.cos(a) * rad, groundY(t.x, t.z) - .15 + yy, t.z + Math.sin(a) * rad, 0, 0, 0, r, r, r, tmpC.getHex()); } }));
+  // Baumschatten am Boden
+  instanced(new THREE.CircleGeometry(1, 14), treeShadowMat, con.length + broad.length, put => { con.forEach(t => put(t.x, groundY(t.x, t.z) + .04, t.z, -Math.PI / 2, 0, 0, 1.9 * t.s, 1.9 * t.s, 1)); broad.forEach(t => put(t.x, groundY(t.x, t.z) + .04, t.z, -Math.PI / 2, 0, 0, 2.3 * t.s, 2.3 * t.s, 1)); }, false);
+  // Büsche, Felsen, Blumen, Pilze, Schilf
+  instanced(new THREE.IcosahedronGeometry(.5, 1), mat(0x2f8a45), bushes.length * 3, put => bushes.forEach(b => { for (let i = 0; i < 3; i++) put(b.x + rng(-.4, .4) * b.s, groundY(b.x, b.z) + .35 * b.s, b.z + rng(-.4, .4) * b.s, 0, Math.random() * 3, 0, b.s, b.s, b.s); }));
+  instanced(new THREE.DodecahedronGeometry(1, 0), mat(0x8d9793), rocks.length, put => rocks.forEach(r => put(r.x, groundY(r.x, r.z) + .15 * r.s, r.z, r.rx, r.ry, 0, r.s, r.s * .8, r.s)));
+  instanced(new THREE.IcosahedronGeometry(.11, 0), white(), flowers.length, put => flowers.forEach(f => put(f.x, groundY(f.x, f.z) + .5, f.z, 0, 0, 0, 1, 1, 1, f.c)), false);
+  instanced(new THREE.CylinderGeometry(.02, .02, .5, 4), smooth(0x3f8f3a), flowers.length, put => flowers.forEach(f => put(f.x, groundY(f.x, f.z) + .25, f.z, 0, 0, 0, 1, 1, 1)), false);
+  instanced(new THREE.SphereGeometry(.22, 8, 6, 0, 6.3, 0, 1.6), smooth(0xd8402c), shrooms.length, put => shrooms.forEach(m => put(m.x, groundY(m.x, m.z) + .22, m.z, 0, 0, 0, 1, 1, 1)), false);
+  instanced(new THREE.CylinderGeometry(.07, .09, .25, 6), smooth(0xf1e6d2), shrooms.length, put => shrooms.forEach(m => put(m.x, groundY(m.x, m.z) + .12, m.z, 0, 0, 0, 1, 1, 1)), false);
+  instanced(new THREE.CylinderGeometry(.03, .05, 1, 4), smooth(0x6f8f3a), reeds.length, put => reeds.forEach(r => put(r.x, groundY(r.x, r.z) + r.h / 2, r.z, 0, 0, r.rz, 1, r.h, 1)), false);
   // Steg am See
   (function () { const steg = new THREE.Mesh(new THREE.BoxGeometry(2.2, .2, 10), mat(0x8a5a33)); steg.position.set(LAKE.x - LAKE.r + 2, WATER_Y + .35, LAKE.z - 6); steg.castShadow = true; scene.add(steg); for (let i = 0; i < 4; i++) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, 2, 6), barkMat); p.position.set(LAKE.x - LAKE.r + 2 + (i % 2 ? .9 : -.9), WATER_Y - .3, LAKE.z - 10 + Math.floor(i / 2) * 8); scene.add(p); } })();
+
+  // Troll-Höhle mit Gittertor (ab Level 10)
+  const gate = new THREE.Group(); gate.userData = { open: false, lift: 0 };
+  (function () {
+    const rock = new THREE.MeshStandardMaterial({ color: 0x3f453f, roughness: 1, flatShading: true });
+    const mound = new THREE.Mesh(new THREE.SphereGeometry(CAVE.r, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), rock); mound.scale.y = .55; mound.position.set(CAVE.x, groundY(CAVE.x, CAVE.z) - .3, CAVE.z); mound.castShadow = true; mound.receiveShadow = true; scene.add(mound);
+    for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.5 + Math.random() * .5); const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.8, 2.2), 0), rock); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4 && x < CAVE.x) continue; b.position.set(x, groundY(x, z) + rng(.5, 3), z); b.rotation.set(Math.random(), Math.random(), 0); b.castShadow = true; scene.add(b); }
+    for (let i = 0; i < 40; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.55 + Math.random() * .4); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4 && x < CAVE.x) continue; const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rng(.5, 1.1), 1), mat(0x2f6b3a)); m.position.set(x, groundY(x, z) + .3 + Math.max(0, Math.sqrt(Math.max(0, CAVE.r * CAVE.r - r * r)) * .62 - .3), z); scene.add(m); }
+    // Eingang: dunkler Tunnel nach Westen
+    const ex = CAVE.x - CAVE.r + 1, ez = CAVE.z;
+    const tunnel = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 7), new THREE.MeshStandardMaterial({ color: 0x07090a, roughness: 1, side: THREE.BackSide })); tunnel.position.set(ex + 6, groundY(ex, ez) + 2.6, ez); scene.add(tunnel);
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(14, .3, 7), new THREE.MeshStandardMaterial({ color: 0x3a3d3a, roughness: 1 })); floor.position.set(ex + 6, groundY(ex, ez) - .02, ez); scene.add(floor);
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(3.9, .7, 8, 16, Math.PI), rock); arch.position.set(ex - .2, groundY(ex, ez) + .4, ez); arch.rotation.y = Math.PI / 2; arch.castShadow = true; scene.add(arch);
+    for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.5, 1.1), rock); post.position.set(ex - .2, groundY(ex, ez) + 2.7, ez + s * 3.9); post.castShadow = true; scene.add(post); const torch = new THREE.PointLight(0xffa040, 1.8, 12, 2); torch.position.set(ex - 1.2, groundY(ex, ez) + 3.6, ez + s * 3.9); scene.add(torch); const fl = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.copy(torch.position); scene.add(fl); }
+    // Gitter
+    const iron = new THREE.MeshStandardMaterial({ color: 0x3b3f44, metalness: .8, roughness: .45 });
+    for (let i = 0; i < 8; i++) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 5.2, 8), iron); bar.position.set(0, 2.6, -3.15 + i * .9); bar.castShadow = true; gate.add(bar); }
+    for (const y of [.6, 2.6, 4.6]) { const cross = new THREE.Mesh(new THREE.BoxGeometry(.18, .16, 6.6), iron); cross.position.set(0, y, 0); gate.add(cross); }
+    const lock = new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .9), new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .3 })); lock.position.set(0, 2.2, 0); gate.add(lock); gate.userData.lock = lock;
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(.1, .7, 1.6), leatherLike(0x5a3b22)); sign.position.set(-.6, 3.9, 0); gate.add(sign);
+    gate.position.set(ex - .2, groundY(ex, ez), ez); scene.add(gate);
+  })();
+  function leatherLike(c) { return new THREE.MeshStandardMaterial({ color: c, roughness: .85 }); }
+  const gateDist = () => Math.hypot(player.position.x - gate.position.x, player.position.z - gate.position.z);
+  function tryGate() {
+    if (gate.userData.open) { toast('Das Tor steht offen'); return; }
+    if (state.level < 10) { toast(`Verschlossen · Troll-Höhle ab Level 10 (du bist Level ${state.level})`); return; }
+    gate.userData.open = true; toast('Das Gitter hebt sich – der Waldtroll wartet in der Höhle'); gainXp(0);
+  }
+  function caveCollision() {
+    const dx = player.position.x - CAVE.x, dz = player.position.z - CAVE.z, d = Math.hypot(dx, dz), inCorridor = Math.abs(dz) < 3 && dx < 0;
+    if (d < CAVE.r - 1 && !(inCorridor && gate.userData.open)) { if (inCorridor) { player.position.x = gate.position.x - 1.2; } else { const k = (CAVE.r - 1) / d; player.position.x = CAVE.x + dx * k; player.position.z = CAVE.z + dz * k; } }
+  }
 
   // Lager
   const fire = new THREE.PointLight(0xffa040, 2.5, 16, 2); fire.position.set(3, 2.4, -3); scene.add(fire);
@@ -452,7 +487,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     g.add(tail); g.scale.setScalar(s); g.userData = { legs, tail, alpha, alive: true }; return g;
   }
 
-  const troll = buildTroll(); troll.position.set(26, groundY(26, -4), -4); troll.rotation.y = -1.2; scene.add(troll);
+  const troll = buildTroll(); troll.position.set(CAVE.x + 1, groundY(CAVE.x + 1, CAVE.z), CAVE.z); troll.rotation.y = -Math.PI / 2; scene.add(troll);
+  const trollLight = new THREE.PointLight(0xff6a3d, 1.6, 14, 2); trollLight.position.set(CAVE.x - 2, groundY(CAVE.x, CAVE.z) + 3, CAVE.z); scene.add(trollLight);
   // Troll-Krieger mit Waffen (Keule, Axt, Speer)
   function buildGrunt(weapon) {
     const g = new THREE.Group(); const skinG = new THREE.MeshStandardMaterial({ color: 0x6f8f45, roughness: .85 }), skinD = new THREE.MeshStandardMaterial({ color: 0x55703a, roughness: .85 });
@@ -579,7 +615,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     { id: 'wolves', t: 'Trolljagd', d: 'Besiege 3 Troll-Krieger im Wald', need: 3, xp: 60, coins: 30, item: 'helmL' },
     { id: 'chest', t: 'Die verlorene Truhe', d: 'Finde Brams Truhe (nördlich des Lagers) und öffne sie', need: 1, xp: 40, coins: 20, item: 'key' },
     { id: 'alpha', t: 'Der Troll-Häuptling', d: 'Besiege den Troll-Häuptling (groß, goldene Krone)', need: 1, xp: 120, coins: 60, item: 'chestL' },
-    { id: 'troll', t: 'Boss: Waldtroll', d: 'Besiege den Waldtroll am Ende des Wegs · Mindestlevel 10 (Vorschau: frei)', need: 1, xp: 200, coins: 100, item: 'tooth' }
+    { id: 'troll', t: 'Boss: Waldtroll', d: 'Öffne das Tor der Troll-Höhle (ab Level 10) und besiege den Waldtroll', need: 1, xp: 200, coins: 100, item: 'tooth' }
   ];
   const qstate = {}; QUESTS.forEach(q => qstate[q.id] = { acc: false, prog: 0, done: false });
   let tracked = null;
@@ -638,7 +674,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; ch.userData.lid.rotation.x = -1.6; const loot = ch.userData.gold ? ['hammer', 'helmI', 'chestI', 'phoenix'][Math.floor(Math.random() * 4)] : ['heal', 'coin', 'stam', 'bootsI'][Math.floor(Math.random() * 4)]; if (loot === 'coin') { state.coins += 25; toast('Truhe · +25 🪙'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
     for (const s of stations) if (near(s.g, 2.5)) { if (s.done) { toast('Station erledigt · kommt morgen wieder'); return; } openStation(s); return; }
     for (const w of wolves) if (w.userData.alive && near(w, 3.5)) { startBattle(w.userData.kind, w); return; }
-    if (near(troll, 7)) { startBattle('troll'); return; }
+    if (gateDist() < 4.5 && !gate.userData.open) { tryGate(); return; }
+    if (near(troll, 8)) { if (!gate.userData.open) { toast('Erst das Tor öffnen (ab Level 10)'); return; } startBattle('troll'); return; }
     toast('Nichts in der Nähe · E bei NPC, Truhe, Station, Gegner');
   }
   function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -674,7 +711,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
       } else state.stamina = Math.min(100, state.stamina + dt * 5);
       if (!state.mounted && moving) state.stamina = Math.min(100, state.stamina + dt * 3);
       $('stam').style.width = state.stamina + '%';
-      player.rotation.y = heading;
+      player.rotation.y = heading; caveCollision();
       if (Math.hypot(px - grassCenter.x, pz - grassCenter.z) > GR * .55) placeGrass(px, pz);
     }
     if (rolling > 0) rolling -= dt;
@@ -702,12 +739,13 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     // Abgestelltes / gerufenes Reittier
     if (!state.mounted) { const d = mountFree.position.distanceTo(player.position); if (mountCalled && d > 2.5) { const dx = player.position.x - mountFree.position.x, dz = player.position.z - mountFree.position.z; const l = Math.hypot(dx, dz); mountFree.position.x += dx / l * dt * 11; mountFree.position.z += dz / l * dt * 11; mountFree.rotation.y = Math.atan2(dx, dz); walkPhase += dt * 9; animateLegs(mountMesh, 1); } else if (mountCalled) { mountCalled = false; toggleMount(); } else animateLegs(mountMesh, 0); mountFree.position.y = inWater(mountFree.position.x, mountFree.position.z) ? WATER_Y - .7 : groundY(mountFree.position.x, mountFree.position.z); }
     // Interaktions-Hinweis
-    let hint = ''; if (inWorld) { if (near(npc, 3.5)) hint = 'Mit Bram sprechen'; else if (chests.some(c => near(c, 2.5))) hint = 'Truhe öffnen'; else if (stations.some(s => near(s.g, 2.5))) hint = 'Vokabel-Station'; else if (wolves.some(w => w.userData.alive && near(w, 3.5))) hint = 'Angreifen'; else if (near(troll, 7)) hint = 'Waldtroll herausfordern'; else if (!state.mounted && mountFree.position.distanceTo(player.position) < 3.5) hint = 'F · Aufsteigen'; }
+    let hint = ''; if (inWorld) { if (near(npc, 3.5)) hint = 'Mit Bram sprechen'; else if (chests.some(c => near(c, 2.5))) hint = 'Truhe öffnen'; else if (stations.some(s => near(s.g, 2.5))) hint = 'Vokabel-Station'; else if (wolves.some(w => w.userData.alive && near(w, 3.5))) hint = 'Angreifen'; else if (gateDist() < 4.5 && !gate.userData.open) hint = state.level >= 10 ? 'Tor öffnen' : 'Tor verschlossen · ab Level 10'; else if (near(troll, 8)) hint = 'Waldtroll herausfordern'; else if (!state.mounted && mountFree.position.distanceTo(player.position) < 3.5) hint = 'F · Aufsteigen'; }
     $('interactText').textContent = hint; $('interact').classList.toggle('show', !!hint);
 
     stations.forEach((s, i) => { s.c.rotation.y += dt; s.c.position.y = 1.4 + Math.sin(clock.t * 2.5 + i) * .15; s.ring.rotation.z += dt * .5; });
     flames.forEach((f, i) => { f.scale.y = 1 + Math.sin(clock.t * 14 + i) * .18; f.rotation.y += dt * 2; }); fire.intensity = 2.3 + Math.sin(clock.t * 9) * .5;
     const spPos = smoke.geometry.attributes.position; for (let i = 0; i < spPos.count; i++) { let y = spPos.getY(i) + dt * 1.2; if (y > 7) y = 2; spPos.setY(i, y); spPos.setX(i, 3 + Math.sin(clock.t * 2 + i) * .35 * (y - 2) * .3); } spPos.needsUpdate = true;
+    if (gate.userData.open && gate.userData.lift < 4.6) { gate.userData.lift = Math.min(4.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
     wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); if (inWorld && d < 14 && d > 2.5) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.5) { const nx = w.position.x + Math.sin(w.userData.dir) * dt * 2.2, nz = w.position.z + Math.cos(w.userData.dir) * dt * 2.2; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 2.8 && w.userData.atk <= 0) { w.userData.atk = 1.3; const dm = w.userData.alpha ? 9 : w.userData.weapon === 'axe' ? 8 : w.userData.weapon === 'spear' ? 6 : 5; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
@@ -743,7 +781,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     stations.forEach(s => { const [a, b] = P(s.g.position.x, s.g.position.z); mctx.fillStyle = s.done ? '#4a7' : '#7cff9b'; mctx.beginPath(); mctx.arc(a, b, 2.5, 0, 7); mctx.fill(); });
     wolves.forEach(w => { if (!w.userData.alive) return; const [a, b] = P(w.position.x, w.position.z); mctx.fillStyle = w.userData.alpha ? '#ff2a3c' : '#ff6b6b'; mctx.beginPath(); mctx.arc(a, b, w.userData.alpha ? 3.5 : 2.5, 0, 7); mctx.fill(); });
     let [nx, nz] = P(npc.position.x, npc.position.z); mctx.fillStyle = '#ffd166'; mctx.font = '10px sans-serif'; mctx.fillText('!', nx - 2, nz + 4);
-    let [tx, tz] = P(troll.position.x, troll.position.z); mctx.fillStyle = '#ff8a5c'; mctx.beginPath(); mctx.arc(tx, tz, 4, 0, 7); mctx.fill();
+    let [cx2, cz2] = P(CAVE.x, CAVE.z); mctx.fillStyle = '#4a4e4a'; mctx.beginPath(); mctx.arc(cx2, cz2, CAVE.r * k, 0, 7); mctx.fill();
+    let [tx, tz] = P(troll.position.x, troll.position.z); mctx.fillStyle = '#ff8a5c'; mctx.beginPath(); mctx.arc(tx, tz, 4, 0, 7); mctx.fill(); mctx.fillStyle = '#ffd166'; mctx.font = '9px sans-serif'; mctx.fillText(gate.userData.open ? '' : '🔒', P(gate.position.x, gate.position.z)[0] - 5, P(gate.position.x, gate.position.z)[1] + 3);
     mctx.translate(c, c); mctx.rotate(-heading + Math.PI); mctx.fillStyle = '#fff'; mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2); mctx.lineTo(-5, 5); mctx.closePath(); mctx.fill(); mctx.restore();
     mctx.strokeStyle = 'rgba(124,255,155,.5)'; mctx.lineWidth = 2; mctx.beginPath(); mctx.arc(c, c, c - 2, 0, 7); mctx.stroke(); mctx.fillStyle = '#9fb3a6'; mctx.font = 'bold 10px sans-serif'; mctx.fillText('N', c - 3, 11);
   }
@@ -766,7 +805,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Speichern / Laden ----------
   function saveGame() {
-    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs };
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
     return writeSave(d);
   }
   function applySave(d) {
@@ -778,7 +817,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (d.quests) Object.keys(qstate).forEach(k => { if (d.quests[k]) Object.assign(qstate[k], d.quests[k]); }); tracked = d.tracked || null;
     if (d.chests) d.chests.forEach((o, i) => { if (chests[i] && o) { chests[i].userData.open = true; chests[i].userData.lid.rotation.x = -1.6; } });
     if (d.stations) d.stations.forEach((o, i) => { if (stations[i] && o) { stations[i].done = true; stations[i].c.material.emissiveIntensity = .2; } });
-    if (typeof d.secs === 'number') secs = d.secs;
+    if (typeof d.secs === 'number') secs = d.secs; if (d.gate) gate.userData.open = true;
     rebuildHero(); state.mounted = true; setMount(prefs.tier); if (d.state && d.state.mounted === false) { state.mounted = true; toggleMount(); }
     if (d.pos) player.position.set(d.pos[0], d.pos[1], d.pos[2]); if (typeof d.heading === 'number') heading = d.heading;
     applyGear(hero); stats(); renderAll(); updateTracker(); hpUI();
@@ -878,6 +917,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   let secs = 0; setInterval(() => { if (!hud.classList.contains('on')) return; secs = Math.min(900, secs + 1); const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0'); $('ring').style.setProperty('--p', (secs / 900 * 100) + '%'); $('ring').querySelector('span').textContent = m + ':' + s; if (secs === 900) toast('Login-Tag gezählt! +Tagesbonus'); }, 1000);
 
   renderAll(); updateTracker(); show('start');
+  window.__vq = { renderer, scene, state, settings }; // Diagnose in der Browser-Konsole
 
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
   const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', horse: '/models/animals/Horse.glb' };
@@ -904,7 +944,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // Gegner und Boss
   function dressEnemies() {
     wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? .62 : .42); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
-    if (gl.demon && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.demon); inst.obj.scale.setScalar(1.35); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.05); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
     if (gl.barbarian && !npc.userData.inst) { npc.children.forEach(c => { if (c !== npc.userData.marker) c.visible = false; }); const inst = instance(gl.barbarian); inst.obj.scale.setScalar(.75); inst.obj.rotation.y = Math.PI; npc.add(inst.obj); npc.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
   }
   Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
