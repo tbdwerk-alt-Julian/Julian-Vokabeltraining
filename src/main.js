@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { loadModel, instance, size as modelSize } from './assets.js';
+import * as V from './vocab.js';
+import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
 (function () {
   const $ = id => document.getElementById(id);
@@ -590,7 +592,7 @@ import { loadModel, instance, size as modelSize } from './assets.js';
 
   // ---------- Steuerung ----------
   const keys = {}; const hud = $('hud');
-  let uiOpen = () => !$('inventory').hidden || !$('settings').hidden || !$('npc').hidden || !$('station').hidden || !$('pause').hidden || $('dead').classList.contains('on') || battleOn;
+  let uiOpen = () => !$('inventory').hidden || !$('settings').hidden || !$('npc').hidden || !$('station').hidden || !$('pause').hidden || !$('vocabScreen').hidden || !$('newWord').hidden || $('dead').classList.contains('on') || battleOn;
   // Eingabe-Erkennung: Joystick nur bei Touch, sonst Tastatur/Controller
   let lastInput = ('ontouchstart' in window) ? 'touch' : 'key', padSeen = false;
   function setInput(k) { if (lastInput === k) return; lastInput = k; joy.style.display = k === 'touch' ? '' : 'none'; $('ctrlHint').textContent = k === 'pad' ? 'Controller: Stick laufen · A Rolle · B auf/absteigen · X benutzen · Y Inventar' : k === 'key' ? 'W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar · Esc Pause' : 'Joystick laufen · Knöpfe rechts'; if (k === 'pad') toast('Controller erkannt'); if (k === 'key') toast('Tastatur erkannt · Joystick ausgeblendet'); }
@@ -604,7 +606,8 @@ import { loadModel, instance, size as modelSize } from './assets.js';
     if (e.key.toLowerCase() === 'f' && !uiOpen()) toggleMount();
     if (e.key.toLowerCase() === 'e' && !uiOpen()) interact();
     if (e.key.toLowerCase() === 'i') { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; }
-    if (e.key === 'Escape') { if (!$('settings').hidden || !$('inventory').hidden || !$('npc').hidden) { $('settings').hidden = true; $('inventory').hidden = true; $('npc').hidden = true; } else $('pause').hidden = !$('pause').hidden; }
+    if (e.key.toLowerCase() === 'v' && !battleOn) { if ($('vocabScreen').hidden) openVocab(); else $('vocabScreen').hidden = true; }
+    if (e.key === 'Escape') { if (!$('settings').hidden || !$('inventory').hidden || !$('npc').hidden || !$('vocabScreen').hidden) { $('settings').hidden = true; $('inventory').hidden = true; $('npc').hidden = true; $('vocabScreen').hidden = true; } else $('pause').hidden = !$('pause').hidden; }
     if (/^[1-9]$/.test(e.key)) selectHot(+e.key - 1);
   });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
@@ -759,12 +762,52 @@ import { loadModel, instance, size as modelSize } from './assets.js';
   const screens = ['start', 'create', 'battle', 'map', 'win'];
   function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); if (name === 'map') { const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
   $('newGame').onclick = () => show('create'); $('backStart').onclick = () => show('start');
-  $('startWorld').onclick = () => { state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); };
+  $('startWorld').onclick = () => { state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
+
+  // ---------- Speichern / Laden ----------
+  function saveGame() {
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs };
+    return writeSave(d);
+  }
+  function applySave(d) {
+    state.name = d.name || 'Held'; state.charIdx = d.charIdx || 0; Object.assign(prefs, d.prefs || {}); Object.assign(state, d.state || {});
+    $('pnameHud').textContent = state.name; $('pname').value = state.name;
+    document.querySelectorAll('#char .choice').forEach(c => c.setAttribute('aria-pressed', +c.dataset.v === state.charIdx ? 'true' : 'false'));
+    ['kurs', 'modus', 'tier'].forEach(g => document.querySelectorAll('#' + g + ' .choice').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === prefs[g] ? 'true' : 'false')));
+    if (d.hotbar) d.hotbar.forEach((v, i) => hotbar[i] = v); if (d.bag) d.bag.forEach((v, i) => bag[i] = v); if (d.equip) Object.assign(equip, d.equip); if (d.counts) Object.entries(d.counts).forEach(([k, n]) => { if (ITEMS[k]) ITEMS[k].n = n; });
+    if (d.quests) Object.keys(qstate).forEach(k => { if (d.quests[k]) Object.assign(qstate[k], d.quests[k]); }); tracked = d.tracked || null;
+    if (d.chests) d.chests.forEach((o, i) => { if (chests[i] && o) { chests[i].userData.open = true; chests[i].userData.lid.rotation.x = -1.6; } });
+    if (d.stations) d.stations.forEach((o, i) => { if (stations[i] && o) { stations[i].done = true; stations[i].c.material.emissiveIntensity = .2; } });
+    if (typeof d.secs === 'number') secs = d.secs;
+    rebuildHero(); state.mounted = true; setMount(prefs.tier); if (d.state && d.state.mounted === false) { state.mounted = true; toggleMount(); }
+    if (d.pos) player.position.set(d.pos[0], d.pos[1], d.pos[2]); if (typeof d.heading === 'number') heading = d.heading;
+    applyGear(hero); stats(); renderAll(); updateTracker(); hpUI();
+  }
+  let autosaveT = 0; function autosave() { const n = Date.now(); if (n - autosaveT > 15000 && hud.classList.contains('on')) { autosaveT = n; saveGame(); } }
+  setInterval(() => { if (hud.classList.contains('on') && !uiOpen()) saveGame(); }, 30000);
+  (function () { const d = loadSave(); if (d) { $('continueGame').hidden = false; $('continueGame').textContent = `Weiter spielen · ${d.name} · Level ${d.state ? d.state.level : 1}`; $('startHint').textContent = 'Zuletzt gespeichert: ' + fmtTime(d.savedAt); } })();
+
+  // ---------- Vokabel-Menü ----------
+  function openVocab() { $('vocabScreen').hidden = false; renderVocab(); }
+  function renderVocab() {
+    const units = V.units(); const sel = $('vUnitFilter'); const curU = sel.value; sel.innerHTML = '<option value="">Alle Units</option>' + units.map(u => `<option value="${u}">${u}</option>`).join(''); if (units.includes(curU)) sel.value = curU;
+    $('vUnits').innerHTML = units.map(u => `<option value="${u}">`).join('');
+    const s = V.stats(sel.value); $('vocabStats').innerHTML = `<span class="tag">${s.total} Wörter</span><span class="tag">neu ${s.unseen}</span><span class="tag">☆ ${s.stars[0]}</span><span class="tag">★ ${s.stars[1]}</span><span class="tag">★★ ${s.stars[2]}</span><span class="tag">★★★ ${s.stars[3]}</span>`;
+    const list = V.byUnit(sel.value); $('vList').innerHTML = list.length ? list.map(w => `<div class="vrow ${w.seen ? '' : 'new'}"><span class="de">${w.de}</span><span>${w.en}</span><span class="st s${w.stars}">${'★'.repeat(w.stars) || '☆'}</span><button class="x" data-id="${w.id}" title="Löschen">✕</button></div>`).join('') : '<p class="hint">Noch keine Wörter. Über „Hinzufügen" oder „Liste einfügen" eintragen.</p>';
+    $('vList').querySelectorAll('.x').forEach(b => b.addEventListener('click', () => { V.remove(+b.dataset.id); renderVocab(); }));
+  }
+  $('vUnitFilter').onchange = renderVocab;
+  $('vDeleteUnit').onclick = () => { const u = $('vUnitFilter').value; if (!u) { toast('Erst eine Unit auswählen'); return; } V.removeUnit(u); $('vUnitFilter').value = ''; renderVocab(); toast('Unit gelöscht: ' + u); };
+  $('vtabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { $('vtabs').querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', 'false')); b.setAttribute('aria-selected', 'true'); $('vocabScreen').querySelectorAll('.tabpane').forEach(p => p.hidden = p.dataset.p !== b.dataset.t); }));
+  $('vAddForm').addEventListener('submit', e => { e.preventDefault(); const w = V.add($('vDe').value, $('vEn').value, $('vUnit').value || 'Unit 1', $('vEx').value); if (w) { $('vAddMsg').textContent = `✓ ${w.de} – ${w.en}`; $('vDe').value = ''; $('vEn').value = ''; $('vEx').value = ''; $('vDe').focus(); renderVocab(); } else $('vAddMsg').textContent = 'Deutsch und Englisch ausfüllen'; });
+  $('vImport').onclick = () => { const n = V.importList($('vPaste').value, $('vPasteUnit').value || 'Unit 1'); $('vPasteMsg').textContent = n ? `✓ ${n} Wörter eingefügt` : 'Nichts erkannt – Format prüfen'; if (n) { $('vPaste').value = ''; renderVocab(); } };
   $('mapBtn').onclick = () => show('map'); $('closeMap').onclick = () => show('world'); $('winBack').onclick = () => show('world');
-  $('saveBtn').onclick = () => toast('Gespeichert · Lager, Level ' + state.level); $('mountBtn').onclick = toggleMount; $('useBtn').onclick = interact;
+  $('saveBtn').onclick = () => { if (saveGame()) toast('Gespeichert · Level ' + state.level); else toast('Speichern nicht möglich (Browser blockiert Speicher)'); }; $('mountBtn').onclick = toggleMount; $('useBtn').onclick = interact;
+  $('vocabBtn').onclick = openVocab; $('vocabBtnStart').onclick = openVocab; $('closeVocab').onclick = () => $('vocabScreen').hidden = true; $('pVocab').onclick = () => { $('pause').hidden = true; openVocab(); };
+  $('continueGame').onclick = () => { const d = loadSave(); if (d) { applySave(d); show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } };
   $('invBtn').onclick = () => { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; }; $('closeInv').onclick = () => $('inventory').hidden = true;
   $('settingsBtn').onclick = () => $('settings').hidden = false; $('respawnBtn').onclick = respawn;
-  $('pResume').onclick = () => $('pause').hidden = true; $('pSettings').onclick = () => { $('pause').hidden = true; $('settings').hidden = false; }; $('pInv').onclick = () => { $('pause').hidden = true; openInv(); }; $('pMap').onclick = () => { $('pause').hidden = true; show('map'); }; $('pSave').onclick = () => { $('pause').hidden = true; toast('Gespeichert · Level ' + state.level); }; $('pMenu').onclick = () => { $('pause').hidden = true; show('start'); };
+  $('pResume').onclick = () => $('pause').hidden = true; $('pSettings').onclick = () => { $('pause').hidden = true; $('settings').hidden = false; }; $('pInv').onclick = () => { $('pause').hidden = true; openInv(); }; $('pMap').onclick = () => { $('pause').hidden = true; show('map'); }; $('pSave').onclick = () => { $('pause').hidden = true; if (saveGame()) toast('Gespeichert · Level ' + state.level); }; $('pMenu').onclick = () => { $('pause').hidden = true; show('start'); };
   if (lastInput !== 'touch') { joy.style.display = 'none'; $('ctrlHint').textContent = 'W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar · Esc Pause'; } $('closeSettings').onclick = () => $('settings').hidden = true; $('closeNpc').onclick = () => { $('npc').hidden = true; updateTracker(); };
   ['char', 'kurs', 'modus', 'tier'].forEach(g => $(g).querySelectorAll('.choice').forEach(c => c.addEventListener('click', () => { $(g).querySelectorAll('.choice').forEach(x => x.setAttribute('aria-pressed', 'false')); c.setAttribute('aria-pressed', 'true'); if (g === 'char') { state.charIdx = +c.dataset.v; rebuildHero(); } else prefs[g] = c.dataset.v; $('modusField').hidden = prefs.kurs === 'G'; if (g === 'tier') setMount(prefs.tier); })));
   // Einstellungen
@@ -778,11 +821,22 @@ import { loadModel, instance, size as modelSize } from './assets.js';
   $('quality').onchange = e => { settings.quality = +e.target.value; const q = settings.quality; renderer.shadowMap.enabled = q >= 1; sun.castShadow = q >= 1; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } renderer.setPixelRatio(q === 0 ? 1 : Math.min(devicePixelRatio, 2)); water.material.roughness = q >= 2 ? .12 : .5; clouds.forEach(c => c.visible = q >= 1); fireflies.visible = q >= 2; grass.count = q === 0 ? GRASS / 3 : q === 1 ? GRASS / 2 : GRASS; toast('Grafik: ' + ['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][q] + ' · Sichtweite unverändert'); };
 
   // ---------- Kampf ----------
-  const vocab = [['der Wald', 'forest'], ['gefährlich', 'dangerous'], ['die Umwelt', 'environment'], ['verantwortlich', 'responsible'], ['die Erfahrung', 'experience'], ['entscheiden', 'decide'], ['die Zukunft', 'future'], ['erfolgreich', 'successful'], ['der Nachbar', 'neighbour'], ['verbessern', 'improve'], ['die Freiheit', 'freedom'], ['überraschend', 'surprising']];
+  V.load();
+  // Neues Wort zuerst zeigen (Konzept: nie ins Blaue raten)
+  const introduced = new Set();
+  function introWord(w, cb) {
+    if (w.seen || introduced.has(w.id)) return cb();
+    introduced.add(w.id); $('nwDe').textContent = w.de; $('nwEn').textContent = w.en; $('nwEx').textContent = w.ex || ''; $('newWord').hidden = false; $('nwOk').focus();
+    $('nwOk').onclick = () => { $('newWord').hidden = true; cb(); };
+  }
   let bossHp, bossMax, phase, combo, cur, timerId, timeLeft, battleOn = false, foe = null, foeObj = null;
   const FOES = { grunt: { name: 'Troll-Krieger', eyebrow: 'Gegner · Wald', hp: 36, xp: 22, coins: 9, phases: 1 }, alpha: { name: 'Troll-Häuptling', eyebrow: 'Mini-Boss · Wald', hp: 70, xp: 60, coins: 25, phases: 2 }, troll: { name: 'Waldtroll', eyebrow: 'Boss · Wald', hp: 120, xp: 200, coins: 60, phases: 2 } };
   function lev(a, b) { const m = []; for (let i = 0; i <= a.length; i++) m[i] = [i]; for (let j = 0; j <= b.length; j++) m[0][j] = j; for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return m[a.length][b.length]; }
-  function nextWord() { cur = vocab[Math.floor(Math.random() * vocab.length)]; $('word').textContent = cur[0]; $('answer').value = ''; $('answer').focus(); const T = prefs.kurs === 'G' ? 15 : 9; timeLeft = T; clearInterval(timerId); timerId = setInterval(() => { timeLeft -= .1; $('timer').style.width = Math.max(0, timeLeft / T * 100) + '%'; if (timeLeft <= 0) hit('bad', 'Zu langsam! Treffer kassiert.'); }, 100); }
+  function nextWord() {
+    cur = V.pick(1)[0]; if (!cur) { toast('Keine Vokabeln – erst unter 📚 Vokabeln eintragen'); endBattle(); show('world'); return; }
+    $('word').textContent = '…'; $('timer').style.width = '100%'; clearInterval(timerId);
+    introWord(cur, () => { if (!battleOn) return; $('word').textContent = cur.de; $('answer').value = ''; $('answer').focus(); const T = prefs.kurs === 'G' ? 15 : 9; timeLeft = T; clearInterval(timerId); timerId = setInterval(() => { timeLeft -= .1; $('timer').style.width = Math.max(0, timeLeft / T * 100) + '%'; if (timeLeft <= 0) { V.record(cur.id, false); hit('bad', 'Zu langsam! Treffer kassiert.'); } }, 100); });
+  }
   function startBattle(kind, obj) {
     foe = FOES[kind]; foeObj = obj || (kind === 'troll' ? troll : null); battleOn = true; bossMax = foe.hp; bossHp = foeObj && foeObj.userData.hp !== undefined ? foeObj.userData.hp : bossMax; phase = bossHp <= bossMax / 2 && foe.phases > 1 ? 2 : 1; combo = 0;
     $('bossName').textContent = foe.name; $('bossEyebrow').textContent = foe.eyebrow; $('phase').textContent = foe.phases > 1 ? 'Phase 1' : ''; $('bossHp').style.width = '100%'; $('bossHp').style.background = ''; $('feedback').textContent = ''; $('feedback').className = 'feedback';
@@ -805,13 +859,16 @@ import { loadModel, instance, size as modelSize } from './assets.js';
     else { if (foeObj) { const fo = foeObj; fo.userData.alive = false; if (fo.userData.inst) { fo.userData.inst.play('Death', .1, false); setTimeout(() => { fo.visible = false; }, 1400); } else fo.visible = false; if (fo.userData.label) fo.userData.label.style.display = 'none'; setTimeout(() => { fo.userData.alive = true; fo.visible = true; fo.userData.hp = fo.userData.maxHp; }, 300000); } addItem('pelt'); if (foe === FOES.alpha) progress('alpha'); else progress('wolves'); $('winTitle').innerHTML = foe.name + ' <span>besiegt</span>'; $('winText').innerHTML = 'Trollfell erhalten · Gegner kommt in 5 Min wieder'; }
     $('winSub').textContent = `+${foe.xp} XP · +${foe.coins} 🪙`; renderAll(); setTimeout(() => show('win'), 600);
   }
-  $('answerForm').addEventListener('submit', e => { e.preventDefault(); if (!battleOn) return; clearInterval(timerId); const a = $('answer').value.trim().toLowerCase(), target = cur[1]; if (a === target) hit('crit', '💥 Kritischer Treffer! Perfekt geschrieben · 2× Schaden', 20); else if (a && lev(a, target) <= 2) { if (prefs.kurs === 'E' && prefs.modus === 'H') hit('bad', `Schreibfehler zählt als falsch · richtig: ${target}`); else hit('soft', `Fast: „${a}" → richtig: ${target} · normaler Schaden`, 10); } else hit('bad', `Falsch · richtig: ${target}`); });
+  $('answerForm').addEventListener('submit', e => { e.preventDefault(); if (!battleOn || !cur || !$('newWord').hidden) return; clearInterval(timerId); const a = $('answer').value.trim().toLowerCase(), target = cur.en.toLowerCase(); if (a === target) { V.record(cur.id, true); hit('crit', '💥 Kritischer Treffer! Perfekt geschrieben · 2× Schaden', 20); } else if (a && lev(a, target) <= 2) { if (prefs.kurs === 'E' && prefs.modus === 'H') { V.record(cur.id, false); hit('bad', `Schreibfehler zählt als falsch · richtig: ${cur.en}`); } else { V.record(cur.id, true); hit('soft', `Fast: „${a}" → richtig: ${cur.en} · normaler Schaden`, 10); } } else { V.record(cur.id, false); hit('bad', `Falsch · richtig: ${cur.en}`); } });
   // Vokabel-Station: 6 Wörter, Ergebnis = XP
   let st = null, stTimer;
-  function openStation(s) { st = { s, i: 0, ok: 0, words: [...vocab].sort(() => Math.random() - .5).slice(0, 6), res: [] }; $('station').hidden = false; $('sFeedback').textContent = ''; $('sFeedback').className = 'feedback'; stNext(); }
-  function stNext() { if (st.i >= 6) return stDone(); $('sCount').textContent = (st.i + 1) + ' / 6'; $('sProg').innerHTML = Array.from({ length: 6 }, (_, k) => `<i class="${st.res[k] || ''}"></i>`).join(''); const w = st.words[st.i]; $('sWord').textContent = w[0]; $('sAnswer').value = ''; $('sAnswer').focus(); const T = prefs.kurs === 'G' ? 15 : 10; let left = T; clearInterval(stTimer); stTimer = setInterval(() => { left -= .1; $('sTimer').style.width = Math.max(0, left / T * 100) + '%'; if (left <= 0) stAnswer(''); }, 100); }
-  function stAnswer(a) { clearInterval(stTimer); const w = st.words[st.i], t = w[1], fb = $('sFeedback'); let ok = false; if (a === t) { ok = true; fb.className = 'feedback crit'; fb.textContent = '✓ Perfekt'; } else if (a && lev(a, t) <= 2 && !(prefs.kurs === 'E' && prefs.modus === 'H')) { ok = true; fb.className = 'feedback soft'; fb.textContent = `Fast: „${a}" → ${t}`; } else { fb.className = 'feedback bad'; fb.textContent = (a ? 'Falsch' : 'Zu langsam') + ' · richtig: ' + t; } st.res[st.i] = ok ? 'ok' : 'bad'; if (ok) st.ok++; st.i++; setTimeout(stNext, 700); }
-  function stDone() { $('station').hidden = true; const xp = st.ok * 8 + (st.ok === 6 ? 20 : 0); st.s.done = true; st.s.c.material.emissiveIntensity = .2; gainXp(xp); state.coins += st.ok * 2; toast(`Station · ${st.ok}/6 richtig · +${xp} XP · +${st.ok * 2} 🪙`); st = null; }
+  function openStation(s) { const words = V.pick(6, null, true); if (!words.length) { toast('Keine Vokabeln – erst unter 📚 Vokabeln eintragen'); return; } st = { s, i: 0, ok: 0, words, res: [] }; $('station').hidden = false; $('sFeedback').textContent = ''; $('sFeedback').className = 'feedback'; stNext(); }
+  function stNext() {
+    if (st.i >= st.words.length) return stDone(); $('sCount').textContent = (st.i + 1) + ' / ' + st.words.length; $('sProg').innerHTML = st.words.map((_, k) => `<i class="${st.res[k] || ''}"></i>`).join(''); const w = st.words[st.i]; $('sWord').textContent = '…'; $('sTimer').style.width = '100%';
+    introWord(w, () => { if (!st) return; $('sWord').textContent = w.de; $('sAnswer').value = ''; $('sAnswer').focus(); const T = prefs.kurs === 'G' ? 15 : 10; let left = T; clearInterval(stTimer); stTimer = setInterval(() => { left -= .1; $('sTimer').style.width = Math.max(0, left / T * 100) + '%'; if (left <= 0) stAnswer(''); }, 100); });
+  }
+  function stAnswer(a) { clearInterval(stTimer); const w = st.words[st.i], t = w.en.toLowerCase(), fb = $('sFeedback'); let ok = false; if (a === t) { ok = true; fb.className = 'feedback crit'; fb.textContent = '✓ Perfekt'; } else if (a && lev(a, t) <= 2 && !(prefs.kurs === 'E' && prefs.modus === 'H')) { ok = true; fb.className = 'feedback soft'; fb.textContent = `Fast: „${a}" → ${w.en}`; } else { fb.className = 'feedback bad'; fb.textContent = (a ? 'Falsch' : 'Zu langsam') + ' · richtig: ' + w.en; } V.record(w.id, ok); st.res[st.i] = ok ? 'ok' : 'bad'; if (ok) st.ok++; st.i++; setTimeout(stNext, 700); }
+  function stDone() { $('station').hidden = true; const n = st.words.length, xp = st.ok * 8 + (st.ok === n ? 20 : 0); st.s.done = true; st.s.c.material.emissiveIntensity = .2; gainXp(xp); state.coins += st.ok * 2; toast(`Station · ${st.ok}/${n} richtig · +${xp} XP · +${st.ok * 2} 🪙`); st = null; autosave(); }
   $('sForm').addEventListener('submit', e => { e.preventDefault(); if (!st) return; stAnswer($('sAnswer').value.trim().toLowerCase()); });
   $('sQuit').onclick = () => { clearInterval(stTimer); $('station').hidden = true; st = null; };
 

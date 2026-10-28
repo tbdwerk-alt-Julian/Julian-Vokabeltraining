@@ -20,6 +20,7 @@
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); overflow: hidden; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 button { font-family: inherit; }
 #stage { position: fixed; inset: 0; }
 #stage canvas { display: block; width: 100%; height: 100%; }
@@ -163,6 +164,16 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
 .deadwhy { color: #8a3a44; font-family: var(--display); letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
 #stage canvas { filter: saturate(1.12) contrast(1.06); }
 #pause .card { text-align: center; }
+textarea { font: inherit; font-size: 14px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--fg); width: 100%; resize: vertical; }
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.vlist { display: flex; flex-direction: column; gap: 4px; max-height: 42vh; overflow: auto; }
+.vrow { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.03); font-size: 14px; }
+.vrow .st { font-size: 12px; letter-spacing: 1px; color: var(--accent-2); white-space: nowrap; }
+.vrow .st.s0 { color: rgba(255,255,255,.25); }
+.vrow .x { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; }
+.vrow .x:hover { color: var(--danger); }
+.vrow.new .de::after { content: " · neu"; font-size: 11px; color: var(--accent); }
+@media (max-width: 520px) { .vrow { grid-template-columns: 1fr 1fr auto; } .vrow .st { grid-column: 1 / -1; } }
 .mmwrap { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: 96px; width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.4); background: var(--glass); }
 #minimap { display: block; width: 150px; height: 150px; }
 #labels { position: fixed; inset: 0; pointer-events: none; }
@@ -225,6 +236,7 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
         <button class="btn small" id="mountBtn">🐾 Absteigen</button>
         <button class="btn small" id="useBtn">E</button>
         <button class="btn small" id="invBtn">🎒 Inventar</button>
+        <button class="btn small" id="vocabBtn">📚 Vokabeln</button>
         <button class="btn small" id="mapBtn">🗺 Karte</button>
         <button class="btn small" id="saveBtn">💾</button>
       </div>
@@ -236,8 +248,8 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
       <div class="eyebrow">Design-Vorschau · 3D</div>
       <h1>Vocab<span>Quest</span></h1>
       <p class="muted">Vokabeln lernen als Abenteuer. Wald, Wüste, Kirschen-Gebiet, Vulkan – und am Ende die Schattenfestung.</p>
-      <div class="row"><button class="btn primary" id="newGame">Neues Abenteuer</button></div>
-      <p class="hint">Nur ein Eindruck für Design und Gefühl. Keine echten Vokabeln, kein Speichern.</p>
+      <div class="row"><button class="btn primary" id="continueGame" hidden>Weiter spielen</button><button class="btn primary" id="newGame">Neues Abenteuer</button><button class="btn" id="vocabBtnStart">📚 Vokabeln</button></div>
+      <p class="hint" id="startHint">Vokabeln eingeben, dann loslegen – dein Fortschritt wird im Browser gespeichert.</p>
     </div>
   </div>
 
@@ -332,6 +344,43 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
     </div>
   </div>
 
+  <div class="overlay" id="vocabScreen" hidden>
+    <div class="card wide stack">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Vokabeln</div><h2>Deine Wörter</h2></div><button class="btn small" id="closeVocab">Schließen</button></div>
+      <div class="row" id="vocabStats"></div>
+      <div class="tabs" id="vtabs"><button aria-selected="true" data-t="list">Liste</button><button aria-selected="false" data-t="add">Hinzufügen</button><button aria-selected="false" data-t="paste">Liste einfügen</button></div>
+      <div class="tabpane" data-p="list">
+        <div class="row" style="align-items:center;gap:8px;margin-bottom:8px;"><label class="hint">Unit</label><select id="vUnitFilter"></select><button class="btn small" id="vDeleteUnit">Unit löschen</button></div>
+        <div class="vlist" id="vList"></div>
+      </div>
+      <div class="tabpane" data-p="add" hidden>
+        <form id="vAddForm" class="stack" style="gap:10px;">
+          <div class="row"><div class="field" style="flex:1;min-width:160px;"><label for="vDe">Deutsch</label><input type="text" id="vDe" placeholder="der Hund" autocomplete="off"></div><div class="field" style="flex:1;min-width:160px;"><label for="vEn">Englisch</label><input type="text" id="vEn" placeholder="dog" autocomplete="off" autocapitalize="off"></div></div>
+          <div class="row"><div class="field" style="flex:1;min-width:160px;"><label for="vUnit">Unit</label><input type="text" id="vUnit" placeholder="Unit 3" list="vUnits"><datalist id="vUnits"></datalist></div><div class="field" style="flex:2;min-width:200px;"><label for="vEx">Beispielsatz (optional)</label><input type="text" id="vEx" placeholder="The dog is sleeping."></div></div>
+          <div class="row"><button class="btn primary" type="submit">Hinzufügen (Enter)</button><span class="hint" id="vAddMsg"></span></div>
+        </form>
+      </div>
+      <div class="tabpane" data-p="paste" hidden>
+        <div class="stack" style="gap:10px;">
+          <p class="hint">Eine Vokabel pro Zeile: <b>deutsch - englisch</b> (auch mit „=", „;", „:" oder Tab getrennt). Ein dritter Teil wird als Beispielsatz übernommen.</p>
+          <textarea id="vPaste" rows="8" placeholder="der Wald - forest&#10;gefährlich = dangerous&#10;die Umwelt; environment; We must protect the environment."></textarea>
+          <div class="row"><div class="field" style="flex:1;min-width:160px;"><label for="vPasteUnit">Unit</label><input type="text" id="vPasteUnit" placeholder="Unit 3" list="vUnits"></div><button class="btn primary" id="vImport" type="button" style="align-self:flex-end;">Einfügen</button><span class="hint" id="vPasteMsg" style="align-self:flex-end;"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="newWord" hidden style="z-index:5;">
+    <div class="card stack" style="text-align:center;width:min(440px,100%);">
+      <div class="eyebrow">Neues Wort</div>
+      <div class="word" id="nwDe">—</div>
+      <div style="font-family:var(--display);font-size:22px;color:var(--accent);" id="nwEn">—</div>
+      <p class="muted" id="nwEx"></p>
+      <p class="hint">Präg es dir ein – gleich wird es abgefragt.</p>
+      <button class="btn primary" id="nwOk">Verstanden (Enter)</button>
+    </div>
+  </div>
+
   <div class="overlay" id="pause" hidden>
     <div class="card stack" style="width:min(360px,100%);">
       <div class="eyebrow">Pause</div><h2>VocabQuest</h2>
@@ -339,6 +388,7 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
       <button class="btn" id="pSettings">⚙ Einstellungen</button>
       <button class="btn" id="pInv">🎒 Inventar</button>
       <button class="btn" id="pMap">🗺 Karte</button>
+      <button class="btn" id="pVocab">📚 Vokabeln</button>
       <button class="btn" id="pSave">💾 Speichern</button>
       <button class="btn" id="pMenu">Hauptmenü</button>
       <p class="hint">Esc = Pause · Einstellungen auch über ⚙ oben rechts</p>
