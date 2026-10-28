@@ -791,9 +791,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     sun.position.set(player.position.x - 40, 50, player.position.z - 60); sun.target.position.copy(player.position); sun.target.updateMatrixWorld();
     renderer.render(scene, camera); renderInv();
-    if (!loopStarted) { loopStarted = true; const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
   }
-  let loopStarted = false;
+  function hideLoading() { const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
   requestAnimationFrame(loop);
 
   // Minimap (Nord oben, Radius 90 m)
@@ -1001,6 +1000,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   renderAll(); updateTracker(); show('start');
   window.__vq = { renderer, scene, state, settings, player, gainXp }; // Diagnose in der Browser-Konsole
+  hideLoading(); // Welt steht – Ladebildschirm weg, unabhängig davon, ob der Browser schon Bilder zeichnet
   // Dev: Bildrate an den Dev-Server melden (perf.log), damit Ruckler auf fremden Geräten sichtbar werden
   if (import.meta.env && import.meta.env.DEV) setInterval(() => { if (!hud.classList.contains('on') || !window.__fpsNow) return; const i = renderer.info.render; fetch('/__fps', { method: 'POST', body: JSON.stringify({ fps: window.__fpsNow, q: settings.quality, pr: renderer.getPixelRatio(), calls: i.calls, tris: i.triangles, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: (window.__gpu || '').slice(0, 60), ua: navigator.userAgent.slice(-40) }) }).catch(() => { }); }, 5000);
 
