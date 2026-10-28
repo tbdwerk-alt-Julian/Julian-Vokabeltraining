@@ -858,6 +858,9 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (!$('season').hidden) renderSeason();
   }
   function openSeason() { checkSeason(); $('season').hidden = false; renderSeason(); }
+  // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
+  let seasonShown = false;
+  const _show = show; show = function (name) { _show(name); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } };
   function renderSeason() {
     const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP;
     $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · noch ${info.daysLeft} Tage · kostenlos, nur durch Lernen`;
