@@ -704,6 +704,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (settings.fps && now - lastFrame < 1000 / settings.fps - 1) return; lastFrame = now;
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now; clock.t += dt;
     anims.forEach(a => a.update(dt));
+    if (window.__adapt) window.__adapt(now);
     frames++; if (now - fpsT > 500) { if (settings.showFps) $('fpsBox').textContent = Math.round(frames * 1000 / (now - fpsT)) + ' FPS'; frames = 0; fpsT = now; }
     if (grassMat.userData.u) grassMat.userData.u.value = clock.t;
     const inWorld = hud.classList.contains('on') && !uiOpen();
@@ -900,7 +901,20 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   $('invertCam').onchange = e => settings.invert = +e.target.value;
   $('music').oninput = e => $('musVal').textContent = e.target.value; $('sfx').oninput = e => $('sfxVal').textContent = e.target.value;
   $('fps').onchange = e => settings.fps = +e.target.value; $('showFps').onchange = e => { settings.showFps = +e.target.value; $('fpsBox').style.display = settings.showFps ? 'block' : 'none'; };
-  $('quality').onchange = e => { settings.quality = +e.target.value; const q = settings.quality; renderer.shadowMap.enabled = q >= 1; sun.castShadow = q >= 1; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } renderer.setPixelRatio(q === 0 ? 1 : Math.min(devicePixelRatio, 2)); water.material.roughness = q >= 2 ? .12 : .5; clouds.forEach(c => c.visible = q >= 1); fireflies.visible = q >= 2; grass.count = q === 0 ? GRASS / 3 : q === 1 ? GRASS / 2 : GRASS; toast('Grafik: ' + ['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][q] + ' · Sichtweite unverändert'); };
+  function applyQuality(q, silent) {
+    settings.quality = q; $('quality').value = String(q);
+    renderer.shadowMap.enabled = q >= 1; sun.castShadow = q >= 1; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+    renderer.setPixelRatio(q === 0 ? Math.min(1, devicePixelRatio) * .8 : q === 1 ? 1 : Math.min(devicePixelRatio, 1.5));
+    water.material.roughness = q >= 2 ? .06 : .5; clouds.forEach(c => c.visible = q >= 1); fireflies.visible = q >= 2; leaves.visible = q >= 2; butterflies.forEach(b => b.visible = q >= 1);
+    grass.count = q === 0 ? Math.floor(GRASS / 4) : q === 1 ? Math.floor(GRASS / 2) : GRASS;
+    document.body.classList.toggle('fx', q >= 2); // CSS-Filter auf dem Canvas nur bei hoher Qualität
+    if (!silent) toast('Grafik: ' + ['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][q] + ' · Sichtweite unverändert');
+  }
+  $('quality').onchange = e => applyQuality(+e.target.value);
+  applyQuality(settings.quality, true);
+  // Automatik: bei dauerhaft niedriger Bildrate eine Stufe runter
+  let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0;
+  window.__adapt = (now) => { adaptFrames++; if (now - adaptT < 2000) return; const fps = adaptFrames * 1000 / (now - adaptT); adaptT = now; adaptFrames = 0; if (!hud.classList.contains('on')) return; if (fps < 28 && settings.quality > 0 && now > adaptCooldown) { adaptCooldown = now + 8000; applyQuality(settings.quality - 1, true); toast(`Ruckelt (${Math.round(fps)} FPS) · Grafik automatisch auf „${['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][settings.quality]}" gestellt`); } };
 
   // ---------- Kampf ----------
   V.load();
