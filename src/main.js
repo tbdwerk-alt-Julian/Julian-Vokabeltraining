@@ -912,7 +912,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   }
   $('quality').onchange = e => applyQuality(+e.target.value);
   // Startqualität nach Grafikkarte: integrierte Intel-Grafik → Mittel, Software-Renderer → Niedrig
-  (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__vq.gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Intel|Iris|UHD|Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; } catch (e) { } })();
+  (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Intel|Iris|UHD|Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; } catch (e) { } })();
   applyQuality(settings.quality, true);
   // Automatik: bei dauerhaft niedriger Bildrate eine Stufe runter
   let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0;
