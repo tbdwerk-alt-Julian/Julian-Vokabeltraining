@@ -201,13 +201,29 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // Troll-Höhle mit Gittertor (ab Level 10)
   const gate = new THREE.Group(); gate.userData = { open: false, lift: 0 };
   (function () {
-    const rock = new THREE.MeshStandardMaterial({ color: 0x3f453f, roughness: 1, flatShading: true });
-    const mound = new THREE.Mesh(new THREE.SphereGeometry(CAVE.r, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), rock); mound.scale.y = .55; mound.position.set(CAVE.x, groundY(CAVE.x, CAVE.z) - .3, CAVE.z); mound.castShadow = true; mound.receiveShadow = true; scene.add(mound);
-    for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.5 + Math.random() * .5); const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.8, 2.2), 0), rock); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4 && x < CAVE.x) continue; b.position.set(x, groundY(x, z) + rng(.5, 3), z); b.rotation.set(Math.random(), Math.random(), 0); b.castShadow = true; scene.add(b); }
-    for (let i = 0; i < 40; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.55 + Math.random() * .4); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4 && x < CAVE.x) continue; const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rng(.5, 1.1), 1), mat(0x2f6b3a)); m.position.set(x, groundY(x, z) + .3 + Math.max(0, Math.sqrt(Math.max(0, CAVE.r * CAVE.r - r * r)) * .62 - .3), z); scene.add(m); }
+    // Runder Felshügel: Kugel mit Rauschen verformt, oben Moos (Vertex-Farben), unten Fels
+    const rock = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .95, vertexColors: true });
+    const mg = new THREE.SphereGeometry(CAVE.r, 56, 36, 0, Math.PI * 2, 0, Math.PI / 2);
+    const mp = mg.attributes.position, mcol = [], cRock = new THREE.Color(0x4a4f49), cRock2 = new THREE.Color(0x6a6f66), cMoss = new THREE.Color(0x3f7a3a), cMoss2 = new THREE.Color(0x6fae4a);
+    const nz = (x, y, z) => Math.sin(x * .9) * Math.cos(z * .8) * .5 + Math.sin(x * 2.3 + z * 1.7) * .25 + Math.cos(y * 2.1 + x * .6) * .3;
+    for (let i = 0; i < mp.count; i++) {
+      const x = mp.getX(i), y = mp.getY(i), z = mp.getZ(i); const l = Math.hypot(x, y, z) || 1; const n = nz(x, y, z);
+      const k = 1 + n * .09; mp.setXYZ(i, x * k, y * k * .58, z * k);
+      const h = y / CAVE.r; const t = clamp((h - .35) * 2.2 + n * .3, 0, 1); const c = cRock.clone().lerp(cRock2, Math.max(0, n)).lerp(cMoss.clone().lerp(cMoss2, Math.max(0, n * .8)), t);
+      mcol.push(c.r, c.g, c.b);
+    }
+    mg.setAttribute('color', new THREE.Float32BufferAttribute(mcol, 3)); mg.computeVertexNormals();
+    const mound = new THREE.Mesh(mg, rock); mound.position.set(CAVE.x, groundY(CAVE.x, CAVE.z) - .4, CAVE.z); mound.castShadow = true; mound.receiveShadow = true; scene.add(mound);
+    const rockM = new THREE.MeshStandardMaterial({ color: 0x555b55, roughness: 1 });
+    for (let i = 0; i < 22; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.75 + Math.random() * .35); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.6, 1.8), 1), rockM); b.position.set(x, groundY(x, z) + rng(.2, .8), z); b.rotation.set(Math.random(), Math.random(), Math.random()); b.scale.y = rng(.5, .9); b.castShadow = true; b.receiveShadow = true; scene.add(b); }
+    for (let i = 0; i < 70; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.2 + Math.random() * .75); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const hy = Math.sqrt(Math.max(0, CAVE.r * CAVE.r - r * r)) * .58; const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rng(.35, .9), 1), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(.3 + Math.random() * .05, .5, .32 + Math.random() * .12), roughness: 1 })); m.position.set(x, groundY(CAVE.x, CAVE.z) - .4 + hy + .1, z); m.scale.y = .6; scene.add(m); }
+    // Stalaktiten am Eingang und Steinweg
+    for (let i = 0; i < 7; i++) { const st = new THREE.Mesh(new THREE.ConeGeometry(rng(.15, .35), rng(.6, 1.6), 6), rockM); st.position.set(CAVE.x - CAVE.r + 1.5 + rng(-.5, 2.5), groundY(CAVE.x, CAVE.z) + 5.2, CAVE.z + rng(-3, 3)); st.rotation.x = Math.PI; scene.add(st); }
+    for (let i = 0; i < 12; i++) { const sx = CAVE.x - CAVE.r - 2 - i * 1.6, sz = CAVE.z + Math.sin(i * .9) * .9; const s = new THREE.Mesh(new THREE.CylinderGeometry(rng(.5, .8), rng(.6, .9), .14, 7), new THREE.MeshStandardMaterial({ color: 0x8c8f88, roughness: 1 })); s.position.set(sx, groundY(sx, sz) + .07, sz); s.rotation.y = Math.random() * 3; s.receiveShadow = true; scene.add(s); }
     // Eingang: dunkler Tunnel nach Westen
     const ex = CAVE.x - CAVE.r + 1, ez = CAVE.z;
-    const tunnel = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 7), new THREE.MeshStandardMaterial({ color: 0x07090a, roughness: 1, side: THREE.BackSide })); tunnel.position.set(ex + 6, groundY(ex, ez) + 2.6, ez); scene.add(tunnel);
+    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.6, 13, 18, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.BackSide })); tunnel.rotation.z = Math.PI / 2; tunnel.rotation.y = Math.PI / 2; tunnel.position.set(ex + 6, groundY(ex, ez) + .3, ez); scene.add(tunnel);
+    const back = new THREE.Mesh(new THREE.CircleGeometry(3.6, 18, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.DoubleSide })); back.rotation.y = -Math.PI / 2; back.position.set(ex + 12.5, groundY(ex, ez) + .3, ez); scene.add(back);
     const floor = new THREE.Mesh(new THREE.BoxGeometry(14, .3, 7), new THREE.MeshStandardMaterial({ color: 0x3a3d3a, roughness: 1 })); floor.position.set(ex + 6, groundY(ex, ez) - .02, ez); scene.add(floor);
     const arch = new THREE.Mesh(new THREE.TorusGeometry(3.9, .7, 8, 16, Math.PI), rock); arch.position.set(ex - .2, groundY(ex, ez) + .4, ez); arch.rotation.y = Math.PI / 2; arch.castShadow = true; scene.add(arch);
     for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.5, 1.1), rock); post.position.set(ex - .2, groundY(ex, ez) + 2.7, ez + s * 3.9); post.castShadow = true; scene.add(post); const torch = new THREE.PointLight(0xffa040, 1.8, 12, 2); torch.position.set(ex - 1.2, groundY(ex, ez) + 3.6, ez + s * 3.9); scene.add(torch); const fl = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.copy(torch.position); scene.add(fl); }
@@ -508,7 +524,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     g.scale.setScalar(.95); g.userData = { legs, tail: new THREE.Group(), arms, head, kind: 'grunt', weapon, alive: true }; return g;
   }
   const wolves = [];
-  for (let i = 0; i < 10; i++) { const w = buildGrunt(i === 0 ? 'axe' : ['club', 'axe', 'spear'][i % 3]); if (i === 0) { w.userData.kind = 'alpha'; w.userData.alpha = true; w.scale.setScalar(1.45); w.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x6f8f45) o.material = new THREE.MeshStandardMaterial({ color: 0x4e6b3a, roughness: .85 }); }); const crown = new THREE.Mesh(new THREE.CylinderGeometry(.42, .38, .22, 8, 1, true), metal(0xe6c25a)); crown.position.set(0, 2.42, .1); w.add(crown); } w.userData.hp = i === 0 ? 70 : 36; w.userData.maxHp = w.userData.hp; let x, z; do { x = rng(-100, 100); z = rng(-100, 100); } while (Math.hypot(x, z) < 22 || inWater(x, z)); w.position.set(x, groundY(x, z), z); w.userData.dir = Math.random() * 6; w.userData.t = Math.random() * 5; scene.add(w); wolves.push(w); }
+  for (let i = 0; i < 10; i++) { const w = buildGrunt(i === 0 ? 'axe' : ['club', 'axe', 'spear'][i % 3]); if (i === 0) { w.userData.kind = 'alpha'; w.userData.alpha = true; w.scale.setScalar(1.45); w.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x6f8f45) o.material = new THREE.MeshStandardMaterial({ color: 0x4e6b3a, roughness: .85 }); }); const crown = new THREE.Mesh(new THREE.CylinderGeometry(.42, .38, .22, 8, 1, true), metal(0xe6c25a)); crown.position.set(0, 2.42, .1); w.add(crown); } w.userData.hp = i === 0 ? 110 : 55; w.userData.maxHp = w.userData.hp; let x, z; do { x = rng(-100, 100); z = rng(-100, 100); } while (Math.hypot(x, z) < 22 || inWater(x, z)); w.position.set(x, groundY(x, z), z); w.userData.dir = Math.random() * 6; w.userData.t = Math.random() * 5; scene.add(w); wolves.push(w); }
   const npc = buildNpc(); npc.position.set(-2, groundY(-2, 2), 2); npc.rotation.y = 2.3; scene.add(npc);
 
   const player = new THREE.Group(); scene.add(player);
@@ -595,7 +611,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   function respawn() { $('dead').classList.remove('on'); state.hp = state.maxHp; player.position.set(0, 1.2, 0); heading = Math.PI * .5; if (!state.mounted) { mountFree.position.set(2, 1.2, 3); } hpUI(); show('world'); toast('Wiederbelebt am Lagerfeuer'); }
   function renderAll() { renderHotbar(); renderBag(); hpUI(); $('coins').textContent = state.coins; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
   function hearts(el, n, max) { el.innerHTML = Array.from({ length: max }, (_, i) => `<span class="h ${i < n ? '' : 'off'}">♥</span>`).join(''); }
-  function gainXp(n) { state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); state.hp = state.maxHp; } renderAll(); }
+  function gainXp(n) { if (n > 0) gainSeasonXp(Math.max(1, Math.round(n * .6))); state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); state.hp = state.maxHp; } renderAll(); }
   function addItem(id, n) { const it = ITEMS[id]; if (it.n !== undefined) { it.n += n || 1; const idx = bag.indexOf(id); if (idx < 0 && hotbar.indexOf(id) < 0) { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; } } else { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; else toast('Inventar voll'); } renderAll(); }
 
   // Inventar-3D-Ansicht
@@ -628,7 +644,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Steuerung ----------
   const keys = {}; const hud = $('hud');
-  let uiOpen = () => !$('inventory').hidden || !$('settings').hidden || !$('npc').hidden || !$('station').hidden || !$('pause').hidden || !$('vocabScreen').hidden || !$('newWord').hidden || $('dead').classList.contains('on') || battleOn;
+  let uiOpen = () => !$('inventory').hidden || !$('settings').hidden || !$('npc').hidden || !$('station').hidden || !$('pause').hidden || !$('vocabScreen').hidden || !$('newWord').hidden || !$('season').hidden || $('dead').classList.contains('on') || battleOn;
   // Eingabe-Erkennung: Joystick nur bei Touch, sonst Tastatur/Controller
   let lastInput = ('ontouchstart' in window) ? 'touch' : 'key', padSeen = false;
   function setInput(k) { if (lastInput === k) return; lastInput = k; joy.style.display = k === 'touch' ? '' : 'none'; $('ctrlHint').textContent = k === 'pad' ? 'Controller: Stick laufen · A Rolle · B auf/absteigen · X benutzen · Y Inventar' : k === 'key' ? 'W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar · Esc Pause' : 'Joystick laufen · Knöpfe rechts'; if (k === 'pad') toast('Controller erkannt'); if (k === 'key') toast('Tastatur erkannt · Joystick ausgeblendet'); }
@@ -643,7 +659,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (e.key.toLowerCase() === 'e' && !uiOpen()) interact();
     if (e.key.toLowerCase() === 'i') { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; }
     if (e.key.toLowerCase() === 'v' && !battleOn) { if ($('vocabScreen').hidden) openVocab(); else $('vocabScreen').hidden = true; }
-    if (e.key === 'Escape') { if (!$('settings').hidden || !$('inventory').hidden || !$('npc').hidden || !$('vocabScreen').hidden) { $('settings').hidden = true; $('inventory').hidden = true; $('npc').hidden = true; $('vocabScreen').hidden = true; } else $('pause').hidden = !$('pause').hidden; }
+    if (e.key === 'Escape') { if (!$('settings').hidden || !$('inventory').hidden || !$('npc').hidden || !$('vocabScreen').hidden || !$('season').hidden) { $('settings').hidden = true; $('inventory').hidden = true; $('npc').hidden = true; $('vocabScreen').hidden = true; $('season').hidden = true; } else $('pause').hidden = !$('pause').hidden; }
     if (/^[1-9]$/.test(e.key)) selectHot(+e.key - 1);
   });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
@@ -748,7 +764,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (gate.userData.open && gate.userData.lift < 4.6) { gate.userData.lift = Math.min(4.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
-    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); if (inWorld && d < 14 && d > 2.5) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.5) { const nx = w.position.x + Math.sin(w.userData.dir) * dt * 2.2, nz = w.position.z + Math.cos(w.userData.dir) * dt * 2.2; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 2.8 && w.userData.atk <= 0) { w.userData.atk = 1.3; const dm = w.userData.alpha ? 9 : w.userData.weapon === 'axe' ? 8 : w.userData.weapon === 'spear' ? 6 : 5; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
+    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const hunting = inWorld && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.1; const dm = w.userData.alpha ? 16 : w.userData.weapon === 'axe' ? 12 : w.userData.weapon === 'spear' ? 9 : 8; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > 420) c.position.x = -420; });
     for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true;
     const fpos = fireflies.geometry.attributes.position; for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = .5 + Math.sin(clock.t * 4) * .3;
@@ -792,7 +808,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     const w = stage.clientWidth, h = stage.clientHeight;
     const show = (obj, name, hp, max, cls) => { let el = obj.userData.label; if (!el) { el = document.createElement('div'); el.className = 'lbl ' + (cls || ''); el.innerHTML = `<div class="n"></div><div class="b"><i></i></div>`; labels.appendChild(el); obj.userData.label = el; } v3.set(obj.position.x, obj.position.y + (obj.userData.alpha ? 3.6 : 2.7), obj.position.z).project(camera); const vis = v3.z < 1 && obj.visible && obj.position.distanceTo(player.position) < 32; el.style.display = vis ? 'block' : 'none'; if (vis) { el.style.left = ((v3.x + 1) / 2 * w) + 'px'; el.style.top = ((1 - v3.y) / 2 * h) + 'px'; el.querySelector('.n').textContent = name; el.querySelector('i').style.width = (hp / max * 100) + '%'; } };
     wolves.forEach(x => show(x, x.userData.alpha ? 'Troll-Häuptling · Lvl 5' : 'Troll-Krieger · Lvl 2', x.userData.hp, x.userData.maxHp, x.userData.alpha ? 'boss' : ''));
-    show(troll, 'Waldtroll · Boss · Lvl 10', troll.userData.hp === undefined ? 120 : troll.userData.hp, 120, 'boss');
+    show(troll, 'Waldtroll · Boss · Lvl 10', troll.userData.hp === undefined ? 160 : troll.userData.hp, 160, 'boss');
     const nl = npc.userData.label || (npc.userData.label = (() => { const el = document.createElement('div'); el.className = 'lbl npc'; el.innerHTML = '<div class="n">Bram · Quests</div>'; labels.appendChild(el); return el; })()); v3.set(npc.position.x, npc.position.y + 3.2, npc.position.z).project(camera); const nv = v3.z < 1 && npc.position.distanceTo(player.position) < 25; nl.style.display = nv ? 'block' : 'none'; if (nv) { nl.style.left = ((v3.x + 1) / 2 * w) + 'px'; nl.style.top = ((1 - v3.y) / 2 * h) + 'px'; }
   }
 
@@ -805,7 +821,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Speichern / Laden ----------
   function saveGame() {
-    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
     return writeSave(d);
   }
   function applySave(d) {
@@ -825,6 +841,30 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   let autosaveT = 0; function autosave() { const n = Date.now(); if (n - autosaveT > 15000 && hud.classList.contains('on')) { autosaveT = n; saveGame(); } }
   setInterval(() => { if (hud.classList.contains('on') && !uiOpen()) saveGame(); }, 30000);
   (function () { const d = loadSave(); if (d) { $('continueGame').hidden = false; $('continueGame').textContent = `Weiter spielen · ${d.name} · Level ${d.state ? d.state.level : 1}`; $('startHint').textContent = 'Zuletzt gespeichert: ' + fmtTime(d.savedAt); } })();
+
+  // ---------- Saison-Pass (kostenlos, alle 4 Wochen, 30 Stufen) ----------
+  const SEASONS = [{ name: 'Herbstwald', icon: '🍂' }, { name: 'Eiswinter', icon: '❄️' }, { name: 'Kirschblüte', icon: '🌸' }, { name: 'Sommersee', icon: '☀️' }];
+  const SEASON_ANCHOR = Date.UTC(2026, 9, 26), SEASON_LEN = 28 * 86400000, TIER_XP = 120, TIERS = 30;
+  function seasonInfo() { const idx = Math.max(0, Math.floor((Date.now() - SEASON_ANCHOR) / SEASON_LEN)); const s = SEASONS[idx % SEASONS.length]; return { id: idx, name: s.name, icon: s.icon, ends: SEASON_ANCHOR + (idx + 1) * SEASON_LEN, daysLeft: Math.max(0, Math.ceil((SEASON_ANCHOR + (idx + 1) * SEASON_LEN - Date.now()) / 86400000)) }; }
+  function tierReward(t) { if (t === 30) return { item: 'seasonSkin', label: 'Saison-Skin' }; if (t % 10 === 0) return { item: ['helmI', 'chestI', 'bootsI'][t / 10 - 1], label: ITEMS[['helmI', 'chestI', 'bootsI'][t / 10 - 1]].name }; if (t === 25) return { item: 'hammer', label: 'Trollhammer' }; if (t === 15) return { item: 'phoenix', label: 'Phönix-Trank' }; if (t % 5 === 0) return { item: 'bigheal', label: 'Großer Heiltrank' }; if (t % 3 === 0) return { item: 'heal', label: 'Heiltrank' }; if (t % 4 === 0) return { item: 'stam', label: 'Ausdauer-Trank' }; return { coins: 20 + t * 8, label: (20 + t * 8) + ' Münzen' }; }
+  ITEMS.seasonSkin = { icon: '✨', name: 'Saison-Skin ' + seasonInfo().name, type: 'misc', r: 'gold' };
+  ICON.seasonSkin = S(`<path d="M16 3l3 8 8 1-6 6 2 9-7-4-7 4 2-9-6-6 8-1z" fill="#ffd166"/><path d="M16 9l1.5 4 4 .5-3 3 1 4.5-3.5-2-3.5 2 1-4.5-3-3 4-.5z" fill="#fff4c2"/>`);
+  if (!state.season) state.season = { id: seasonInfo().id, xp: 0, claimed: 0 };
+  function seasonTier() { return Math.min(TIERS, Math.floor(state.season.xp / TIER_XP)); }
+  function checkSeason() { const info = seasonInfo(); if (state.season.id !== info.id) { state.season = { id: info.id, xp: 0, claimed: 0 }; toast('Neue Saison: ' + info.icon + ' ' + info.name); } }
+  function gainSeasonXp(n) {
+    checkSeason(); state.season.xp += n; const t = seasonTier();
+    while (state.season.claimed < t) { state.season.claimed++; const r = tierReward(state.season.claimed); if (r.coins) state.coins += r.coins; else addItem(r.item); toast(`🎫 Saison-Pass Stufe ${state.season.claimed}: ${r.label}`); }
+    if (!$('season').hidden) renderSeason();
+  }
+  function openSeason() { checkSeason(); $('season').hidden = false; renderSeason(); }
+  function renderSeason() {
+    const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP;
+    $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · noch ${info.daysLeft} Tage · kostenlos, nur durch Lernen`;
+    $('seasonBar').style.width = (t >= TIERS ? 100 : into / TIER_XP * 100) + '%'; $('seasonNext').textContent = t >= TIERS ? 'Alle Stufen erreicht!' : `${into} / ${TIER_XP} XP bis Stufe ${t + 1}`;
+    $('seasonGrid').innerHTML = Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n === t + 1 ? 'next' : 'lock'; return `<div class="tier ${st}"><small>${n}</small><div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><span>${r.label}</span></div>`; }).join('');
+  }
+  $('seasonBtn').onclick = openSeason; $('pSeason').onclick = () => { $('pause').hidden = true; openSeason(); }; $('closeSeason').onclick = () => $('season').hidden = true;
 
   // ---------- Vokabel-Menü ----------
   function openVocab() { $('vocabScreen').hidden = false; renderVocab(); }
@@ -869,7 +909,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     $('nwOk').onclick = () => { $('newWord').hidden = true; cb(); };
   }
   let bossHp, bossMax, phase, combo, cur, timerId, timeLeft, battleOn = false, foe = null, foeObj = null;
-  const FOES = { grunt: { name: 'Troll-Krieger', eyebrow: 'Gegner · Wald', hp: 36, xp: 22, coins: 9, phases: 1 }, alpha: { name: 'Troll-Häuptling', eyebrow: 'Mini-Boss · Wald', hp: 70, xp: 60, coins: 25, phases: 2 }, troll: { name: 'Waldtroll', eyebrow: 'Boss · Wald', hp: 120, xp: 200, coins: 60, phases: 2 } };
+  const FOES = { grunt: { name: 'Troll-Krieger', eyebrow: 'Gegner · Wald', hp: 55, xp: 30, coins: 12, phases: 1 }, alpha: { name: 'Troll-Häuptling', eyebrow: 'Mini-Boss · Wald', hp: 110, xp: 90, coins: 40, phases: 2 }, troll: { name: 'Waldtroll', eyebrow: 'Boss · Wald', hp: 160, xp: 250, coins: 80, phases: 2 } };
   function lev(a, b) { const m = []; for (let i = 0; i <= a.length; i++) m[i] = [i]; for (let j = 0; j <= b.length; j++) m[0][j] = j; for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return m[a.length][b.length]; }
   function nextWord() {
     cur = V.pick(1)[0]; if (!cur) { toast('Keine Vokabeln – erst unter 📚 Vokabeln eintragen'); endBattle(); show('world'); return; }
@@ -885,7 +925,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   function endBattle() { battleOn = false; clearInterval(timerId); }
   function hit(kind, msg, dmg) {
     const fb = $('feedback'); fb.className = 'feedback ' + kind; fb.textContent = msg;
-    if (kind === 'bad') { combo = 0; damage(foe === FOES.troll ? 22 : foe === FOES.alpha ? 16 : 10); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
+    if (kind === 'bad') { combo = 0; damage(foe === FOES.troll ? 28 : foe === FOES.alpha ? 20 : 14); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
     else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10); bossHp = Math.max(0, bossHp - Math.round(dmg * mult)); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; }
     $('bcombo').textContent = combo; $('combo').textContent = combo;
     if (foe.phases > 1 && bossHp <= bossMax / 2 && phase === 1) { phase = 2; $('phase').textContent = 'Phase 2 · Wütend'; $('bossHp').style.background = 'linear-gradient(90deg,#ff3d3d,#8a0f2a)'; if (foe === FOES.troll) troll.userData.body.material.color.setHex(0x8a2f2f); toast(foe.name + ' wird wütend – stärker, anderes Aussehen!'); }
@@ -894,7 +934,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   }
   function win() {
     gainXp(foe.xp); state.coins += foe.coins; let extra = '';
-    if (foe === FOES.troll) { troll.userData.hp = 120; addItem('tooth'); progress('troll'); if (Math.random() < 1 / 3) { addItem('hammer'); extra = ' · Drop: Trollhammer!'; } else extra = ' · kein Drop (1 von 3)'; $('winTitle').innerHTML = 'Waldtroll <span>gefallen</span>'; $('winText').innerHTML = 'Trophäe: <b>Trollzahn</b> 🦷' + extra; }
+    if (foe === FOES.troll) { troll.userData.hp = 160; addItem('tooth'); progress('troll'); if (Math.random() < 1 / 3) { addItem('hammer'); extra = ' · Drop: Trollhammer!'; } else extra = ' · kein Drop (1 von 3)'; $('winTitle').innerHTML = 'Waldtroll <span>gefallen</span>'; $('winText').innerHTML = 'Trophäe: <b>Trollzahn</b> 🦷' + extra; }
     else { if (foeObj) { const fo = foeObj; fo.userData.alive = false; if (fo.userData.inst) { fo.userData.inst.play('Death', .1, false); setTimeout(() => { fo.visible = false; }, 1400); } else fo.visible = false; if (fo.userData.label) fo.userData.label.style.display = 'none'; setTimeout(() => { fo.userData.alive = true; fo.visible = true; fo.userData.hp = fo.userData.maxHp; }, 300000); } addItem('pelt'); if (foe === FOES.alpha) progress('alpha'); else progress('wolves'); $('winTitle').innerHTML = foe.name + ' <span>besiegt</span>'; $('winText').innerHTML = 'Trollfell erhalten · Gegner kommt in 5 Min wieder'; }
     $('winSub').textContent = `+${foe.xp} XP · +${foe.coins} 🪙`; renderAll(); setTimeout(() => show('win'), 600);
   }
@@ -917,7 +957,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   let secs = 0; setInterval(() => { if (!hud.classList.contains('on')) return; secs = Math.min(900, secs + 1); const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0'); $('ring').style.setProperty('--p', (secs / 900 * 100) + '%'); $('ring').querySelector('span').textContent = m + ':' + s; if (secs === 900) toast('Login-Tag gezählt! +Tagesbonus'); }, 1000);
 
   renderAll(); updateTracker(); show('start');
-  window.__vq = { renderer, scene, state, settings }; // Diagnose in der Browser-Konsole
+  window.__vq = { renderer, scene, state, settings, player, gainXp }; // Diagnose in der Browser-Konsole
 
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
   const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', horse: '/models/animals/Horse.glb' };
@@ -943,8 +983,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const _setMount = setMount; setMount = function (kind) { if (kind === 'horse' && gl.horse) { const wasIn = mountMesh.parent; wasIn.remove(mountMesh); mountMesh = buildHorse(); wasIn.add(mountMesh); if (state.mounted) setRiding(); } else _setMount(kind); };
   // Gegner und Boss
   function dressEnemies() {
-    wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? .62 : .42); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
-    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.05); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+    wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? .9 : .62); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
+    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.35); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
     if (gl.barbarian && !npc.userData.inst) { npc.children.forEach(c => { if (c !== npc.userData.marker) c.visible = false; }); const inst = instance(gl.barbarian); inst.obj.scale.setScalar(.75); inst.obj.rotation.y = Math.PI; npc.add(inst.obj); npc.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
   }
   Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
