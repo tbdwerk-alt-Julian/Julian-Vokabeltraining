@@ -204,7 +204,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     // Runder Felshügel: Kugel mit Rauschen verformt, oben Moos (Vertex-Farben), unten Fels
     const rock = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .95, vertexColors: true });
     const mg = new THREE.SphereGeometry(CAVE.r, 56, 36, 0, Math.PI * 2, 0, Math.PI / 2);
-    const mp = mg.attributes.position, mcol = [], cRock = new THREE.Color(0x4a4f49), cRock2 = new THREE.Color(0x6a6f66), cMoss = new THREE.Color(0x3f7a3a), cMoss2 = new THREE.Color(0x6fae4a);
+    const mp = mg.attributes.position, mcol = [], cRock = new THREE.Color(0x2e332c), cRock2 = new THREE.Color(0x4a4f45), cMoss = new THREE.Color(0x2f6a2c), cMoss2 = new THREE.Color(0x5a9a3c);
     const nz = (x, y, z) => Math.sin(x * .9) * Math.cos(z * .8) * .5 + Math.sin(x * 2.3 + z * 1.7) * .25 + Math.cos(y * 2.1 + x * .6) * .3;
     for (let i = 0; i < mp.count; i++) {
       const x = mp.getX(i), y = mp.getY(i), z = mp.getZ(i); const l = Math.hypot(x, y, z) || 1; const n = nz(x, y, z);
@@ -214,12 +214,12 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     }
     mg.setAttribute('color', new THREE.Float32BufferAttribute(mcol, 3)); mg.computeVertexNormals();
     const mound = new THREE.Mesh(mg, rock); mound.position.set(CAVE.x, groundY(CAVE.x, CAVE.z) - .4, CAVE.z); mound.castShadow = true; mound.receiveShadow = true; scene.add(mound);
-    const rockM = new THREE.MeshStandardMaterial({ color: 0x555b55, roughness: 1 });
+    const rockM = new THREE.MeshStandardMaterial({ color: 0x33382f, roughness: 1 });
     for (let i = 0; i < 22; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.75 + Math.random() * .35); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.6, 1.8), 1), rockM); b.position.set(x, groundY(x, z) + rng(.2, .8), z); b.rotation.set(Math.random(), Math.random(), Math.random()); b.scale.y = rng(.5, .9); b.castShadow = true; b.receiveShadow = true; scene.add(b); }
     for (let i = 0; i < 70; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.2 + Math.random() * .75); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const hy = Math.sqrt(Math.max(0, CAVE.r * CAVE.r - r * r)) * .58; const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rng(.35, .9), 1), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(.3 + Math.random() * .05, .5, .32 + Math.random() * .12), roughness: 1 })); m.position.set(x, groundY(CAVE.x, CAVE.z) - .4 + hy + .1, z); m.scale.y = .6; scene.add(m); }
     // Stalaktiten am Eingang und Steinweg
     for (let i = 0; i < 7; i++) { const st = new THREE.Mesh(new THREE.ConeGeometry(rng(.15, .35), rng(.6, 1.6), 6), rockM); st.position.set(CAVE.x - CAVE.r + 1.5 + rng(-.5, 2.5), groundY(CAVE.x, CAVE.z) + 5.2, CAVE.z + rng(-3, 3)); st.rotation.x = Math.PI; scene.add(st); }
-    for (let i = 0; i < 12; i++) { const sx = CAVE.x - CAVE.r - 2 - i * 1.6, sz = CAVE.z + Math.sin(i * .9) * .9; const s = new THREE.Mesh(new THREE.CylinderGeometry(rng(.5, .8), rng(.6, .9), .14, 7), new THREE.MeshStandardMaterial({ color: 0x8c8f88, roughness: 1 })); s.position.set(sx, groundY(sx, sz) + .07, sz); s.rotation.y = Math.random() * 3; s.receiveShadow = true; scene.add(s); }
+    for (let i = 0; i < 12; i++) { const sx = CAVE.x - CAVE.r - 2 - i * 1.6, sz = CAVE.z + Math.sin(i * .9) * .9; const s = new THREE.Mesh(new THREE.CylinderGeometry(rng(.4, .6), rng(.5, .7), .12, 7), new THREE.MeshStandardMaterial({ color: 0x5c605a, roughness: 1 })); s.position.set(sx, groundY(sx, sz) + .07, sz); s.rotation.y = Math.random() * 3; s.receiveShadow = true; scene.add(s); }
     // Eingang: dunkler Tunnel nach Westen
     const ex = CAVE.x - CAVE.r + 1, ez = CAVE.z;
     const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.6, 13, 18, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.BackSide })); tunnel.rotation.z = Math.PI / 2; tunnel.rotation.y = Math.PI / 2; tunnel.position.set(ex + 6, groundY(ex, ez) + .3, ez); scene.add(tunnel);

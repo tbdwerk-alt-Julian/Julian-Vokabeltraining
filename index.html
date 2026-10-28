@@ -535,6 +535,6 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 
 <script type="module" src="/src/main.js"></script>
-<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }</script>
+<script>if ('serviceWorker' in navigator && !/Electron/i.test(navigator.userAgent)) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }</script>
 </body>
 </html>
