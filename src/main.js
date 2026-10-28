@@ -705,7 +705,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now; clock.t += dt;
     anims.forEach(a => a.update(dt));
     if (window.__adapt) window.__adapt(now);
-    frames++; if (now - fpsT > 500) { if (settings.showFps) $('fpsBox').textContent = Math.round(frames * 1000 / (now - fpsT)) + ' FPS'; frames = 0; fpsT = now; }
+    frames++; if (now - fpsT > 500) { window.__fpsNow = Math.round(frames * 1000 / (now - fpsT)); if (settings.showFps) $('fpsBox').textContent = window.__fpsNow + ' FPS'; frames = 0; fpsT = now; }
     if (grassMat.userData.u) grassMat.userData.u.value = clock.t;
     const inWorld = hud.classList.contains('on') && !uiOpen();
     const pad = inWorld ? pollPad() : null;
@@ -903,7 +903,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   $('fps').onchange = e => settings.fps = +e.target.value; $('showFps').onchange = e => { settings.showFps = +e.target.value; $('fpsBox').style.display = settings.showFps ? 'block' : 'none'; };
   function applyQuality(q, silent) {
     settings.quality = q; $('quality').value = String(q);
-    renderer.shadowMap.enabled = q >= 1; sun.castShadow = q >= 1; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+    renderer.shadowMap.enabled = q >= 2; sun.castShadow = q >= 2; sun.shadow.mapSize.set(q >= 3 ? 4096 : q === 2 ? 2048 : 1024, q >= 3 ? 4096 : q === 2 ? 2048 : 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
     renderer.setPixelRatio(q === 0 ? .5 : q === 1 ? .8 : q === 2 ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 1.5));
     water.material.roughness = q >= 2 ? .06 : .5; clouds.forEach(c => c.visible = q >= 1); fireflies.visible = q >= 2; leaves.visible = q >= 2; butterflies.forEach(b => b.visible = q >= 1);
     grass.count = q === 0 ? Math.floor(GRASS / 8) : q === 1 ? Math.floor(GRASS / 2) : GRASS; scene.fog.density = q === 0 ? .0075 : .0042;
@@ -977,6 +977,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   renderAll(); updateTracker(); show('start');
   window.__vq = { renderer, scene, state, settings, player, gainXp }; // Diagnose in der Browser-Konsole
+  // Dev: Bildrate an den Dev-Server melden (perf.log), damit Ruckler auf fremden Geräten sichtbar werden
+  if (import.meta.env && import.meta.env.DEV) setInterval(() => { if (!hud.classList.contains('on') || !window.__fpsNow) return; const i = renderer.info.render; fetch('/__fps', { method: 'POST', body: JSON.stringify({ fps: window.__fpsNow, q: settings.quality, pr: renderer.getPixelRatio(), calls: i.calls, tris: i.triangles, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: (window.__gpu || '').slice(0, 60), ua: navigator.userAgent.slice(-40) }) }).catch(() => { }); }, 5000);
 
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
   const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', horse: '/models/animals/Horse.glb' };
