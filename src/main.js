@@ -1,14 +1,16 @@
 import * as THREE from 'three';
+import { loadModel, instance, size as modelSize } from './assets.js';
 
 (function () {
   const $ = id => document.getElementById(id);
   const rng = (a, b) => a + Math.random() * (b - a);
+  const anims = new Set(); let heroInst = null, invInst = null; // animierte GLTF-Instanzen
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- Spielzustand ----------
   const state = { level: 1, xp: 0, xpNeed: 100, hp: 100, maxHp: 100, hearts: 5, maxHearts: 5, coins: 0, stamina: 100, air: 100, mounted: true, charIdx: 0, name: 'Held', hot: 0, quests: { wolves: 0, chest: false, accepted: {} }, wolvesKilled: 0 };
   const settings = { sens: 1, camDist: 8.5, joy: 120, invert: 0, quality: 3, fps: 0, showFps: 0 };
-  const prefs = { kurs: 'E', modus: 'S', tier: 'tiger' };
+  const prefs = { kurs: 'E', modus: 'S', tier: 'horse' };
   const CHARS = [
     { name: 'Kai', hair: 0x2a1a12, cloth: 0x2d6fd6, cloth2: 0x1f2a44, cape: 0x8b1f3a, style: 'spiky' },
     { name: 'Lena', hair: 0xf0d070, cloth: 0x7a4fd6, cloth2: 0x2a2440, cape: 0x1f8a4c, style: 'pony' },
@@ -567,7 +569,7 @@ import * as THREE from 'three';
     invScene.add(new THREE.HemisphereLight(0xffffff, 0x334433, 1.1)); const k = new THREE.DirectionalLight(0xfff0d0, 1.4); k.position.set(2, 4, 3); invScene.add(k); const rim = new THREE.DirectionalLight(0x7cff9b, 1); rim.position.set(-3, 2, -3); invScene.add(rim);
     const disc = new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, .08, 32), new THREE.MeshStandardMaterial({ color: 0x1b3a2a, emissive: 0x7cff9b, emissiveIntensity: .15 })); disc.position.y = -.04; invScene.add(disc);
   }
-  function renderInv() { if ($('inventory').hidden) return; const cv = $('invView'); const w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== w * invRenderer.getPixelRatio()) { invRenderer.setSize(w, h, false); invCam.aspect = w / h; invCam.updateProjectionMatrix(); } if (invHero) { invHero.rotation.y += .01; invHero.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05; } invRenderer.render(invScene, invCam); }
+  function renderInv() { if ($('inventory').hidden) return; const cv = $('invView'); const w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== w * invRenderer.getPixelRatio()) { invRenderer.setSize(w, h, false); invCam.aspect = w / h; invCam.updateProjectionMatrix(); } if (invHero) { invHero.rotation.y += .01; invHero.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05; } if (invInst) invInst.obj.rotation.y += .01; invRenderer.render(invScene, invCam); }
   function openInv() { initInv(); if (invHero) invScene.remove(invHero); invHero = buildHero(CHARS[state.charIdx]); applyGear(invHero); invScene.add(invHero); $('invName').textContent = state.name; stats(); renderBag(); $('inventory').hidden = false; }
 
   // ---------- Quests ----------
@@ -645,6 +647,7 @@ import * as THREE from 'three';
     requestAnimationFrame(loop);
     if (settings.fps && now - lastFrame < 1000 / settings.fps - 1) return; lastFrame = now;
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now; clock.t += dt;
+    anims.forEach(a => a.update(dt));
     frames++; if (now - fpsT > 500) { if (settings.showFps) $('fpsBox').textContent = Math.round(frames * 1000 / (now - fpsT)) + ' FPS'; frames = 0; fpsT = now; }
     if (grassMat.userData.u) grassMat.userData.u.value = clock.t;
     const inWorld = hud.classList.contains('on') && !uiOpen();
@@ -672,6 +675,14 @@ import * as THREE from 'three';
       if (Math.hypot(px - grassCenter.x, pz - grassCenter.z) > GR * .55) placeGrass(px, pz);
     }
     if (rolling > 0) rolling -= dt;
+    // Animationen der GLTF-Figuren
+    if (heroInst) {
+      if (state.mounted) heroInst.play(swimming ? 'Sit_Floor_Idle' : 'Sit_Chair_Idle');
+      else if (rolling > 0) heroInst.play('Dodge_Forward', .1);
+      else if (swimming) { heroInst.play(moving ? 'Walking_A' : 'Lie_Idle'); heroInst.obj.rotation.x = 1.2; heroInst.obj.position.y = .3; }
+      else { heroInst.obj.rotation.x = 0; heroInst.obj.position.y = 0; heroInst.play(moving ? (fwd < 0 ? 'Walking_Backwards' : 'Running_A') : 'Idle'); }
+    }
+    if (mountMesh.userData.inst) { const a = mountMesh.userData.inst.action; if (a) { a.paused = !(moving || swimming); a.timeScale = swimming ? .5 : 1; } }
     const gy = groundY(player.position.x, player.position.z);
     const targetY = swimming ? WATER_Y - (state.mounted ? .75 : .95) + Math.sin(clock.t * 2) * .06 : (onBridge(player.position.x, player.position.z) ? 1.75 : gy) + (rolling > 0 ? Math.sin(rolling / .45 * Math.PI) * .7 : 0);
     player.position.y += (targetY - player.position.y) * Math.min(1, dt * 10);
@@ -696,7 +707,7 @@ import * as THREE from 'three';
     const spPos = smoke.geometry.attributes.position; for (let i = 0; i < spPos.count; i++) { let y = spPos.getY(i) + dt * 1.2; if (y > 7) y = 2; spPos.setY(i, y); spPos.setX(i, 3 + Math.sin(clock.t * 2 + i) * .35 * (y - 2) * .3); } spPos.needsUpdate = true;
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
-    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); if (inWorld && d < 14 && d > 2.5) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.5) { const nx = w.position.x + Math.sin(w.userData.dir) * dt * 2.2, nz = w.position.z + Math.cos(w.userData.dir) * dt * 2.2; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 2.8 && w.userData.atk <= 0) { w.userData.atk = 1.3; const dm = w.userData.alpha ? 9 : w.userData.weapon === 'axe' ? 8 : w.userData.weapon === 'spear' ? 6 : 5; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
+    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); if (inWorld && d < 14 && d > 2.5) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.5) { const nx = w.position.x + Math.sin(w.userData.dir) * dt * 2.2, nz = w.position.z + Math.cos(w.userData.dir) * dt * 2.2; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 2.8 && w.userData.atk <= 0) { w.userData.atk = 1.3; const dm = w.userData.alpha ? 9 : w.userData.weapon === 'axe' ? 8 : w.userData.weapon === 'spear' ? 6 : 5; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > 420) c.position.x = -420; });
     for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true;
     const fpos = fireflies.geometry.attributes.position; for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = .5 + Math.sin(clock.t * 4) * .3;
@@ -791,7 +802,7 @@ import * as THREE from 'three';
   function win() {
     gainXp(foe.xp); state.coins += foe.coins; let extra = '';
     if (foe === FOES.troll) { troll.userData.hp = 120; addItem('tooth'); progress('troll'); if (Math.random() < 1 / 3) { addItem('hammer'); extra = ' · Drop: Trollhammer!'; } else extra = ' · kein Drop (1 von 3)'; $('winTitle').innerHTML = 'Waldtroll <span>gefallen</span>'; $('winText').innerHTML = 'Trophäe: <b>Trollzahn</b> 🦷' + extra; }
-    else { if (foeObj) { const fo = foeObj; fo.userData.alive = false; fo.visible = false; if (fo.userData.label) fo.userData.label.style.display = 'none'; setTimeout(() => { fo.userData.alive = true; fo.visible = true; fo.userData.hp = fo.userData.maxHp; }, 300000); } addItem('pelt'); if (foe === FOES.alpha) progress('alpha'); else progress('wolves'); $('winTitle').innerHTML = foe.name + ' <span>besiegt</span>'; $('winText').innerHTML = 'Trollfell erhalten · Gegner kommt in 5 Min wieder'; }
+    else { if (foeObj) { const fo = foeObj; fo.userData.alive = false; if (fo.userData.inst) { fo.userData.inst.play('Death', .1, false); setTimeout(() => { fo.visible = false; }, 1400); } else fo.visible = false; if (fo.userData.label) fo.userData.label.style.display = 'none'; setTimeout(() => { fo.userData.alive = true; fo.visible = true; fo.userData.hp = fo.userData.maxHp; }, 300000); } addItem('pelt'); if (foe === FOES.alpha) progress('alpha'); else progress('wolves'); $('winTitle').innerHTML = foe.name + ' <span>besiegt</span>'; $('winText').innerHTML = 'Trollfell erhalten · Gegner kommt in 5 Min wieder'; }
     $('winSub').textContent = `+${foe.xp} XP · +${foe.coins} 🪙`; renderAll(); setTimeout(() => show('win'), 600);
   }
   $('answerForm').addEventListener('submit', e => { e.preventDefault(); if (!battleOn) return; clearInterval(timerId); const a = $('answer').value.trim().toLowerCase(), target = cur[1]; if (a === target) hit('crit', '💥 Kritischer Treffer! Perfekt geschrieben · 2× Schaden', 20); else if (a && lev(a, target) <= 2) { if (prefs.kurs === 'E' && prefs.modus === 'H') hit('bad', `Schreibfehler zählt als falsch · richtig: ${target}`); else hit('soft', `Fast: „${a}" → richtig: ${target} · normaler Schaden`, 10); } else hit('bad', `Falsch · richtig: ${target}`); });
@@ -810,4 +821,34 @@ import * as THREE from 'three';
   let secs = 0; setInterval(() => { if (!hud.classList.contains('on')) return; secs = Math.min(900, secs + 1); const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0'); $('ring').style.setProperty('--p', (secs / 900 * 100) + '%'); $('ring').querySelector('span').textContent = m + ':' + s; if (secs === 900) toast('Login-Tag gezählt! +Tagesbonus'); }, 1000);
 
   renderAll(); updateTracker(); show('start');
+
+  // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
+  const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', horse: '/models/animals/Horse.glb' };
+  const HERO_MODEL = ['knight', 'rogue', 'mage'];
+  const gl = {};
+  function heroModelKey() { return HERO_MODEL[state.charIdx] || 'knight'; }
+  // Held
+  function setHeroModel() {
+    const key = heroModelKey(); if (!gl[key]) return;
+    if (heroInst) { player.remove(heroInst.obj); }
+    heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.75); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero();
+  }
+  function placeHero() { if (!heroInst) return; if (state.mounted) { heroInst.obj.position.set(0, mountMesh.userData.seatY - .5, .05); heroInst.obj.rotation.set(0, 0, 0); heroInst.play('Sit_Chair_Idle'); } else { heroInst.obj.position.set(0, 0, 0); heroInst.obj.rotation.set(0, 0, 0); } }
+  const _rebuildHero = rebuildHero; rebuildHero = function () { _rebuildHero(); setHeroModel(); };
+  const _setRiding = setRiding, _setWalking = setWalking; setRiding = function () { _setRiding(); placeHero(); }; setWalking = function () { _setWalking(); placeHero(); };
+  // Inventar-Ansicht
+  const _openInv = openInv; openInv = function () { _openInv(); const key = heroModelKey(); if (!gl[key]) return; if (invInst) { invScene.remove(invInst.obj); anims.delete(invInst); } invInst = instance(gl[key]); invInst.obj.scale.setScalar(.75); invScene.add(invInst.obj); anims.add(invInst); invInst.play('Idle'); if (invHero) invHero.visible = false; };
+  // Pferd als Reittier
+  function buildHorse() {
+    const g = new THREE.Group(); const inst = instance(gl.horse); inst.obj.scale.setScalar(.011); inst.obj.rotation.y = 0; inst.obj.position.y = 0; g.add(inst.obj); anims.add(inst); inst.play('horse_A_'); inst.action.paused = true;
+    g.userData = { legs: [], tail: new THREE.Group(), head: new THREE.Group(), seatY: 1.75, landSpeed: 12, waterSpeed: 3.5, inst }; return g;
+  }
+  const _setMount = setMount; setMount = function (kind) { if (kind === 'horse' && gl.horse) { const wasIn = mountMesh.parent; wasIn.remove(mountMesh); mountMesh = buildHorse(); wasIn.add(mountMesh); if (state.mounted) setRiding(); } else _setMount(kind); };
+  // Gegner und Boss
+  function dressEnemies() {
+    wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? .62 : .42); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
+    if (gl.demon && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.demon); inst.obj.scale.setScalar(1.35); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+    if (gl.barbarian && !npc.userData.inst) { npc.children.forEach(c => { if (c !== npc.userData.marker) c.visible = false; }); const inst = instance(gl.barbarian); inst.obj.scale.setScalar(.75); inst.obj.rotation.y = Math.PI; npc.add(inst.obj); npc.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+  }
+  Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
 })();
