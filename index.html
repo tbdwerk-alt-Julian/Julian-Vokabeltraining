@@ -172,7 +172,24 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
 .deadwhy { color: #8a3a44; font-family: var(--display); letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
 body.fx #stage canvas { filter: saturate(1.12) contrast(1.06); }
 #pause .card { text-align: center; }
-.tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; max-height: 46vh; overflow: auto; }
+.tiers { overflow-x: auto; overflow-y: hidden; padding: 8px 0 12px; }
+.road { position: relative; display: flex; gap: 0; min-width: max-content; height: 220px; align-items: flex-start; padding: 0 30px; }
+.road-line { position: absolute; left: 30px; right: 30px; top: 108px; height: 14px; border-radius: 99px; background: repeating-linear-gradient(90deg, #5a4a33 0 26px, #3b2f22 26px 40px); box-shadow: 0 4px 12px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.08); }
+.road-line::after { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: repeating-linear-gradient(90deg, #e6c25a 0 14px, transparent 14px 28px); opacity: .7; }
+.stop { position: relative; width: 96px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted); text-align: center; padding-top: calc(70px + (var(--i) % 2) * 0px); }
+.stop:nth-child(odd) { padding-top: 22px; } .stop:nth-child(even) { padding-top: 118px; }
+.stop:nth-child(odd) span { order: -1; }
+.stop .node { width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--line); background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.12), rgba(0,0,0,.45)); display: grid; place-items: center; position: relative; box-shadow: 0 6px 16px rgba(0,0,0,.5); }
+.stop .node .ic { width: 34px; height: 34px; } .stop .node .ic svg { width: 100%; height: 100%; }
+.stop .node b { position: absolute; right: -4px; bottom: -4px; background: var(--glass2); border: 1px solid var(--line); border-radius: 99px; font-family: var(--display); font-size: 10px; padding: 1px 6px; color: var(--fg); }
+.stop.big .node { width: 72px; height: 72px; border-color: var(--accent-2); }
+.stop.done .node { border-color: var(--accent); background: radial-gradient(circle at 50% 30%, rgba(124,255,155,.35), rgba(0,0,0,.4)); }
+.stop.done .node::after { content: "✓"; position: absolute; left: -4px; top: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #06130b; font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+.stop.next .node { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(255,177,61,.35), 0 0 24px rgba(255,177,61,.5); animation: pulse 1.6s ease-in-out infinite; }
+.stop.next span { color: var(--fg); font-weight: 800; }
+.stop.lock { opacity: .6; } .stop.lock .node .ic { filter: grayscale(.7); }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@media (prefers-reduced-motion: reduce) { .stop.next .node { animation: none; } }
 .tier { position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px 6px; text-align: center; background: rgba(255,255,255,.03); font-size: 10.5px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .tier small { position: absolute; left: 6px; top: 4px; font-family: var(--display); font-size: 10px; color: var(--muted); }
 .tier .ic { width: 34px; height: 34px; } .tier .ic svg { width: 100%; height: 100%; }
@@ -279,9 +296,11 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
         <div class="title" id="qtitle">Keine Quest</div>
         <div class="prog" id="qprog">Sprich mit Bram im Lager</div>
       </div>
-      <div class="panel" style="display:flex;gap:10px;align-items:center;">
-        <div class="ring" id="ring" style="--p:0%"><span>0:00</span></div>
-        <div class="hint">Login-Tag<br>ab 15 Min</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        <div class="panel" id="ringPanel" style="display:flex;gap:10px;align-items:center;">
+          <div class="ring" id="ring" style="--p:0%"><span>0:00</span></div>
+          <div class="hint">Login-Tag<br>ab 15 Min</div>
+        </div>
         <button class="btn icon" id="settingsBtn" title="Einstellungen">⚙</button>
       </div>
     </div>

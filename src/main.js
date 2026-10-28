@@ -32,7 +32,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .9, metalness: 0, flatShading: true }, o));
   const smooth = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .75, metalness: 0 }, o));
   const clock = { t: 0 };
-  const WORLD = 420, HALF = WORLD / 2 - 6;
+  const WORLD = 720, HALF = WORLD / 2 - 6;
 
   // Himmel
   const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(800, 32, 16), new THREE.ShaderMaterial({
@@ -46,8 +46,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   try { const pm = new THREE.PMREMGenerator(renderer); const es = new THREE.Scene(); es.add(skyMesh.clone()); scene.environment = pm.fromScene(es, .02).texture; pm.dispose(); } catch (e) { console.warn('env', e); }
   // Sonnenscheibe mit Glow
   (function () { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const c = cv.getContext('2d'); const gr = c.createRadialGradient(128, 128, 10, 128, 128, 128); gr.addColorStop(0, 'rgba(255,250,230,1)'); gr.addColorStop(.18, 'rgba(255,235,180,.9)'); gr.addColorStop(.5, 'rgba(255,200,120,.25)'); gr.addColorStop(1, 'rgba(255,180,100,0)'); c.fillStyle = gr; c.fillRect(0, 0, 256, 256); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, fog: false })); sp.scale.set(220, 220, 1); sp.position.set(-.5, .35, -.78).normalize().multiplyScalar(700); scene.add(sp); })();
-  const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x3b5a2a, 0.75); scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff0d0, 2.0); sun.castShadow = true;
+  const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x3b5a2a, 0.7); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xffe9c4, 2.1); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0003; sun.shadow.normalBias = .02; sun.shadow.radius = 2;
   Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 220 }); sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun); scene.add(sun.target);
@@ -66,7 +66,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
       if (snow) { const cap = new THREE.Mesh(new THREE.ConeGeometry(w * .32, hh * .32, 6), mat(0xf4f8ff)); cap.position.set(m.position.x, hh - hh * .16 - 3, m.position.z); cap.rotation.y = m.rotation.y; scene.add(cap); }
     }
   }
-  mountains(330, 120, 0x5f7f9c, 40, true); mountains(250, 60, 0x3f6b4a, 44, false);
+  mountains(520, 160, 0x5f7f9c, 46, true); mountains(430, 90, 0x4b6f5c, 50, true);
 
   // ---------- Gelände ----------
   const LAKE = { x: 70, z: 80, r: 48 }, RIVER_X = -40, WATER_Y = 0.3;
@@ -75,15 +75,21 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     const d = Math.hypot(x - LAKE.x, z - LAKE.z); if (d < LAKE.r) y -= 5 * (1 - (d / LAKE.r) ** 2);
     const rd = Math.abs(x - RIVER_X); if (rd < 7) y -= 2.4 * (1 - (rd / 7) ** 2);
     const c = Math.hypot(x, z); if (c < 16) y = y * clamp((c - 8) / 8, 0, 1) + 1.2 * (1 - clamp((c - 8) / 8, 0, 1));
+    // Berge: Gebirgsring am Kartenrand + drei Hügelketten im Inneren
+    if (c > 240) y += Math.pow((c - 240) / 70, 2) * 32 + Math.sin(x * .07) * Math.cos(z * .06) * Math.min(12, (c - 240) * .2);
+    y += 16 * Math.exp(-(((x - 190) ** 2) + ((z + 150) ** 2)) / 4200) + 13 * Math.exp(-(((x + 210) ** 2) + ((z - 90) ** 2)) / 5200) + 22 * Math.exp(-(((x - 40) ** 2) + ((z - 250) ** 2)) / 6500) + 9 * Math.exp(-(((x + 120) ** 2) + ((z + 200) ** 2)) / 3000);
     return y;
   }
+  const TREELINE = 13;
   const inWater = (x, z) => groundY(x, z) < WATER_Y - .45;
-  const groundGeo = new THREE.PlaneGeometry(WORLD, WORLD, 140, 140); groundGeo.rotateX(-Math.PI / 2);
+  const groundGeo = new THREE.PlaneGeometry(WORLD, WORLD, 220, 220); groundGeo.rotateX(-Math.PI / 2);
   const gp = groundGeo.attributes.position, gcol = [];
   for (let i = 0; i < gp.count; i++) {
     const x = gp.getX(i), z = gp.getZ(i), y = groundY(x, z); gp.setY(i, y);
     const n = .5 + .5 * Math.sin(x * .9) * Math.cos(z * .7);
-    const c = y < WATER_Y + .2 ? new THREE.Color(0xc9b98a) : new THREE.Color().setHSL(.3 - n * .04, .55, .28 + n * .1);
+    let c = y < WATER_Y + .2 ? new THREE.Color(0xc9b98a) : new THREE.Color().setHSL(.3 - n * .04, .55, .28 + n * .1);
+    if (y > 9) { const rockC = new THREE.Color().setHSL(.08, .08, .3 + n * .08); c = c.lerp(rockC, clamp((y - 9) / 5, 0, 1)); }
+    if (y > 20) c = c.lerp(new THREE.Color(0xf2f6fa), clamp((y - 20) / 6, 0, 1));
     gcol.push(c.r, c.g, c.b);
   }
   groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(gcol, 3)); groundGeo.computeVertexNormals();
@@ -98,7 +104,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, map: makeGroundTex() })); ground.receiveShadow = true; scene.add(ground);
 
   // Wasser (See + Fluss), leichte Wellen
-  const waterGeo = new THREE.PlaneGeometry(WORLD, WORLD, 60, 60); waterGeo.rotateX(-Math.PI / 2);
+  const waterGeo = new THREE.PlaneGeometry(WORLD, WORLD, 100, 100); waterGeo.rotateX(-Math.PI / 2);
   const wp = waterGeo.attributes.position, wcol = [];
   for (let i = 0; i < wp.count; i++) {
     const depth = WATER_Y - groundY(wp.getX(i), wp.getZ(i));
@@ -106,7 +112,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     wcol.push(c.r, c.g, c.b);
   }
   waterGeo.setAttribute('color', new THREE.Float32BufferAttribute(wcol, 3));
-  const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .06, metalness: .35, transparent: true, opacity: .84, envMapIntensity: 1 }));
+  const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .04, metalness: .4, transparent: true, opacity: .86, envMapIntensity: 1.3 }));
   water.position.y = WATER_Y; scene.add(water);
 
   // Brücke über den Fluss
@@ -147,7 +153,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     for (let i = 0; i < GRASS; i++) {
       let x, z, tries = 0;
       do { x = cx + rng(-GR, GR); z = cz + rng(-GR, GR); tries++; } while ((inWater(x, z) || Math.hypot(x - 3, z + 3) < 2.5) && tries < 4);
-      dummy.position.set(x, groundY(x, z), z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(inWater(x, z) ? 0 : .7 + Math.random() * .9);
+      const gyy = groundY(x, z); dummy.position.set(x, gyy, z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(gyy < WATER_Y - .45 || gyy > 18 ? 0 : .7 + Math.random() * .9);
       dummy.updateMatrix(); grass.setMatrixAt(i, dummy.matrix);
       gcolor.setHSL(.27 + Math.random() * .07, .55 + Math.random() * .2, .42 + Math.random() * .2); grass.setColorAt(i, gcolor);
     }
@@ -159,16 +165,16 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // ===== Vegetation: instanziiert (ein Draw-Call pro Bauteil statt tausender Einzel-Meshes) =====
   const CAVE = { x: 36, z: -6, r: 13 };
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [];
-  for (let i = 0; i < 600; i++) {
-    const x = rng(-HALF, HALF), z = rng(-HALF, HALF);
-    if (Math.hypot(x, z) < 11 || inWater(x, z) || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || Math.hypot(x - 60, z - 30) < 6) continue;
-    const it = { x, z, s: rng(.9, 1.9), rot: Math.random() * 6, hue: Math.random() }; (Math.random() < .5 ? con : broad).push(it); treeSpots.push([x, z]);
+  for (let i = 0; i < 1700; i++) {
+    const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
+    if (Math.hypot(x, z) < 11 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || Math.hypot(x - 60, z - 30) < 6) continue;
+    const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; (Math.random() < (gy > 6 ? .8 : .5) ? con : broad).push(it); treeSpots.push([x, z]);
   }
-  for (let i = 0; i < 220; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
-  for (let i = 0; i < 160; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; rocks.push({ x, z, s: rng(.3, 1.3), rx: Math.random(), ry: Math.random() }); }
+  for (let i = 0; i < 600; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
+  for (let i = 0; i < 520; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; const gy = groundY(x, z); rocks.push({ x, z, s: rng(.3, 1.3) * (gy > 9 ? 2.2 : 1), rx: Math.random(), ry: Math.random() }); }
   const flowerCols = [0xff6b9a, 0xffd166, 0xb48cff, 0xffffff, 0xff8c42];
-  for (let i = 0; i < 700; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
-  for (let i = 0; i < 60; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z)) continue; shrooms.push({ x, z }); }
+  for (let i = 0; i < 1800; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
+  for (let i = 0; i < 160; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE) continue; shrooms.push({ x, z }); }
   for (let i = 0; i < 200; i++) { const a = Math.random() * Math.PI * 2, r = LAKE.r * (0.86 + Math.random() * .12); reeds.push({ x: LAKE.x + Math.cos(a) * r, z: LAKE.z + Math.sin(a) * r, h: rng(1.2, 2), rz: rng(-.15, .15) }); }
 
   function instanced(geo, material, n, fill, shadow = true) {
@@ -229,7 +235,9 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.5, 1.1), rock); post.position.set(ex - .2, groundY(ex, ez) + 2.7, ez + s * 3.9); post.castShadow = true; scene.add(post); const torch = new THREE.PointLight(0xffa040, 1.8, 12, 2); torch.position.set(ex - 1.2, groundY(ex, ez) + 3.6, ez + s * 3.9); scene.add(torch); const fl = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.copy(torch.position); scene.add(fl); }
     // Gitter
     const iron = new THREE.MeshStandardMaterial({ color: 0x3b3f44, metalness: .8, roughness: .45 });
-    for (let i = 0; i < 8; i++) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 5.2, 8), iron); bar.position.set(0, 2.6, -3.15 + i * .9); bar.castShadow = true; gate.add(bar); }
+    for (let i = 0; i < 6; i++) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 5.2, 8), iron); bar.position.set(0, 2.6, -3.1 + i * 1.24); bar.castShadow = true; gate.add(bar); }
+    const inner1 = new THREE.PointLight(0xffa040, 2.2, 16, 2); inner1.position.set(ex + 5, groundY(ex, ez) + 3, ez + 2.5); scene.add(inner1); const inner2 = new THREE.PointLight(0xff6a3d, 2.0, 16, 2); inner2.position.set(ex + 9, groundY(ex, ez) + 2.5, ez - 2.5); scene.add(inner2);
+    for (const s of [-1, 1]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(.16, .45, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.set(ex + 6, groundY(ex, ez) + 2.4, ez + s * 3.1); scene.add(fl); const holder = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 6), iron); holder.position.set(ex + 6, groundY(ex, ez) + 2.05, ez + s * 3.1); scene.add(holder); }
     for (const y of [.6, 2.6, 4.6]) { const cross = new THREE.Mesh(new THREE.BoxGeometry(.18, .16, 6.6), iron); cross.position.set(0, y, 0); gate.add(cross); }
     const lock = new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .9), new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .3 })); lock.position.set(0, 2.2, 0); gate.add(lock); gate.userData.lock = lock;
     const sign = new THREE.Mesh(new THREE.BoxGeometry(.1, .7, 1.6), leatherLike(0x5a3b22)); sign.position.set(-.6, 3.9, 0); gate.add(sign);
@@ -259,7 +267,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // Stationen, Truhen
   const stations = [];
-  [[14, 10], [-12, 18], [22, -16], [45, 20], [-30, -40], [60, -50], [-70, 40], [20, 110]].forEach(([x, z]) => {
+  [[14, 10], [-12, 18], [22, -16], [45, 20], [-30, -40], [60, -50], [-70, 40], [20, 110], [-140, 90], [160, -40], [90, 170], [-180, -120], [210, 120], [-60, -210], [230, -190], [-230, 180]].forEach(([x, z]) => {
     const g = new THREE.Group();
     const c = new THREE.Mesh(new THREE.OctahedronGeometry(.75, 0), new THREE.MeshStandardMaterial({ color: 0x7cff9b, emissive: 0x3fd66d, emissiveIntensity: 1.2, roughness: .2 })); c.position.y = 1.4; g.add(c);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, .06, 6, 24), new THREE.MeshStandardMaterial({ color: 0x7cff9b, emissive: 0x7cff9b, emissiveIntensity: .8 })); ring.rotation.x = Math.PI / 2; ring.position.y = .12; g.add(ring);
@@ -273,7 +281,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     for (const bx of [-.35, .35]) { const band = new THREE.Mesh(new THREE.BoxGeometry(.1, .64, .8), smooth(0xf2c14e, { metalness: .6, roughness: .35 })); band.position.set(bx, .3, 0); chest.add(band); }
     chest.position.set(x, groundY(x, z), z); chest.rotation.y = Math.random() * 6; scene.add(chest); chest.userData = { lid, open: false }; return chest;
   }
-  const chests = [[-9, 12], [38, -28], [-55, 60], [95, 30], [-120, -40], [140, -90], [60, 140], [-80, 130], [150, 110], [-150, 20], [20, -130], [110, -160]].map(([x, z], i) => { const c = buildChest(x, z); if (i % 4 === 3) { c.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x9a6a33) o.material = new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .28 }); }); c.userData.gold = true; const l = new THREE.PointLight(0xffd166, 1.2, 6, 2); l.position.y = 1; c.add(l); } return c; });
+  const chests = [[-9, 12], [38, -28], [-55, 60], [95, 30], [-120, -40], [140, -90], [60, 140], [-80, 130], [150, 110], [-150, 20], [20, -130], [110, -160], [220, 60], [-220, -60], [40, 230], [-40, -240], [250, -120], [-250, 140], [190, 220], [-190, -220]].map(([x, z], i) => { const c = buildChest(x, z); if (i % 4 === 3) { c.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x9a6a33) o.material = new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .28 }); }); c.userData.gold = true; const l = new THREE.PointLight(0xffd166, 1.2, 6, 2); l.position.y = 1; c.add(l); } return c; });
 
   // ---------- Figuren ----------
   function limb(len, r, c) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r * .8, r, len, 7), c); m.geometry.translate(0, -len / 2, 0); m.castShadow = true; return m; }
@@ -524,7 +532,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     g.scale.setScalar(.95); g.userData = { legs, tail: new THREE.Group(), arms, head, kind: 'grunt', weapon, alive: true }; return g;
   }
   const wolves = [];
-  for (let i = 0; i < 10; i++) { const w = buildGrunt(i === 0 ? 'axe' : ['club', 'axe', 'spear'][i % 3]); if (i === 0) { w.userData.kind = 'alpha'; w.userData.alpha = true; w.scale.setScalar(1.45); w.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x6f8f45) o.material = new THREE.MeshStandardMaterial({ color: 0x4e6b3a, roughness: .85 }); }); const crown = new THREE.Mesh(new THREE.CylinderGeometry(.42, .38, .22, 8, 1, true), metal(0xe6c25a)); crown.position.set(0, 2.42, .1); w.add(crown); } w.userData.hp = i === 0 ? 110 : 55; w.userData.maxHp = w.userData.hp; let x, z; do { x = rng(-100, 100); z = rng(-100, 100); } while (Math.hypot(x, z) < 22 || inWater(x, z)); w.position.set(x, groundY(x, z), z); w.userData.dir = Math.random() * 6; w.userData.t = Math.random() * 5; scene.add(w); wolves.push(w); }
+  for (let i = 0; i < 18; i++) { const w = buildGrunt(i === 0 ? 'axe' : ['club', 'axe', 'spear'][i % 3]); if (i === 0) { w.userData.kind = 'alpha'; w.userData.alpha = true; w.scale.setScalar(1.45); w.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x6f8f45) o.material = new THREE.MeshStandardMaterial({ color: 0x4e6b3a, roughness: .85 }); }); const crown = new THREE.Mesh(new THREE.CylinderGeometry(.42, .38, .22, 8, 1, true), metal(0xe6c25a)); crown.position.set(0, 2.42, .1); w.add(crown); } w.userData.hp = i === 0 ? 110 : 55; w.userData.maxHp = w.userData.hp; let x, z; do { x = rng(-170, 170); z = rng(-170, 170); } while (Math.hypot(x, z) < 22 || inWater(x, z) || groundY(x, z) > TREELINE); w.position.set(x, groundY(x, z), z); w.userData.dir = Math.random() * 6; w.userData.t = Math.random() * 5; scene.add(w); wolves.push(w); }
   const npc = buildNpc(); npc.position.set(-2, groundY(-2, 2), 2); npc.rotation.y = 2.3; scene.add(npc);
 
   const player = new THREE.Group(); scene.add(player);
@@ -822,7 +830,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Speichern / Laden ----------
   function saveGame() {
-    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
     return writeSave(d);
   }
   function applySave(d) {
@@ -834,7 +842,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (d.quests) Object.keys(qstate).forEach(k => { if (d.quests[k]) Object.assign(qstate[k], d.quests[k]); }); tracked = d.tracked || null;
     if (d.chests) d.chests.forEach((o, i) => { if (chests[i] && o) { chests[i].userData.open = true; chests[i].userData.lid.rotation.x = -1.6; } });
     if (d.stations) d.stations.forEach((o, i) => { if (stations[i] && o) { stations[i].done = true; stations[i].c.material.emissiveIntensity = .2; } });
-    if (typeof d.secs === 'number') secs = d.secs; if (d.gate) gate.userData.open = true;
+    if (typeof d.secs === 'number' && d.state && d.state.login && d.state.login.secsDay === dayIdx()) secs = d.secs; if (d.gate) gate.userData.open = true; loginUI();
     rebuildHero(); state.mounted = true; setMount(prefs.tier); if (d.state && d.state.mounted === false) { state.mounted = true; toggleMount(); }
     if (d.pos) player.position.set(d.pos[0], d.pos[1], d.pos[2]); if (typeof d.heading === 'number') heading = d.heading;
     applyGear(hero); stats(); renderAll(); updateTracker(); hpUI();
@@ -866,7 +874,9 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP;
     $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · noch ${info.daysLeft} Tage · kostenlos, nur durch Lernen`;
     $('seasonBar').style.width = (t >= TIERS ? 100 : into / TIER_XP * 100) + '%'; $('seasonNext').textContent = t >= TIERS ? 'Alle Stufen erreicht!' : `${into} / ${TIER_XP} XP bis Stufe ${t + 1}`;
-    $('seasonGrid').innerHTML = Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n === t + 1 ? 'next' : 'lock'; return `<div class="tier ${st}"><small>${n}</small><div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><span>${r.label}</span></div>`; }).join('');
+    // Straße: Stufen als Stationen auf einem geschwungenen Weg
+    $('seasonGrid').innerHTML = `<div class="road"><div class="road-line"></div>` + Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n === t + 1 ? 'next' : 'lock'; const big = n % 5 === 0; return `<div class="stop ${st} ${big ? 'big' : ''}" style="--i:${i}"><div class="node"><div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><b>${n}</b></div><span>${r.label}</span></div>`; }).join('') + `</div>`;
+    const nextEl = $('seasonGrid').querySelector('.stop.next'); if (nextEl) nextEl.scrollIntoView({ inline: 'center', block: 'nearest' });
   }
   $('seasonBtn').onclick = openSeason; $('pSeason').onclick = () => { $('pause').hidden = true; openSeason(); }; $('closeSeason').onclick = () => $('season').hidden = true;
 
@@ -912,7 +922,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   }
   $('quality').onchange = e => applyQuality(+e.target.value);
   // Startqualität nach Grafikkarte: integrierte Intel-Grafik → Mittel, Software-Renderer → Niedrig
-  (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Intel|Iris|UHD|Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; } catch (e) { } })();
+  (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Intel|Iris|UHD|Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; if (/Electron/i.test(navigator.userAgent)) settings.quality = 0; } catch (e) { } })();
   applyQuality(settings.quality, true);
   // Automatik: bei dauerhaft niedriger Bildrate eine Stufe runter
   let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0;
@@ -973,7 +983,17 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   $('dodge').onclick = () => { if (!battleOn) return; $('feedback').className = 'feedback ok'; $('feedback').textContent = 'Rolle! Attacke ausgewichen.'; };
   $('flee').onclick = () => { endBattle(); show('world'); if (Math.random() < .6) toast('Geflohen!'); else damage(10, 'Flucht misslungen'); };
 
-  let secs = 0; setInterval(() => { if (!hud.classList.contains('on')) return; secs = Math.min(900, secs + 1); const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0'); $('ring').style.setProperty('--p', (secs / 900 * 100) + '%'); $('ring').querySelector('span').textContent = m + ':' + s; if (secs === 900) toast('Login-Tag gezählt! +Tagesbonus'); }, 1000);
+  // Login-Tag: 15 Minuten Spielzeit, zählt nur Mo–Fr, einmal pro Tag – danach verschwindet der Ring bis zum nächsten Tag
+  const dayIdx = () => Math.floor(Date.now() / 86400000);
+  let secs = 0; if (!state.login) state.login = { day: -1, streak: 0, secsDay: -1 };
+  function loginUI() { const done = state.login.day === dayIdx(); $('ringPanel').hidden = done; }
+  setInterval(() => {
+    if (!hud.classList.contains('on') || uiOpen()) return; const today = dayIdx(); if (state.login.day === today) return;
+    if (state.login.secsDay !== today) { state.login.secsDay = today; secs = 0; }
+    secs = Math.min(900, secs + 1); const m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0'); $('ring').style.setProperty('--p', (secs / 900 * 100) + '%'); $('ring').querySelector('span').textContent = m + ':' + s;
+    if (secs === 900) { const wd = new Date().getDay(); const weekday = wd >= 1 && wd <= 5; state.login.day = today; if (weekday) { state.login.streak = (state.login.lastDay !== undefined && today - state.login.lastDay <= 3) ? state.login.streak + 1 : 1; state.login.lastDay = today; const bonus = 30 + state.login.streak * 10; state.coins += bonus; gainXp(20 + state.login.streak * 5); toast(`Login-Tag ${state.login.streak} gezählt! +${bonus} 🪙 · morgen wieder`); } else toast('15 Minuten geschafft · Wochenende zählt nicht für die Serie'); loginUI(); saveGame(); }
+  }, 1000);
+  loginUI();
 
   renderAll(); updateTracker(); show('start');
   window.__vq = { renderer, scene, state, settings, player, gainXp }; // Diagnose in der Browser-Konsole
@@ -1004,8 +1024,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const _setMount = setMount; setMount = function (kind) { if (kind === 'horse' && gl.horse) { const wasIn = mountMesh.parent; wasIn.remove(mountMesh); mountMesh = buildHorse(); wasIn.add(mountMesh); if (state.mounted) setRiding(); } else _setMount(kind); };
   // Gegner und Boss
   function dressEnemies() {
-    wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? .9 : .62); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
-    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.35); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+    wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? 1.15 : .8); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
+    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.6); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
     if (gl.barbarian && !npc.userData.inst) { npc.children.forEach(c => { if (c !== npc.userData.marker) c.visible = false; }); const inst = instance(gl.barbarian); inst.obj.scale.setScalar(.75); inst.obj.rotation.y = Math.PI; npc.add(inst.obj); npc.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
   }
   Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
