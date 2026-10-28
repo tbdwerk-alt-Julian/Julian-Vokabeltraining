@@ -21,6 +21,8 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
 
   // ---------- Renderer & Szene ----------
   const stage = $('stage');
+  const setLoad = (t) => { const el = $('loadText'); if (el) el.textContent = t; };
+  setLoad('Grafik wird gestartet …');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -789,7 +791,9 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     sun.position.set(player.position.x - 40, 50, player.position.z - 60); sun.target.position.copy(player.position); sun.target.updateMatrixWorld();
     renderer.render(scene, camera); renderInv();
+    if (!loopStarted) { loopStarted = true; const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
   }
+  let loopStarted = false;
   requestAnimationFrame(loop);
 
   // Minimap (Nord oben, Radius 90 m)
@@ -1001,6 +1005,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   if (import.meta.env && import.meta.env.DEV) setInterval(() => { if (!hud.classList.contains('on') || !window.__fpsNow) return; const i = renderer.info.render; fetch('/__fps', { method: 'POST', body: JSON.stringify({ fps: window.__fpsNow, q: settings.quality, pr: renderer.getPixelRatio(), calls: i.calls, tris: i.triangles, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: (window.__gpu || '').slice(0, 60), ua: navigator.userAgent.slice(-40) }) }).catch(() => { }); }, 5000);
 
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
+  setLoad('3D-Modelle werden geladen …');
   const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', horse: '/models/animals/Horse.glb' };
   const HERO_MODEL = ['knight', 'rogue', 'mage'];
   const gl = {};
