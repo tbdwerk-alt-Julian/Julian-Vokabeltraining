@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VocabQuest</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: one full-screen 3D stage; HUD, hotbar and overlays float above as glass panels. */
+:root {
+  --bg: #0b1210; --fg: #eef5ef; --muted: #9fb3a6;
+  --glass: rgba(10, 20, 16, 0.72); --glass2: rgba(10, 20, 16, 0.88);
+  --line: rgba(160, 230, 190, 0.18);
+  --accent: #7CFF9B; --accent-2: #FFB13D; --danger: #FF5C6C; --heart: #FF4D6D; --water: #4fc3e8;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); overflow: hidden; }
+* { box-sizing: border-box; }
+button { font-family: inherit; }
+#stage { position: fixed; inset: 0; }
+#stage canvas { display: block; width: 100%; height: 100%; }
+#ui { position: fixed; inset: 0; pointer-events: none; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; }
+#ui > * { pointer-events: auto; }
+.screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.screen[hidden] { display: none !important; }
+#start { align-items: flex-end; padding-bottom: 40px; }
+#start .card { background: rgba(10, 20, 16, 0.42); max-height: 62%; }
+#start h1 { text-shadow: 0 4px 30px rgba(0,0,0,.6); }
+.card { background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 18px; padding: 22px; width: min(560px, 100%); max-height: 100%; overflow: auto; box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
+.card.wide { width: min(900px, 100%); }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: .02em; }
+h1 { font-size: clamp(40px, 9vw, 72px); line-height: .95; text-transform: uppercase; }
+h1 span { color: var(--accent); }
+h2 { font-size: 22px; text-transform: uppercase; }
+h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.eyebrow { font-family: var(--display); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+p { margin: 0; line-height: 1.5; }
+.muted { color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--line); cursor: pointer; background: rgba(255,255,255,.04); color: var(--fg); transition: transform .12s, background .12s; }
+.btn:hover { background: rgba(255,255,255,.09); }
+.btn:active { transform: scale(.97); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); color: #06130b; border-color: transparent; box-shadow: 0 0 0 1px rgba(124,255,155,.35), 0 10px 30px rgba(124,255,155,.25); }
+.btn.primary:hover { background: #94ffae; }
+.btn.small { font-size: 13px; padding: 8px 12px; }
+.btn.icon { width: 44px; height: 44px; padding: 0; border-radius: 12px; font-size: 18px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.choice { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; cursor: pointer; background: rgba(255,255,255,.03); text-align: left; color: var(--fg); }
+.choice .t { font-family: var(--display); font-weight: 700; font-size: 15px; }
+.choice .d { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.choice[aria-pressed="true"] { border-color: var(--accent); background: rgba(124,255,155,.10); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice .sw { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 4px; vertical-align: middle; border: 1px solid rgba(255,255,255,.3); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-family: var(--display); }
+input[type="text"] { font: inherit; font-size: 17px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--fg); width: 100%; }
+input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--fg); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* HUD */
+#hud { display: none; flex: 1; flex-direction: column; justify-content: space-between; }
+#hud.on { display: flex; }
+.hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hud-bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.panel { background: var(--glass); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.hearts { display: flex; gap: 4px; font-size: 18px; }
+.hearts .h { color: var(--heart); filter: drop-shadow(0 0 6px rgba(255,77,109,.6)); }
+.hearts .h.off { color: rgba(255,255,255,.18); filter: none; }
+.bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+.bar.stam > i { background: var(--accent-2); }
+.bar.air > i { background: var(--water); }
+.stat { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 12px; min-width: 200px; }
+.stat b { font-family: var(--display); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+.lvl { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+.lvl small { font-size: 12px; color: var(--muted); margin-left: 6px; letter-spacing: .08em; }
+.quest { max-width: 280px; }
+.quest .title { font-family: var(--display); font-weight: 700; font-size: 14px; }
+.quest .prog { font-size: 12px; color: var(--muted); }
+.ring { position: relative; width: 46px; height: 46px; border-radius: 50%; background: conic-gradient(var(--accent) var(--p, 40%), rgba(255,255,255,.12) 0); display: grid; place-items: center; font-family: var(--display); font-size: 11px; font-weight: 700; }
+.ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #0b1210; }
+.ring span { position: relative; }
+.combo { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--accent-2); }
+.hint { font-size: 12px; color: var(--muted); }
+#joy { width: 120px; height: 120px; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.04); position: relative; touch-action: none; flex: none; }
+#joy i { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: rgba(124,255,155,.35); border: 1px solid var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 260px; }
+.toast { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); background: var(--glass); border: 1px solid var(--line); padding: 10px 16px; border-radius: 12px; font-family: var(--display); font-weight: 600; letter-spacing: .04em; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; max-width: 90vw; }
+.toast.show { opacity: 1; }
+.interact { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); background: var(--glass2); border: 1px solid var(--accent); padding: 8px 14px; border-radius: 10px; font-family: var(--display); font-size: 13px; letter-spacing: .06em; display: none; }
+.interact.show { display: block; }
+.interact kbd { background: var(--accent); color: #06130b; border-radius: 6px; padding: 1px 7px; font-weight: 700; margin-right: 6px; }
+.center { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hotbar { display: flex; gap: 6px; background: var(--glass); border: 1px solid var(--line); border-radius: 14px; padding: 6px; backdrop-filter: blur(10px); }
+.slot { width: 46px; height: 46px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.04); display: grid; place-items: center; font-size: 22px; position: relative; cursor: pointer; }
+.slot small { position: absolute; left: 4px; top: 2px; font-size: 9px; color: var(--muted); font-family: var(--display); }
+.slot .n { position: absolute; right: 4px; bottom: 2px; font-size: 10px; font-family: var(--display); color: var(--fg); }
+.slot.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 14px rgba(124,255,155,.4); }
+.slot.empty { opacity: .45; }
+.slot.r-blue { border-color: #5aa0ff; } .slot.r-purple { border-color: #b48cff; } .slot.r-gold { border-color: #ffd166; }
+@media (max-width: 640px) { .slot { width: 36px; height: 36px; font-size: 17px; } .hotbar { gap: 4px; } }
+
+/* Overlays */
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.35); }
+.overlay[hidden] { display: none !important; }
+.inv { display: grid; grid-template-columns: 260px 1fr; gap: 18px; }
+@media (max-width: 720px) { .inv { grid-template-columns: 1fr; } }
+#invView { width: 100%; height: 320px; border-radius: 14px; background: radial-gradient(ellipse at 50% 30%, rgba(124,255,155,.12), rgba(0,0,0,.35)); border: 1px solid var(--line); }
+.equip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.equip .slot { width: auto; height: 54px; }
+.grid20 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.grid20 .slot { width: auto; height: 56px; }
+.itemname { font-size: 12px; color: var(--muted); min-height: 18px; }
+.settings .field { gap: 4px; }
+.settings .val { font-family: var(--display); font-size: 12px; color: var(--accent); }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.keys kbd { background: rgba(255,255,255,.1); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-family: var(--display); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { font-family: var(--display); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: #06130b; border-color: transparent; }
+.tabpane[hidden] { display: none !important; }
+
+/* Battle */
+#battle .card { width: min(640px, 100%); }
+.bosshead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.bossbar { height: 14px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; border: 1px solid var(--line); }
+.bossbar > i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff8a5c, var(--danger)); transition: width .35s; }
+.phase { font-family: var(--display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
+.word { font-family: var(--display); font-size: clamp(28px, 6vw, 42px); font-weight: 700; text-align: center; padding: 10px 0; }
+.feedback { min-height: 24px; text-align: center; font-weight: 800; }
+.feedback.crit { color: var(--accent-2); text-shadow: 0 0 14px rgba(255,177,61,.6); }
+.feedback.ok { color: var(--accent); }
+.feedback.soft, .feedback.bad { color: var(--danger); }
+.tag { display: inline-block; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,.08); font-size: 11px; font-family: var(--display); letter-spacing: .1em; text-transform: uppercase; }
+.timer { height: 4px; background: rgba(255,255,255,.1); border-radius: 99px; overflow: hidden; }
+.timer > i { display: block; height: 100%; width: 100%; background: var(--accent-2); transition: width .1s linear; }
+.map { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.zone { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: rgba(255,255,255,.03); }
+.zone .n { font-family: var(--display); font-weight: 700; }
+.zone .s { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.zone.lock { opacity: .5; }
+.zone.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.qlist { display: flex; flex-direction: column; gap: 8px; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.q .t { font-family: var(--display); font-weight: 700; }
+.q .d { font-size: 12px; color: var(--muted); }
+.bar.hp { height: 12px; border: 1px solid rgba(255,255,255,.12); }
+.bar.hp > i { background: linear-gradient(90deg, #ff4d6d, #ff8a5c); box-shadow: 0 0 10px rgba(255,77,109,.5); }
+.hpnum { font-family: var(--display); font-size: 11px; color: var(--muted); text-align: right; }
+#vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%); }
+#hurt { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, rgba(255,40,60,.55) 100%); opacity: 0; transition: opacity .15s; }
+#hurt.on { opacity: 1; }
+#dead { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1.2s; z-index: 50; }
+#dead.on { opacity: 1; pointer-events: auto; }
+.deadbox { text-align: center; display: flex; flex-direction: column; gap: 18px; align-items: center; padding: 16px; }
+.deadtitle { font-family: var(--display); font-size: clamp(34px, 8vw, 72px); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #ff2a3c; text-shadow: 0 0 30px rgba(255,42,60,.6), 0 0 80px rgba(255,42,60,.3); }
+.deadwhy { color: #8a3a44; font-family: var(--display); letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
+#stage canvas { filter: saturate(1.12) contrast(1.06); }
+#pause .card { text-align: center; }
+.mmwrap { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: 96px; width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.4); background: var(--glass); }
+#minimap { display: block; width: 150px; height: 150px; }
+#labels { position: fixed; inset: 0; pointer-events: none; }
+.lbl { position: absolute; transform: translate(-50%, -100%); text-align: center; font-family: var(--display); font-size: 11px; letter-spacing: .06em; color: #fff; text-shadow: 0 1px 3px #000; width: 110px; }
+.lbl .b { height: 5px; border-radius: 99px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); overflow: hidden; margin-top: 2px; }
+.lbl .b i { display: block; height: 100%; background: linear-gradient(90deg, #ff4d6d, #ff8a5c); }
+.lbl.boss .n { color: #ffb13d; font-weight: 700; } .lbl.boss { width: 150px; } .lbl.boss .b { height: 7px; }
+.lbl.npc .n { color: var(--accent); font-weight: 700; }
+@media (max-width: 640px) { .mmwrap, #minimap { width: 100px; height: 100px; } .mmwrap { top: 110px; } }
+#pause .btn { width: 100%; }
+.slot svg { width: 72%; height: 72%; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.slot { background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.09), rgba(0,0,0,.25)); }
+.slot.sel { background: radial-gradient(circle at 50% 30%, rgba(124,255,155,.25), rgba(0,0,0,.25)); }
+.sprog { display: flex; gap: 6px; }
+.sprog i { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,.12); }
+.sprog i.ok { background: var(--accent); } .sprog i.bad { background: var(--danger); }
+@media (max-width: 520px) { .stat { min-width: 150px; } .quest { max-width: 170px; } .card { padding: 16px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+<div id="vignette"></div>
+<div id="labels"></div>
+<div id="hurt"></div>
+<div id="dead"><div class="deadbox"><div class="deadtitle">Du bist gestorben</div><div class="deadwhy" id="deadWhy"></div><button class="btn primary" id="respawnBtn">Am Lagerfeuer wiederbeleben</button></div></div>
+
+<div id="ui">
+  <div id="hud">
+    <div class="hud-top">
+      <div class="panel stat">
+        <div class="lvl" style="grid-column: 1 / -1;">LVL <span id="lvl">1</span><small id="pnameHud">Held</small></div>
+        <b>HP</b><div><div class="bar hp"><i id="hpBar" style="width:100%"></i></div><div class="hpnum" id="hpNum">100 / 100</div></div>
+        <b>XP</b><div class="bar"><i id="xp"></i></div>
+        <b id="stamLabel">Ausdauer</b><div class="bar stam" id="stamBar"><i id="stam" style="width:100%"></i></div>
+      </div>
+      <div class="panel quest">
+        <div class="eyebrow">Quest</div>
+        <div class="title" id="qtitle">Keine Quest</div>
+        <div class="prog" id="qprog">Sprich mit Bram im Lager</div>
+      </div>
+      <div class="panel" style="display:flex;gap:10px;align-items:center;">
+        <div class="ring" id="ring" style="--p:0%"><span>0:00</span></div>
+        <div class="hint">Login-Tag<br>ab 15 Min</div>
+        <button class="btn icon" id="settingsBtn" title="Einstellungen">⚙</button>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="mmwrap"><canvas id="minimap" width="150" height="150"></canvas></div>
+    <div class="interact" id="interact"><kbd>E</kbd><span id="interactText"></span></div>
+    <div class="hud-bottom">
+      <div id="joy"><i></i></div>
+      <div class="center">
+        <div class="combo">COMBO <span id="combo">0</span> · <span id="coins">0</span> 🪙</div>
+        <div class="hotbar" id="hotbar"></div>
+        <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar</div>
+      </div>
+      <div class="actions">
+        <button class="btn small" id="mountBtn">🐾 Absteigen</button>
+        <button class="btn small" id="useBtn">E</button>
+        <button class="btn small" id="invBtn">🎒 Inventar</button>
+        <button class="btn small" id="mapBtn">🗺 Karte</button>
+        <button class="btn small" id="saveBtn">💾</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="start">
+    <div class="card stack">
+      <div class="eyebrow">Design-Vorschau · 3D</div>
+      <h1>Vocab<span>Quest</span></h1>
+      <p class="muted">Vokabeln lernen als Abenteuer. Wald, Wüste, Kirschen-Gebiet, Vulkan – und am Ende die Schattenfestung.</p>
+      <div class="row"><button class="btn primary" id="newGame">Neues Abenteuer</button></div>
+      <p class="hint">Nur ein Eindruck für Design und Gefühl. Keine echten Vokabeln, kein Speichern.</p>
+    </div>
+  </div>
+
+  <div class="screen" id="create" hidden>
+    <div class="card stack">
+      <div class="eyebrow">Spielstand anlegen · Start auf Level 1</div>
+      <h2>Wer bist du?</h2>
+      <div class="field"><label for="pname">Name</label><input type="text" id="pname" value="" placeholder="Dein Name" maxlength="16"></div>
+      <div class="field"><label>Charakter</label>
+        <div class="choices" id="char">
+          <button class="choice" aria-pressed="true" data-v="0"><div class="t"><span class="sw" style="background:#2a1a12"></span>Kai</div><div class="d">Dunkle Stachelhaare, blauer Hoodie, roter Umhang</div></button>
+          <button class="choice" aria-pressed="false" data-v="1"><div class="t"><span class="sw" style="background:#f0d070"></span>Lena</div><div class="d">Blonder Pferdeschwanz, lila Jacke, grüner Umhang</div></button>
+          <button class="choice" aria-pressed="false" data-v="2"><div class="t"><span class="sw" style="background:#eeeeee"></span>Ryo</div><div class="d">Weiße Haare, schwarzer Mantel, goldener Umhang</div></button>
+        </div>
+      </div>
+      <div class="field"><label>Kurs</label>
+        <div class="choices" id="kurs">
+          <button class="choice" aria-pressed="false" data-v="G"><div class="t">Grundkurs</div><div class="d">Multiple-Choice erlaubt, Hinweise immer da</div></button>
+          <button class="choice" aria-pressed="true" data-v="E"><div class="t">Erweiterungskurs</div><div class="d">Tippen, Zeitdruck, Hinweise nur durch Quests</div></button>
+        </div>
+      </div>
+      <div class="field" id="modusField"><label>Modus</label>
+        <div class="choices" id="modus">
+          <button class="choice" aria-pressed="true" data-v="S"><div class="t">Sanft</div><div class="d">Schreibfehler rot markiert, nicht bestraft</div></button>
+          <button class="choice" aria-pressed="false" data-v="H"><div class="t">Streng</div><div class="d">Schreibfehler zählen als falsch</div></button>
+        </div>
+      </div>
+      <div class="field"><label>Reittier</label>
+        <div class="choices" id="tier">
+          <button class="choice" aria-pressed="true" data-v="tiger"><div class="t">🐯 Tiger</div><div class="d">Schnell an Land, langsam im Wasser</div></button>
+          <button class="choice" aria-pressed="false" data-v="turtle"><div class="t">🐢 Schildkröte</div><div class="d">Schnell im Wasser, langsam an Land</div></button>
+        </div>
+      </div>
+      <div class="row"><button class="btn primary" id="startWorld">Ins Lager</button><button class="btn" id="backStart">Zurück</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="inventory" hidden>
+    <div class="card wide stack">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Inventar</div><h2 id="invName">Held</h2></div><button class="btn small" id="closeInv">Schließen (I)</button></div>
+      <div class="inv">
+        <div>
+          <canvas id="invView"></canvas>
+          <div class="equip" id="equip"></div>
+          <div class="itemname" id="equipInfo">Rüstung anklicken, um sie anzulegen</div>
+        </div>
+        <div class="stack" style="gap:10px;">
+          <h3>20 Plätze</h3>
+          <div class="grid20" id="bag"></div>
+          <div class="itemname" id="bagInfo"></div>
+          <div class="row"><span class="tag">Stärke <b id="statAtk">5</b></span><span class="tag">Rüstung <b id="statDef">0</b></span><span class="tag">Herzen <b id="statHp">5</b></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="settings" hidden>
+    <div class="card stack settings">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Einstellungen</div><h2>Alles anpassbar</h2></div><button class="btn small" id="closeSettings">Schließen</button></div>
+      <div class="tabs" id="stabs"><button aria-selected="true" data-t="ctrl">Steuerung</button><button aria-selected="false" data-t="gfx">Grafik</button><button aria-selected="false" data-t="snd">Ton</button><button aria-selected="false" data-t="keys">Tasten</button></div>
+      <div class="tabpane" data-p="ctrl">
+        <div class="stack" style="gap:12px;">
+          <div class="field"><label>Dreh-Empfindlichkeit <span class="val" id="sensVal">1.0</span></label><input type="range" id="sens" min="0.3" max="3" step="0.1" value="1"></div>
+          <div class="field"><label>Kamera-Abstand <span class="val" id="camVal">8.5</span></label><input type="range" id="camDist" min="5" max="14" step="0.5" value="8.5"></div>
+          <div class="field"><label>Joystick-Größe <span class="val" id="joyVal">120</span></label><input type="range" id="joySize" min="80" max="180" step="10" value="120"></div>
+          <div class="field"><label>Kamera umkehren</label><select id="invertCam"><option value="0">Aus</option><option value="1">An</option></select></div>
+        </div>
+      </div>
+      <div class="tabpane" data-p="gfx" hidden>
+        <div class="stack" style="gap:12px;">
+          <div class="field"><label>Qualität (Sichtweite bleibt immer gleich)</label><select id="quality"><option value="3" selected>Sehr schön</option><option value="2">Schön</option><option value="1">Mittel</option><option value="0">Niedrig</option></select></div>
+          <div class="field"><label>FPS-Limit</label><select id="fps"><option value="60">60</option><option value="120">120</option><option value="240">240</option><option value="0" selected>Unbegrenzt</option></select></div>
+          <div class="field"><label>FPS-Anzeige</label><select id="showFps"><option value="0">Aus</option><option value="1">An</option></select></div>
+        </div>
+      </div>
+      <div class="tabpane" data-p="snd" hidden>
+        <div class="stack" style="gap:12px;">
+          <div class="field"><label>Musik <span class="val" id="musVal">70</span></label><input type="range" id="music" min="0" max="100" value="70"></div>
+          <div class="field"><label>Effekte <span class="val" id="sfxVal">80</span></label><input type="range" id="sfx" min="0" max="100" value="80"></div>
+          <p class="hint">In der Vorschau ohne Ton – im Spiel: ruhige Musik auf der Karte, Boss-Musik im Kampf.</p>
+        </div>
+      </div>
+      <div class="tabpane" data-p="keys" hidden>
+        <div class="keys">
+          <kbd>W / S</kbd><span>Vor / zurück</span><kbd>A / D</kbd><span>Links / rechts drehen</span><kbd>Leertaste</kbd><span>Ausweichrolle</span>
+          <kbd>F</kbd><span>Auf- / absteigen, Reittier rufen</span><kbd>E</kbd><span>Benutzen (NPC, Truhe, Station, Boss)</span><kbd>I</kbd><span>Inventar</span>
+          <kbd>1 – 9</kbd><span>Hotbar-Feld wählen</span><kbd>Esc</kbd><span>Einstellungen</span><kbd>Controller</kbd><span>Stick = laufen, A = Rolle, X = benutzen, Y = Inventar</span>
+        </div>
+        <p class="hint" style="margin-top:10px;">Im fertigen Spiel frei belegbar. Vokabeln werden immer auf der Tastatur getippt.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="pause" hidden>
+    <div class="card stack" style="width:min(360px,100%);">
+      <div class="eyebrow">Pause</div><h2>VocabQuest</h2>
+      <button class="btn primary" id="pResume">Weiter spielen</button>
+      <button class="btn" id="pSettings">⚙ Einstellungen</button>
+      <button class="btn" id="pInv">🎒 Inventar</button>
+      <button class="btn" id="pMap">🗺 Karte</button>
+      <button class="btn" id="pSave">💾 Speichern</button>
+      <button class="btn" id="pMenu">Hauptmenü</button>
+      <p class="hint">Esc = Pause · Einstellungen auch über ⚙ oben rechts</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="npc" hidden>
+    <div class="card stack">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Quest-NPC · Lager</div><h2>Bram, der Waldhüter</h2></div><button class="btn small" id="closeNpc">Schließen</button></div>
+      <p id="npcText" class="muted">„Willkommen im Lager! Troll-Krieger treiben sich im Wald herum, ihr Häuptling mit der goldenen Krone ist auch dabei, und ich hab meine Truhe aus den Augen verloren. Hilfst du mir?"</p>
+      <div class="qlist" id="qlist"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="battle" hidden>
+    <div class="card stack">
+      <div class="bosshead"><div><div class="eyebrow" id="bossEyebrow">Boss · Wald</div><h2 id="bossName">Waldtroll</h2></div><div class="phase" id="phase">Phase 1</div></div>
+      <div class="bossbar"><i id="bossHp"></i></div>
+      <div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;min-width:120px;"><div class="bar hp"><i id="bHp" style="width:100%"></i></div><div class="hpnum" id="bHpNum">100 / 100</div></div><div class="combo">COMBO <span id="bcombo">0</span></div><span class="tag" id="modeTag">Erweiterung · Sanft</span></div>
+      <div class="word" id="word">—</div>
+      <div class="timer"><i id="timer"></i></div>
+      <form id="answerForm" class="stack" style="gap:10px;">
+        <input type="text" id="answer" placeholder="Englisch tippen … Enter = Schlag" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="feedback" id="feedback"></div>
+        <div class="row" style="justify-content:space-between;"><button class="btn" type="button" id="dodge">🤸 Rolle</button><button class="btn" type="button" id="flee">Fliehen</button><button class="btn primary" type="submit">Schlag</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay" id="station" hidden>
+    <div class="card stack">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Vokabel-Station · Wald</div><h2>Lernrunde</h2></div><span class="tag" id="sCount">1 / 6</span></div>
+      <div class="sprog" id="sProg"></div>
+      <div class="word" id="sWord">—</div>
+      <div class="timer"><i id="sTimer"></i></div>
+      <form id="sForm" class="stack" style="gap:10px;">
+        <input type="text" id="sAnswer" placeholder="Englisch tippen … Enter" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="feedback" id="sFeedback"></div>
+        <div class="row" style="justify-content:space-between;"><button class="btn" type="button" id="sQuit">Abbrechen</button><button class="btn primary" type="submit">Antworten</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="screen" id="map" hidden>
+    <div class="card stack">
+      <div class="eyebrow">Map-Menü</div><h2>Weltkarte</h2>
+      <div class="map">
+        <div class="zone active"><div class="n">🌲 Wald</div><div class="s">Waldtroll · Lvl 10<br>Großer See im Osten</div></div>
+        <div class="zone lock"><div class="n">🏜️ Wüste</div><div class="s">Sandwurm · Lvl 25<br>🔒 Waldtroll besiegen</div></div>
+        <div class="zone lock"><div class="n">🌸 Kirschen</div><div class="s">Kirschgeist · Lvl 50<br>🔒 Sandwurm besiegen</div></div>
+        <div class="zone lock"><div class="n">🌋 Vulkan</div><div class="s">Lavadrache · Lvl 75<br>🔒 Alle Gebiete</div></div>
+        <div class="zone lock"><div class="n">👑 ???</div><div class="s">Lvl 100<br>🔒 4 Trophäen</div></div>
+      </div>
+      <p class="hint">Händler erscheint um <b id="merchant">—</b> · Truhen setzen sich um Mitternacht zurück</p>
+      <div class="row"><button class="btn primary" id="closeMap">Zurück in den Wald</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="win" hidden>
+    <div class="card stack" style="text-align:center;">
+      <div class="eyebrow">Sieg</div>
+      <h1 style="font-size:clamp(32px,7vw,52px)" id="winTitle">Waldtroll <span>gefallen</span></h1>
+      <p id="winText">Trophäe erhalten: <b>Trollzahn</b> 🦷</p>
+      <p class="muted" id="winSub">+120 XP · +45 Münzen</p>
+      <div class="row" style="justify-content:center;"><button class="btn primary" id="winBack">Weiter</button></div>
+    </div>
+  </div>
+  <div id="fpsBox" class="hint" style="position:absolute;right:16px;bottom:8px;display:none;font-family:var(--display);"></div>
+</div>
+
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
