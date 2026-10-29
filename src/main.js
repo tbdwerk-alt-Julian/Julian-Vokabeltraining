@@ -902,6 +902,7 @@ import * as A from './audio.js';
     if (e.key.toLowerCase() === 'f' && !uiOpen()) toggleMount();
     if (e.key.toLowerCase() === 'e' && !uiOpen()) interact();
     if (e.key.toLowerCase() === 'i') { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; }
+    if (!uiOpen() && hud.classList.contains('on')) { if (e.key.toLowerCase() === 't') emote('cheer'); if (e.key.toLowerCase() === 'g') emote('wave'); if (e.key.toLowerCase() === 'h') emote('sit'); }
     if (e.key.toLowerCase() === 'v' && !battleOn) { if ($('vocabScreen').hidden) openVocab(); else $('vocabScreen').hidden = true; }
     if (e.key === 'Escape') { if (!$('settings').hidden || !$('inventory').hidden || !$('npc').hidden || !$('vocabScreen').hidden || !$('season').hidden) { $('settings').hidden = true; $('inventory').hidden = true; $('npc').hidden = true; $('vocabScreen').hidden = true; $('season').hidden = true; } else $('pause').hidden = !$('pause').hidden; }
     if (/^[1-9]$/.test(e.key)) selectHot(+e.key - 1);
@@ -953,6 +954,10 @@ import * as A from './audio.js';
     if (rider && heroInst) { heroInst.obj.position.y = (u.heroY !== undefined ? u.heroY : u.seatY - .5) + bob * .7; heroInst.obj.rotation.x = -.15 * sp; }
   }
   let camShake = 0, heroLockUntil = 0, sprinting = false;
+  const EMOTES = { cheer: { n: 'Jubeln', clips: ['Cheer', 'Interact'], ms: 1600, loop: false }, wave: { n: 'Winken', clips: ['Wave', 'Interact', 'Cheer'], ms: 1500, loop: false }, sit: { n: 'Hinsetzen', clips: ['Sit_Floor_Idle', 'Sit_Chair_Idle'], ms: 600000, loop: true } };
+  let emoteIdx = 0;
+  function emote(key) { const em = EMOTES[key]; if (!em || !heroInst || state.mounted || swimming || battleOn) { if (state.mounted) toast('Erst absteigen (F)'); return; } let ok = false; for (const c of em.clips) if (heroInst.play(c, .15, em.loop)) { ok = true; break; } if (!ok) return; heroLockUntil = performance.now() + em.ms; toast((key === 'cheer' ? '🎉 ' : key === 'wave' ? '👋 ' : '🪑 ') + em.n + (em.loop ? ' · laufen = aufstehen' : '')); A.sfx('click'); }
+  $('emoteBtn').onclick = () => { const keys = Object.keys(EMOTES); emote(keys[emoteIdx % keys.length]); emoteIdx++; };
   let bannerT = null; function banner(title, sub, cls) { const b = $('banner'); b.className = 'banner show ' + (cls || ''); b.innerHTML = '<div class="bt">' + title + '</div>' + (sub ? '<div class="bs">' + sub + '</div>' : ''); clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('show'), 2600); }
   // Schwebende Schadenszahl über einem Objekt
   function popDmg(obj, text, cls) {
@@ -991,6 +996,7 @@ import * as A from './audio.js';
       if (sprinting) state.stamina = Math.max(0, state.stamina - dt * 9);
       if (state.stamina <= 0 && state.mounted) base *= .4;
       const sp = (rolling > 0 ? base * 2 : base) * dt * (fwd < 0 ? .6 : 1);
+      if (moving && heroLockUntil > performance.now() + 5000) heroLockUntil = 0;
       if (moving || rolling > 0) {
         const f = rolling > 0 ? 1 : fwd;
         player.position.x = clamp(player.position.x + Math.sin(heading) * sp * f, -HALF, HALF); player.position.z = clamp(player.position.z + Math.cos(heading) * sp * f, -HALF, HALF);
