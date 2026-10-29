@@ -150,7 +150,7 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
 .timer { height: 4px; background: rgba(255,255,255,.1); border-radius: 99px; overflow: hidden; }
 .timer > i { display: block; height: 100%; width: 100%; background: var(--accent-2); transition: width .1s linear; }
 .map { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-.wmwrap { width: 100%; max-height: 52vh; display: flex; justify-content: center; }
+.wmwrap { width: 100%; display: flex; justify-content: center; }
 #worldmap { width: min(100%, 52vh); height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.5); image-rendering: auto; }
 #map .card { width: min(760px, 100%); }
 .zone { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: rgba(255,255,255,.03); }
@@ -324,6 +324,35 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tier .claim { font-size: 11px; padding: 5px 9px; margin-top: 4px; }
 .btn.glow { box-shadow: 0 0 0 3px rgba(124,255,155,.3), 0 0 26px rgba(124,255,155,.55); animation: pulse 1.6s ease-in-out infinite; }
 @media (max-width: 600px) { .sp-head { padding: 16px; } .sp-head h2 { font-size: 24px; } .tier { width: 100px; } }
+
+/* Lebensleiste und Ausdauer über der Hotbar */
+.vitals { width: min(440px, 94vw); display: flex; flex-direction: column; gap: 5px; }
+.vrow { display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 8px; }
+.vrow b { font-family: var(--display); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.8); text-align: right; text-shadow: 0 1px 2px #000; }
+.vbar { position: relative; height: 20px; border-radius: 99px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.16); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,.6), 0 4px 14px rgba(0,0,0,.35); backdrop-filter: blur(6px); }
+.vbar > i { display: block; height: 100%; width: 100%; border-radius: 99px; transition: width .25s; }
+.vbar.hp > i { background: linear-gradient(90deg, #ff3d5e, #ff7a5c 70%, #ffb199); box-shadow: 0 0 16px rgba(255,77,109,.65); }
+.vbar.stam { height: 11px; } .vbar.stam > i { background: linear-gradient(90deg, #ffb13d, #ffe08a); box-shadow: 0 0 10px rgba(255,177,61,.5); }
+.vbar.stam span { font-size: 8px; }
+.vbar span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #fff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0,0,0,.6); pointer-events: none; }
+.combo { display: flex; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.14); border-radius: 99px; padding: 3px 10px; font-family: var(--display); font-size: 11px; font-weight: 700; color: var(--fg); backdrop-filter: blur(6px); }
+.chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,.8); }
+/* Hotbar modern */
+.hotbar { display: flex; gap: 7px; background: linear-gradient(180deg, rgba(20,26,34,.72), rgba(8,12,18,.78)); border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 8px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08); }
+.slot { width: 52px; height: 52px; border-radius: 13px; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(0,0,0,.3)); display: grid; place-items: center; font-size: 22px; position: relative; cursor: pointer; transition: transform .12s, box-shadow .12s; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.slot:hover { transform: translateY(-2px); }
+.slot small { position: absolute; left: 4px; top: 3px; font-size: 9px; color: rgba(255,255,255,.75); font-family: var(--display); font-weight: 700; background: rgba(0,0,0,.5); border-radius: 6px; padding: 0 4px; }
+.slot .n { position: absolute; right: 5px; bottom: 3px; font-size: 10px; font-family: var(--display); font-weight: 700; color: var(--fg); text-shadow: 0 1px 2px #000; }
+.slot.sel { border-color: var(--accent); transform: translateY(-3px) scale(1.06); box-shadow: 0 0 0 1px var(--accent), 0 0 18px rgba(124,255,155,.55), inset 0 1px 0 rgba(255,255,255,.15); background: linear-gradient(180deg, rgba(124,255,155,.28), rgba(0,0,0,.3)); }
+.slot.empty { opacity: .4; }
+/* Weltkarte modern */
+#map .card { width: min(960px, 100%); max-height: 96vh; overflow: auto; }
+#worldmap { width: min(100%, 64vh); height: auto; border-radius: 18px; border: 1px solid rgba(255,255,255,.18); box-shadow: 0 16px 50px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.3); }
+.legend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.zone { border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 12px 14px; background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.25)); }
+.zone.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(124,255,155,.25); background: linear-gradient(180deg, rgba(124,255,155,.18), rgba(0,0,0,.25)); }
+@media (max-width: 600px) { .vitals { width: 96vw; } .slot { width: 44px; height: 44px; } }
 </style>
 </head>
 <body>
@@ -341,9 +370,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     <div class="hud-top">
       <div class="panel stat">
         <div class="lvl" style="grid-column: 1 / -1;">LVL <span id="lvl">1</span><small id="pnameHud">Held</small></div>
-        <b>HP</b><div><div class="bar hp"><i id="hpBar" style="width:100%"></i></div><div class="hpnum" id="hpNum">100 / 100</div></div>
         <b>XP</b><div class="bar"><i id="xp"></i></div>
-        <b id="stamLabel">Ausdauer</b><div class="bar stam" id="stamBar"><i id="stam" style="width:100%"></i></div>
       </div>
       <div class="panel quest">
         <div class="eyebrow">Quest</div>
@@ -364,7 +391,11 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     <div class="hud-bottom">
       <div id="joy"><i></i></div>
       <div class="center">
-        <div class="combo">COMBO <span id="combo">0</span> · <span id="coins">0</span> 🪙 · <span id="gems">0</span> 💎</div>
+        <div class="combo"><span class="chip">COMBO <span id="combo">0</span></span><span class="chip">🪙 <span id="coins">0</span></span><span class="chip">💎 <span id="gems">0</span></span></div>
+        <div class="vitals">
+          <div class="vrow"><b>HP</b><div class="vbar hp"><i id="hpBar" style="width:100%"></i><span id="hpNum">100 / 100</span></div></div>
+          <div class="vrow"><b id="stamLabel">Ausdauer</b><div class="vbar stam" id="stamBar"><i id="stam" style="width:100%"></i><span id="stamNum">100%</span></div></div>
+        </div>
         <div class="hotbar" id="hotbar"></div>
         <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar</div>
       </div>
@@ -588,8 +619,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   <div class="screen" id="map" hidden>
     <div class="card stack">
-      <div class="eyebrow">Map-Menü</div><h2>Weltkarte</h2>
-      <div class="wmwrap"><canvas id="worldmap" width="640" height="640"></canvas></div>
+      <div class="row" style="justify-content:space-between;align-items:flex-end;"><div><div class="eyebrow">Map-Menü</div><h2 style="margin:0">Weltkarte</h2></div><div class="legend"><span class="chip">🏕️ Lager</span><span class="chip">💀 Boss</span><span class="chip"><i style="background:#e6a23c"></i>Truhe</span><span class="chip"><i style="background:#35d6a0"></i>Station</span><span class="chip"><i style="background:#ff6b6b"></i>Troll</span><span class="chip">🏠 Hütte</span><span class="chip">🏛️ Ruine</span></div></div>
+      <div class="wmwrap"><canvas id="worldmap" width="800" height="800"></canvas></div>
       <div class="map">
         <div class="zone active"><div class="n">🌲 Wald</div><div class="s">Waldtroll · Lvl 10<br>Großer See im Osten</div></div>
         <div class="zone lock"><div class="n">🏜️ Wüste</div><div class="s">Sandwurm · Lvl 25<br>🔒 Waldtroll besiegen</div></div>

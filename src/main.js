@@ -240,7 +240,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   (function () { const cell = 6, grid = new Map(), key = (x, z) => (Math.floor(x / cell) + 1000) * 4000 + (Math.floor(z / cell) + 1000); treeSpots.forEach(t => { const k = key(t[0], t[1]); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(t); }); const ca = groundGeo.attributes.color, pa = groundGeo.attributes.position; for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), z = pa.getZ(i); let ao = 0; for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { const l = grid.get(key(x + dx * cell, z + dz * cell)); if (l) for (const t of l) { const d = Math.hypot(t[0] - x, t[1] - z); if (d < 5) ao += (1 - d / 5) * .45; } } ao = Math.min(.5, ao); if (ao > 0) ca.setXYZ(i, ca.getX(i) * (1 - ao), ca.getY(i) * (1 - ao), ca.getZ(i) * (1 - ao)); } ca.needsUpdate = true; })();
   // Büsche, Felsen, Blumen, Pilze, Schilf
   instanced(new THREE.IcosahedronGeometry(.5, 1), weatherize(mat(0x2f8a45)), bushes.length * 3, put => bushes.forEach(b => { for (let i = 0; i < 3; i++) put(b.x + rng(-.4, .4) * b.s, groundY(b.x, b.z) + .35 * b.s, b.z + rng(-.4, .4) * b.s, 0, Math.random() * 3, 0, b.s, b.s, b.s); }));
-  instanced(new THREE.DodecahedronGeometry(1, 1), weatherize(new THREE.MeshStandardMaterial({ color: 0x6c746f, roughness: .92, flatShading: true, normalMap: groundNrm, normalScale: new THREE.Vector2(.8, .8) })), rocks.length, put => rocks.forEach(r => put(r.x, groundY(r.x, r.z) + .15 * r.s, r.z, r.rx, r.ry, 0, r.s, r.s * .8, r.s)));
+  instanced((function () { const g = new THREE.IcosahedronGeometry(1, 2); const p = g.attributes.position, col = []; const n = (x, y, z) => Math.sin(x * 3.1 + y * 1.7) * Math.cos(z * 2.3 - x * 1.1) * .5 + Math.sin(y * 5.3 + z * 2.9) * .25; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const d = 1 + n(x, y, z) * .28 + (Math.random() - .5) * .06; p.setXYZ(i, x * d * 1.15, y * d * .8, z * d); } g.computeVertexNormals(); const nn = g.attributes.normal; for (let i = 0; i < p.count; i++) { const up = Math.max(0, nn.getY(i)); const moss = Math.pow(up, 2.2) * (.55 + Math.random() * .45); const g0 = .42 + (Math.random() - .5) * .14; col.push(g0 * (1 - moss) + .36 * moss, g0 * (1 - moss) + .55 * moss, g0 * (1 - moss) + .3 * moss); } g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); return g; })(), weatherize(new THREE.MeshStandardMaterial({ color: 0x8e948f, roughness: .95, vertexColors: true, normalMap: groundNrm, normalScale: new THREE.Vector2(.7, .7) })), rocks.length, put => rocks.forEach(r => put(r.x, groundY(r.x, r.z) + .15 * r.s, r.z, r.rx, r.ry, 0, r.s, r.s * .8, r.s)));
   instanced(new THREE.IcosahedronGeometry(.11, 0), white(), flowers.length, put => flowers.forEach(f => put(f.x, groundY(f.x, f.z) + .5, f.z, 0, 0, 0, 1, 1, 1, f.c)), false);
   instanced(new THREE.CylinderGeometry(.02, .02, .5, 4), smooth(0x3f8f3a), flowers.length, put => flowers.forEach(f => put(f.x, groundY(f.x, f.z) + .25, f.z, 0, 0, 0, 1, 1, 1)), false);
   instanced(new THREE.SphereGeometry(.22, 8, 6, 0, 6.3, 0, 1.6), smooth(0xd8402c), shrooms.length, put => shrooms.forEach(m => put(m.x, groundY(m.x, m.z) + .22, m.z, 0, 0, 0, 1, 1, 1)), false);
@@ -759,10 +759,10 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   (function () {
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .9, 7), new THREE.MeshStandardMaterial({ color: 0x3a2412, roughness: 1 })); stick.position.y = .3; torch.add(stick);
     const wrap = new THREE.Mesh(new THREE.CylinderGeometry(.075, .07, .22, 8), new THREE.MeshStandardMaterial({ color: 0x5a3b1a, roughness: .9 })); wrap.position.y = .72; torch.add(wrap);
-    const ember = new THREE.Mesh(new THREE.SphereGeometry(.085, 10, 8), new THREE.MeshStandardMaterial({ color: 0xff6a1a, emissive: 0xff5a10, emissiveIntensity: 2.2, roughness: .6 })); ember.position.y = .86; torch.add(ember);
+    const ember = new THREE.Mesh(new THREE.SphereGeometry(.085, 10, 8), new THREE.MeshStandardMaterial({ color: 0xff6a1a, emissive: 0xff5a10, emissiveIntensity: 4, roughness: .6 })); ember.position.y = .86; torch.add(ember);
     const cv = document.createElement('canvas'); cv.width = cv.height = 64; const c = cv.getContext('2d'); const gr = c.createRadialGradient(32, 36, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(255,240,180,1)'); gr.addColorStop(.3, 'rgba(255,160,40,.9)'); gr.addColorStop(.7, 'rgba(255,80,10,.35)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
-    const flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); flame.position.y = 1.0; flame.scale.set(.45, .7, 1); torch.add(flame); torch.userData.flame = flame;
-    const light = new THREE.PointLight(0xffa550, 1.6, 14, 2); light.position.y = 1.0; torch.add(light); torch.userData.light = light;
+    const flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); flame.position.y = 1.0; flame.scale.set(.8, 1.25, 1); torch.add(flame); torch.userData.flame = flame;
+    const light = new THREE.PointLight(0xffb060, 5.5, 26, 1.6); light.position.y = 1.05; torch.add(light); torch.userData.light = light;
     torch.userData.on = false;
   })();
   function setTorch(on) {
@@ -899,7 +899,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
         walkPhase += dt * (state.mounted ? 9 : 11) * Math.abs(f);
       } else state.stamina = Math.min(100, state.stamina + dt * 5);
       if (!state.mounted && moving) state.stamina = Math.min(100, state.stamina + dt * 3);
-      $('stam').style.width = state.stamina + '%';
+      $('stam').style.width = state.stamina + '%'; $('stamNum').textContent = Math.round(state.stamina) + '%';
       player.rotation.y = heading; caveCollision();
       if (Math.hypot(px - grassCenter.x, pz - grassCenter.z) > GR * .55) placeGrass(px, pz);
     }
@@ -909,7 +909,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
       if (state.mounted) heroInst.play(swimming ? 'Sit_Floor_Idle' : 'Sit_Chair_Idle');
       else if (rolling > 0) { if (!state.mounted) heroInst.play('Dodge_Forward', .05, false); }
       else if (swimming) { heroInst.play(moving ? 'Walking_A' : 'Lie_Idle'); heroInst.obj.rotation.x = 1.2; heroInst.obj.position.y = .3; }
-      else { heroInst.obj.rotation.x = 0; heroInst.obj.position.y = 0; heroInst.play(moving ? (fwd < 0 ? 'Walking_Backwards' : 'Running_A') : 'Idle'); }
+      else { heroInst.obj.rotation.x = 0; heroInst.obj.position.y = 0; const slow = Math.abs(fwd) < .5; heroInst.play(moving ? (fwd < 0 ? 'Walking_Backwards' : slow ? 'Walking_A' : 'Running_A') : (Math.abs(turn) > .3 ? 'Walking_A' : 'Idle'), .15); if (heroInst.action) heroInst.action.timeScale = moving ? (slow ? clamp(Math.abs(fwd) * 2, .6, 1.1) : clamp(Math.abs(fwd), .85, 1.15)) : (Math.abs(turn) > .3 ? .8 : 1); }
     }
     if (mountMesh.userData.inst) { const a = mountMesh.userData.inst.action; if (a) { a.paused = !(moving || swimming); a.timeScale = swimming ? .5 : 1; } }
     const gy = groundY(player.position.x, player.position.z);
@@ -938,8 +938,9 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     const spPos = smoke.geometry.attributes.position; for (let i = 0; i < spPos.count; i++) { let y = spPos.getY(i) + dt * 1.2; if (y > 7) y = 2; spPos.setY(i, y); spPos.setX(i, 3 + Math.sin(clock.t * 2 + i) * .35 * (y - 2) * .3); } spPos.needsUpdate = true;
     if (gate.userData.open && gate.userData.lift < 6.6) { gate.userData.lift = Math.min(6.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
+    if (npc.userData.inst) { const ph = clock.t % 9; npc.userData.inst.play(near(npc, 4) ? 'Interact' : ph < 2 ? 'Cheer' : 'Idle', .3); }
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
-    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
+    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) { const hunt = d < 14 && d > 2.5 && inWorld; w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : hunt ? 'Run' : 'Walk', .15); if (w.userData.inst.action) w.userData.inst.action.timeScale = hunt ? (w.userData.alpha ? 1.05 : 1.15) : .9; } if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     if (water.material.userData.wt) water.material.userData.wt.value = clock.t;
     if (settings.quality >= 2) { for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true; }
     const fpos = fireflies.geometry.attributes.position; if (settings.quality >= 2) for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = (.5 + Math.sin(clock.t * 4) * .3) * Math.max(.08, WORLD_U.night.value);
@@ -955,7 +956,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     gfx.updateSky(dt, player.position); if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
     setTorch(hud.classList.contains('on') && gfx.sunElevation() < .04 && !swimming && !!heroInst);
-    if (torch.visible) { const f = torch.userData.flame; f.scale.set(.4 + Math.sin(clock.t * 17) * .06, .65 + Math.sin(clock.t * 23) * .1, 1); torch.userData.light.intensity = 1.5 + Math.sin(clock.t * 19) * .3 + Math.sin(clock.t * 7) * .2; }
+    if (torch.visible) { const f = torch.userData.flame; f.scale.set(.75 + Math.sin(clock.t * 17) * .1, 1.2 + Math.sin(clock.t * 23) * .18, 1); torch.userData.light.intensity = 5.2 + Math.sin(clock.t * 19) * .8 + Math.sin(clock.t * 7) * .5; }
     pollen.visible = settings.quality >= 2 && WORLD_U.night.value < .5 && gfx.wx.cloudDark < .4; if (pollen.visible) { const pa = pollenGeo.attributes.position; for (let i = 0; i < pa.count; i++) { let x = pa.getX(i) + Math.sin(clock.t * .5 + i) * dt * .4 + dt * WORLD_U.wind.value * 1.5, y = pa.getY(i) + Math.cos(clock.t * .7 + i * 1.3) * dt * .25, z = pa.getZ(i) + Math.cos(clock.t * .4 + i) * dt * .3; if (Math.abs(x) > 30) x = -x * .95; if (y < .3) y = 6; if (y > 8) y = .5; pa.setXYZ(i, x, y, z); } pa.needsUpdate = true; pollen.position.set(player.position.x, groundY(player.position.x, player.position.z), player.position.z); pollen.material.opacity = .35 + Math.sin(clock.t * 2) * .1; }
     gfx.render(dt); renderInv();
   }
@@ -965,25 +966,52 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   // Weltkarte: Gelände wird einmal gerastert (Höhe → Farbe), Orte als Symbole
   let worldMapBase = null;
   function buildWorldMapBase() {
-    const S = 640, cv = document.createElement('canvas'); cv.width = cv.height = S; const c = cv.getContext('2d'); const img = c.createImageData(S, S); const d = img.data;
-    for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) { const x = (px / S - .5) * WORLD, z = (py / S - .5) * WORLD; const y = groundY(x, z); let r, g, b; if (y < WATER_Y - .45) { const dpt = Math.min(1, (WATER_Y - y) / 5); r = 60 - dpt * 30; g = 150 - dpt * 70; b = 200 - dpt * 60; } else if (y < WATER_Y + .3) { r = 200; g = 185; b = 140; } else if (y > 20) { const t = Math.min(1, (y - 20) / 6); r = 120 + t * 130; g = 125 + t * 125; b = 120 + t * 135; } else if (y > 9) { const t = (y - 9) / 11; r = 70 + t * 50; g = 110 - t * 20; b = 55 + t * 60; } else { const n = Math.sin(x * .3) * Math.cos(z * .25) * 10; r = 60 + n; g = 130 + n + y * 3; b = 55 + n; } const i = (py * S + px) * 4; d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = 255; }
-    c.putImageData(img, 0, 0); return cv;
+    const S = 800, cv = document.createElement('canvas'); cv.width = cv.height = S; const c = cv.getContext('2d'); const img = c.createImageData(S, S); const d = img.data;
+    const H = new Float32Array(S * S); for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) H[py * S + px] = groundY((px / S - .5) * WORLD, (py / S - .5) * WORLD);
+    const HS = new Float32Array(S * S); { const R = 12; const tmp = new Float32Array(S * S); for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) { let s = 0, n = 0; for (let k = -R; k <= R; k++) { const q = px + k; if (q >= 0 && q < S) { s += H[py * S + q]; n++; } } tmp[py * S + px] = s / n; } for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) { let s = 0, n = 0; for (let k = -R; k <= R; k++) { const q = py + k; if (q >= 0 && q < S) { s += tmp[q * S + px]; n++; } } HS[py * S + px] = s / n; } }
+    const mix = (a, b, t) => a + (b - a) * t; const step = WORLD / S;
+    for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
+      const y = H[py * S + px]; const i = (py * S + px) * 4;
+      // Schummerung (Licht aus Nordwest)
+      const yl = HS[py * S + Math.max(0, px - 2)], yr = HS[py * S + Math.min(S - 1, px + 2)], yu = HS[Math.max(0, py - 2) * S + px], yd = HS[Math.min(S - 1, py + 2) * S + px];
+      const nx = (yl - yr) / (4 * step), nz = (yu - yd) / (4 * step); const len = Math.hypot(nx, nz, 1); const shade = clamp(.82 + (nx * -.6 + nz * -.6 + 1 * .5) / len * .45, .62, 1.2);
+      let r, g, bb;
+      if (y < WATER_Y - .3) { const dpt = clamp((WATER_Y - y) / 5, 0, 1); r = mix(150, 70, dpt); g = mix(205, 150, dpt); bb = mix(228, 205, dpt); }
+      else if (y < WATER_Y + .6) { r = 214; g = 206; bb = 176; }
+      else if (y > 21) { const t = clamp((y - 21) / 6, 0, 1); r = mix(205, 243, t); g = mix(200, 243, t); bb = mix(190, 240, t); }
+      else if (y > 9) { const t = clamp((y - 9) / 12, 0, 1); r = mix(176, 205, t); g = mix(190, 200, t); bb = mix(140, 190, t); }
+      else { const t = clamp(y / 9, 0, 1); r = mix(140, 176, t); g = mix(190, 190, t); bb = mix(118, 140, t); }
+      const land = y >= WATER_Y - .3; const sh = land ? shade : 1;
+      // Höhenlinien alle 4 m (dezent)
+      const cl = land && y < 20 && Math.hypot(nx, nz) < .5 && (Math.abs(((y + 100) % 4)) < .16) ? .88 : 1;
+      d[i] = r * sh * cl; d[i + 1] = g * sh * cl; d[i + 2] = bb * sh * cl; d[i + 3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+    // Wald als feine Punkte
+    c.fillStyle = 'rgba(52,110,60,.55)'; treeSpots.forEach(([x, z]) => { const px = (x / WORLD + .5) * S, pz = (z / WORLD + .5) * S; c.beginPath(); c.arc(px, pz, 1.6, 0, 7); c.fill(); });
+    // Uferlinie
+    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.2; c.beginPath(); c.arc((LAKE.x / WORLD + .5) * S, (LAKE.z / WORLD + .5) * S, LAKE.r * .93 * S / WORLD, 0, 7); c.stroke();
+    // Vignette
+    const vg = c.createRadialGradient(S / 2, S / 2, S * .35, S / 2, S / 2, S * .72); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,16,24,.55)'); c.fillStyle = vg; c.fillRect(0, 0, S, S);
+    return cv;
   }
   function drawWorldMap() {
     if (!worldMapBase) worldMapBase = buildWorldMapBase();
     const cv = $('worldmap'), c = cv.getContext('2d'), S = cv.width; c.drawImage(worldMapBase, 0, 0, S, S);
     const P = (x, z) => [(x / WORLD + .5) * S, (z / WORLD + .5) * S];
-    c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1; for (let g = 0; g <= 6; g++) { c.beginPath(); c.moveTo(g * S / 6, 0); c.lineTo(g * S / 6, S); c.moveTo(0, g * S / 6); c.lineTo(S, g * S / 6); c.stroke(); }
-    const dot = (x, z, col, r) => { const [a, b] = P(x, z); c.fillStyle = col; c.beginPath(); c.arc(a, b, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 1; c.stroke(); };
-    const label = (x, z, t, col, dy) => { const [a, b] = P(x, z); c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,.65)'; c.fillText(t, a + 1, b + (dy || -8) + 1); c.fillStyle = col || '#fff'; c.fillText(t, a, b + (dy || -8)); };
-    HUTS.forEach(([x, z]) => dot(x, z, '#d9a24c', 4)); RUINS.forEach(([x, z]) => dot(x, z, '#bfc4c9', 4));
-    chests.forEach(ch => dot(ch.position.x, ch.position.z, ch.userData.open ? '#777' : ch.userData.gold ? '#ffd166' : '#e6a23c', 3));
-    stations.forEach(st => dot(st.g.position.x, st.g.position.z, st.done ? '#4a7' : '#7cff9b', 3));
-    wolves.forEach(w => { if (w.userData.alive) dot(w.position.x, w.position.z, w.userData.alpha ? '#ff2a3c' : '#ff6b6b', w.userData.alpha ? 4 : 2.5); });
-    const [cx, cz] = P(CAVE.x, CAVE.z); c.fillStyle = 'rgba(40,10,10,.85)'; c.beginPath(); c.arc(cx, cz, 9, 0, 7); c.fill(); label(CAVE.x, CAVE.z, (gate.userData.open ? '' : '🔒 ') + '☠ Waldtroll', '#ff6b6b', -13);
-    dot(0, 0, '#7cff9b', 6); label(0, 0, 'Lager', '#7cff9b', -11); label(LAKE.x, LAKE.z, 'Großer See', '#dff3ff', 4); label(130, -95, 'Nordgipfel', '#fff', 4); label(70, 175, 'Hochland', '#fff', 4); label(-150, 70, 'Westkamm', '#fff', 4);
-    const [px, pz] = P(player.position.x, player.position.z); c.save(); c.translate(px, pz); c.rotate(-heading + Math.PI); c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, -9); c.lineTo(6, 6); c.lineTo(0, 2); c.lineTo(-6, 6); c.closePath(); c.fill(); c.stroke(); c.restore();
-    label(player.position.x, player.position.z, 'Du', '#fff', -14);
+    const pin = (x, z, emoji, col, r) => { const [a, b] = P(x, z); c.save(); c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 6; c.shadowOffsetY = 2; c.fillStyle = '#fff'; c.beginPath(); c.arc(a, b, r, 0, 7); c.fill(); c.restore(); c.strokeStyle = col; c.lineWidth = 2.2; c.beginPath(); c.arc(a, b, r, 0, 7); c.stroke(); c.font = Math.round(r * 1.25) + 'px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(emoji, a, b + 1); };
+    const dot = (x, z, col, r) => { const [a, b] = P(x, z); c.fillStyle = col; c.beginPath(); c.arc(a, b, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.2; c.stroke(); };
+    const label = (x, z, t, dy, size) => { const [a, b] = P(x, z); c.font = '600 ' + (size || 13) + 'px "Segoe UI", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = 4; c.strokeStyle = 'rgba(10,16,24,.75)'; c.lineJoin = 'round'; c.strokeText(t, a, b + dy); c.fillStyle = '#fff'; c.fillText(t, a, b + dy); };
+    const region = (x, z, t) => { const [a, b] = P(x, z); c.font = '700 15px "Segoe UI", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.letterSpacing = '3px'; c.lineWidth = 5; c.strokeStyle = 'rgba(10,16,24,.6)'; c.strokeText(t.toUpperCase(), a, b); c.fillStyle = 'rgba(255,255,255,.92)'; c.fillText(t.toUpperCase(), a, b); c.letterSpacing = '0px'; };
+    region(130, -95, 'Nordgipfel'); region(70, 175, 'Hochland'); region(-150, 70, 'Westkamm'); region(LAKE.x, LAKE.z, 'Großer See'); region(-60, -180, 'Dunkelwald');
+    HUTS.forEach(([x, z]) => pin(x, z, '🏠', '#e0932f', 9)); RUINS.forEach(([x, z]) => pin(x, z, '🏛️', '#9aa3ad', 9));
+    chests.forEach(ch => { if (!ch.userData.open) dot(ch.position.x, ch.position.z, ch.userData.gold ? '#ffd166' : '#e6a23c', 3.5); });
+    stations.forEach(st => dot(st.g.position.x, st.g.position.z, st.done ? '#7fa58a' : '#35d6a0', 3.5));
+    wolves.forEach(w => { if (w.userData.alive) dot(w.position.x, w.position.z, w.userData.alpha ? '#ff2a3c' : '#ff6b6b', w.userData.alpha ? 4 : 2.8); });
+    pin(CAVE.x, CAVE.z, '💀', '#ff4d6d', 13); label(CAVE.x, CAVE.z, (gate.userData.open ? '' : '🔒 ') + 'Waldtroll · Lvl 10', 24, 12);
+    pin(0, 0, '🏕️', '#7cff9b', 12); label(0, 0, 'Lager', 22, 12);
+    const [px, pz] = P(player.position.x, player.position.z); c.save(); c.translate(px, pz); c.rotate(-heading + Math.PI); const cone = c.createRadialGradient(0, 0, 2, 0, 0, 26); cone.addColorStop(0, 'rgba(90,160,255,.55)'); cone.addColorStop(1, 'rgba(90,160,255,0)'); c.fillStyle = cone; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 26, -Math.PI / 2 - .55, -Math.PI / 2 + .55); c.closePath(); c.fill(); c.restore();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(px, pz, 8, 0, 7); c.fill(); c.fillStyle = '#4a9bff'; c.beginPath(); c.arc(px, pz, 5.5, 0, 7); c.fill();
   }
   // Minimap (Nord oben, Radius 90 m)
   const mm = $('minimap'), mctx = mm.getContext('2d'); let mmFrame = 0;
