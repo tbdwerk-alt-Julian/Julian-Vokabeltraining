@@ -369,6 +369,10 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .dmg.bad { color: #ff4d6d; }
 @keyframes dmgUp { 0% { opacity: 0; margin-top: 10px; scale: .5; } 15% { opacity: 1; scale: 1.2; } 35% { scale: 1; } 100% { opacity: 0; margin-top: -80px; } }
 @media (max-width: 600px) { #battle { justify-content: center; align-items: flex-end; } }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.srow { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.srow b { font-family: var(--display); font-size: 16px; color: var(--accent); }
 </style>
 </head>
 <body>
@@ -392,6 +396,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
         <div class="eyebrow">Quest</div>
         <div class="title" id="qtitle">Keine Quest</div>
         <div class="prog" id="qprog">Sprich mit Bram im Lager</div>
+        <div class="prog" id="dailyLine" style="margin-top:4px;"></div>
+        <div class="prog" id="merchantHint" style="margin-top:2px;opacity:.8;"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <div class="panel" id="ringPanel" style="display:flex;gap:10px;align-items:center;">
@@ -420,7 +426,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
         <button class="btn small" id="useBtn">E</button>
         <button class="btn small" id="invBtn">🎒 Inventar <kbd>I</kbd></button>
         <button class="btn small" id="vocabBtn">📚 Vokabeln</button>
-        <button class="btn small" id="seasonBtn">🎫 Saison</button>
+        <button class="btn small" id="seasonBtn">🎫 Saison</button><button class="btn small" id="dailyBtn">📋 Aufgabe</button>
         <button class="btn small" id="mapBtn">🗺 Karte</button>
         <button class="btn small" id="saveBtn">💾</button>
       </div>
@@ -570,6 +576,37 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     </div>
   </div>
 
+
+  <div class="overlay" id="shop" hidden>
+    <div class="card wide sp">
+      <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#2a1a3a 0%,#6b3aa0 55%,#160c22 100%);">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div><div class="eyebrow">Fahrender Händler · jede volle Stunde 15 Minuten</div><h2>🧙 Händler Orrin</h2><div class="sp-pills" id="shopMeta"></div></div>
+          <button class="btn small" id="closeShop">Schließen</button>
+        </div>
+      </div>
+      <div class="sp-track" id="shopGrid" style="flex-wrap:wrap;justify-content:center;"></div>
+      <p class="hint" style="padding:0 20px 16px;margin:0;">Kristalle 💎 gibt es im Saison-Pass und für Tagesaufgaben. Das Angebot wechselt jede Stunde.</p>
+    </div>
+  </div>
+  <div class="overlay" id="daily" hidden>
+    <div class="card wide sp">
+      <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#0d2a1a 0%,#1f8a4a 55%,#06200f 100%);">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div><div class="eyebrow">Tagesaufgaben · eine pro Tag wählen</div><h2>📋 Heute</h2></div>
+          <button class="btn small" id="closeDaily">Schließen</button>
+        </div>
+      </div>
+      <div class="sp-track" id="dailyGrid" style="justify-content:center;"></div>
+      <p class="hint" style="padding:0 20px 16px;margin:0;">Jeden Tag drei neue Aufgaben. Belohnung: 60 🪙, 5 💎 und 60 Saison-XP.</p>
+    </div>
+  </div>
+  <div class="overlay" id="statsScreen" hidden>
+    <div class="card stack" style="width:min(520px,100%);">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Statistik</div><h2>📊 Dein Fortschritt</h2></div><button class="btn small" id="closeStats">Schließen</button></div>
+      <div class="stats" id="statsGrid"></div>
+    </div>
+  </div>
   <div class="overlay" id="newWord" hidden style="z-index:5;">
     <div class="card stack" style="text-align:center;width:min(440px,100%);">
       <div class="eyebrow">Neues Wort</div>
@@ -590,6 +627,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <button class="btn" id="pMap">🗺 Karte</button>
       <button class="btn" id="pVocab">📚 Vokabeln</button>
       <button class="btn" id="pSeason">🎫 Saison-Pass</button>
+      <button class="btn" id="pDaily">📋 Tagesaufgabe</button>
+      <button class="btn" id="pStats">📊 Statistik</button>
       <button class="btn" id="pSave">💾 Speichern</button>
       <button class="btn" id="pMenu">Hauptmenü</button>
       <p class="hint">Esc = Pause · Einstellungen auch über ⚙ oben rechts</p>
