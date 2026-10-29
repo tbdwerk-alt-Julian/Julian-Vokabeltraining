@@ -166,7 +166,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [];
   for (let i = 0; i < 1700; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
-    if (Math.hypot(x, z) < 11 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
+    if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
     const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; (Math.random() < (gy > 6 ? .8 : .5) ? con : broad).push(it); treeSpots.push([x, z]);
   }
   for (let i = 0; i < 600; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
