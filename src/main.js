@@ -1140,7 +1140,7 @@ import * as A from './audio.js';
 
   // ---------- Speichern / Laden ----------
   function saveGame() {
-    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login, gems: state.gems, stats: state.stats, daily: state.daily, buffs: state.buffs, camp: state.camp }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bags: { weapon: [...bags.weapon], armor: [...bags.armor], use: [...bags.use], misc: [...bags.misc] }, equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login, gems: state.gems, stats: state.stats, daily: state.daily, buffs: state.buffs, camp: state.camp, tutDone: state.tutDone }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bags: { weapon: [...bags.weapon], armor: [...bags.armor], use: [...bags.use], misc: [...bags.misc] }, equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
     const ok = writeSave(d, curSlot);
     // Zusätzlich auf dem Dev-Server sichern (saves/spielstand.json) – der App-Browser leert seinen Speicher manchmal
     if (import.meta.env && import.meta.env.DEV) { let vocabRaw = null; try { vocabRaw = localStorage.getItem('vocabquest.vocab.v1'); } catch (e) { } fetch('/__save', { method: 'POST', body: JSON.stringify({ slot: curSlot, save: d, vocabRaw, savedAt: Date.now() }) }).catch(() => { }); }
@@ -1204,7 +1204,22 @@ import * as A from './audio.js';
   function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
-  const _show = show; show = function (name) { _show(name); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } };
+  const _show = show; show = function (name) { _show(name); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } if (name === 'world' && !state.tutDone && !tutStep) setTimeout(startTut, 1200); };
+  // Einführung beim ersten Spielstart
+  const touch = matchMedia('(pointer: coarse)').matches;
+  const TUT = [
+    ['👋 Willkommen in VocabQuest!', touch ? 'Joystick unten links = laufen · Finger ziehen = Kamera' : 'W/S laufen · A/D drehen · Maus ziehen = Kamera drehen'],
+    ['🐎 Dein Reittier', (touch ? 'Absteigen-Knopf' : 'F') + ' = auf- und absteigen · Reiten verbraucht Ausdauer · ' + (touch ? '' : 'Shift = Sprint · ') + 'Leertaste = Ausweichrolle'],
+    ['🧑‍🌾 Bram im Lager', 'Geh zu Bram und drück ' + (touch ? 'den E-Knopf' : 'E') + ' – er gibt dir Quests mit XP, Münzen und Ausrüstung'],
+    ['✨ Lumi', 'Dein Lichtwesen folgt dir. Leuchtet es gelb, ist eine Truhe in der Nähe'],
+    ['⚔️ Kämpfe', 'Trolle greifen an: E = kämpfen · Englische Vokabel tippen = Schlag · perfekt geschrieben = kritischer Treffer'],
+    ['📚 Deine Vokabeln', 'Unter „Vokabeln“ trägst du die Wörter aus deinem Englischbuch ein – die Welt fragt dich genau diese ab'],
+    ['🏰 Dein Ziel', 'Level 10 erreichen, das Festungstor öffnen und den Waldtroll besiegen. Viel Erfolg!']
+  ];
+  let tutStep = 0;
+  function startTut() { if (state.tutDone) return; tutStep = 1; showTut(); }
+  function showTut() { const s = TUT[tutStep - 1]; if (!s) { $('tut').hidden = true; state.tutDone = true; saveGame(); return; } $('tutText').innerHTML = '<b>' + s[0] + '</b><br>' + s[1]; $('tutNext').textContent = tutStep === TUT.length ? 'Los geht’s!' : 'Weiter (' + tutStep + '/' + TUT.length + ')'; $('tut').hidden = false; }
+  $('tutNext').onclick = () => { tutStep++; showTut(); };
   const SEASON_BG = ['linear-gradient(135deg,#3a1d08 0%,#8a4a14 55%,#1d1008 100%)', 'linear-gradient(135deg,#0d2238 0%,#2a6ea3 55%,#08131f 100%)', 'linear-gradient(135deg,#3a1030 0%,#b0487c 55%,#1a0a16 100%)', 'linear-gradient(135deg,#0a2a2a 0%,#1f8a7a 55%,#06201e 100%)'];
   function renderSeason() {
     const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP, open = t - state.season.claimed;

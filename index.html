@@ -381,6 +381,10 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .banner.gold .bt { color: #ffd166; text-shadow: 0 4px 18px rgba(0,0,0,.8), 0 0 46px rgba(255,177,61,.6); }
 .banner.boss .bt { color: #ff4d6d; text-shadow: 0 4px 18px rgba(0,0,0,.9), 0 0 50px rgba(255,77,109,.7); }
 .dmg.xp { color: #7cff9b; font-size: 22px; } .dmg.coin { color: #ffd166; font-size: 22px; }
+
+.tut { position: absolute; left: 50%; bottom: 170px; transform: translateX(-50%); width: min(460px, 92vw); background: rgba(8,12,18,.8); border: 1px solid rgba(124,255,155,.5); border-radius: 16px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 24px rgba(124,255,155,.2); z-index: 4; pointer-events: auto; }
+.tut .tt { flex: 1; font-size: 13px; line-height: 1.4; } .tut .tt b { font-family: var(--display); font-size: 14px; display: block; margin-bottom: 2px; color: var(--accent); }
+@media (max-height: 520px) { .tut { bottom: 120px; } }
 </style>
 </head>
 <body>
@@ -419,6 +423,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     <div class="toast" id="toast"></div>
     <div class="mmwrap"><canvas id="minimap" width="150" height="150"></canvas></div>
     <div class="interact" id="interact"><kbd>E</kbd><span id="interactText"></span></div>
+    <div class="tut" id="tut" hidden><div class="tt" id="tutText"></div><button class="btn small primary" id="tutNext">Weiter</button></div>
     <div class="hud-bottom">
       <div id="joy"><i></i></div>
       <div class="center">
