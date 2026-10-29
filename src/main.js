@@ -168,7 +168,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
 
   // Bäume (realistischer: Stamm mit Ästen, viele Blätterballen, hellere Spitzen)
   // ===== Vegetation: instanziiert (ein Draw-Call pro Bauteil statt tausender Einzel-Meshes) =====
-  const CAVE = { x: 36, z: -6, r: 13 };
+  const CAVE = { x: 36, z: -6, r: 17 };
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [];
   for (let i = 0; i < 1700; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
@@ -229,36 +229,50 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     for (let i = 0; i < 22; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.75 + Math.random() * .35); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.6, 1.8), 1), rockM); b.position.set(x, groundY(x, z) + rng(.2, .8), z); b.rotation.set(Math.random(), Math.random(), Math.random()); b.scale.y = rng(.5, .9); b.castShadow = true; b.receiveShadow = true; scene.add(b); }
     for (let i = 0; i < 70; i++) { const a = Math.random() * Math.PI * 2, r = CAVE.r * (0.2 + Math.random() * .75); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; if (Math.abs(z - CAVE.z) < 4.5 && x < CAVE.x) continue; const hy = Math.sqrt(Math.max(0, CAVE.r * CAVE.r - r * r)) * .58; const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rng(.35, .9), 1), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(.3 + Math.random() * .05, .5, .32 + Math.random() * .12), roughness: 1 })); m.position.set(x, groundY(CAVE.x, CAVE.z) - .4 + hy + .1, z); m.scale.y = .6; scene.add(m); }
     // Stalaktiten am Eingang und Steinweg
-    for (let i = 0; i < 7; i++) { const st = new THREE.Mesh(new THREE.ConeGeometry(rng(.15, .35), rng(.6, 1.6), 6), rockM); st.position.set(CAVE.x - CAVE.r + 1.5 + rng(-.5, 2.5), groundY(CAVE.x, CAVE.z) + 5.2, CAVE.z + rng(-3, 3)); st.rotation.x = Math.PI; scene.add(st); }
+    for (let i = 0; i < 7; i++) { const st = new THREE.Mesh(new THREE.ConeGeometry(rng(.15, .35), rng(.6, 1.6), 6), rockM); st.position.set(CAVE.x - CAVE.r + 1.5 + rng(-.5, 2.5), groundY(CAVE.x, CAVE.z) + 7, CAVE.z + rng(-4.5, 4.5)); st.rotation.x = Math.PI; scene.add(st); }
     for (let i = 0; i < 12; i++) { const sx = CAVE.x - CAVE.r - 2 - i * 1.6, sz = CAVE.z + Math.sin(i * .9) * .9; const s = new THREE.Mesh(new THREE.CylinderGeometry(rng(.4, .6), rng(.5, .7), .12, 7), new THREE.MeshStandardMaterial({ color: 0x5c605a, roughness: 1 })); s.position.set(sx, groundY(sx, sz) + .07, sz); s.rotation.y = Math.random() * 3; s.receiveShadow = true; scene.add(s); }
     // Eingang: dunkler Tunnel nach Westen
     const ex = CAVE.x - CAVE.r + 1, ez = CAVE.z;
-    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.6, 13, 18, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.BackSide })); tunnel.rotation.z = Math.PI / 2; tunnel.rotation.y = Math.PI / 2; tunnel.position.set(ex + 6, groundY(ex, ez) + .3, ez); scene.add(tunnel);
-    const back = new THREE.Mesh(new THREE.CircleGeometry(3.6, 18, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.DoubleSide })); back.rotation.y = -Math.PI / 2; back.position.set(ex + 12.5, groundY(ex, ez) + .3, ez); scene.add(back);
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(14, .3, 7), new THREE.MeshStandardMaterial({ color: 0x3a3d3a, roughness: 1 })); floor.position.set(ex + 6, groundY(ex, ez) - .02, ez); scene.add(floor);
-    const arch = new THREE.Mesh(new THREE.TorusGeometry(3.9, .7, 8, 16, Math.PI), rock); arch.position.set(ex - .2, groundY(ex, ez) + .4, ez); arch.rotation.y = Math.PI / 2; arch.castShadow = true; scene.add(arch);
-    for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.5, 1.1), rock); post.position.set(ex - .2, groundY(ex, ez) + 2.7, ez + s * 3.9); post.castShadow = true; scene.add(post); const torch = new THREE.PointLight(0xffa040, 1.8, 12, 2); torch.position.set(ex - 1.2, groundY(ex, ez) + 3.6, ez + s * 3.9); scene.add(torch); const fl = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.copy(torch.position); scene.add(fl); }
+    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 17, 20, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.BackSide })); tunnel.rotation.z = Math.PI / 2; tunnel.rotation.y = Math.PI / 2; tunnel.position.set(ex + 7.5, groundY(ex, ez) + .3, ez); scene.add(tunnel);
+    const back = new THREE.Mesh(new THREE.CircleGeometry(5, 20, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0b0e0d, roughness: 1, side: THREE.DoubleSide })); back.rotation.y = -Math.PI / 2; back.position.set(ex + 16, groundY(ex, ez) + .3, ez); scene.add(back);
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(18, .3, 10), new THREE.MeshStandardMaterial({ color: 0x3a3d3a, roughness: 1 })); floor.position.set(ex + 8, groundY(ex, ez) - .02, ez); scene.add(floor);
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(5.3, 1.0, 10, 20, Math.PI), rock); arch.position.set(ex - .2, groundY(ex, ez) + .4, ez); arch.rotation.y = Math.PI / 2; arch.castShadow = true; scene.add(arch);
+    for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(1.4, 7.4, 1.4), rock); post.position.set(ex - .2, groundY(ex, ez) + 3.7, ez + s * 5.3); post.castShadow = true; scene.add(post); const torch = new THREE.PointLight(0xffa040, 1.8, 12, 2); torch.position.set(ex - 1.4, groundY(ex, ez) + 5, ez + s * 5.3); scene.add(torch); const fl = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.copy(torch.position); scene.add(fl); }
     // Atmosphäre: leuchtende Kristalle, Ranken am Bogen, Knochen, Pfütze, Glühpilze
     const gy0 = groundY(ex, ez);
     const crystalMat = (c) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .9, roughness: .15, transparent: true, opacity: .9 });
     const crystals = [[ex - 2.5, ez + 4.6, 0x6fd3ff, 1.2], [ex - 3.2, ez - 4.9, 0xb48cff, .9], [ex + 3, ez + 3.2, 0x6fd3ff, 1.4], [ex + 7, ez - 3.1, 0xb48cff, 1.1], [ex + 10, ez + 2.4, 0x7cff9b, 1.0], [ex - 5, ez + 6.2, 0x6fd3ff, .7]];
     crystals.forEach(([cx, cz, col, h]) => { const g = new THREE.Group(); for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.18 + Math.random() * .12, h * (.6 + Math.random() * .6), 6), crystalMat(col)); c.position.set((Math.random() - .5) * .5, h * .3, (Math.random() - .5) * .5); c.rotation.set((Math.random() - .5) * .6, Math.random() * 3, (Math.random() - .5) * .6); g.add(c); } if (crystals.indexOf(crystals.find(q => q[0] === cx)) < 2) { const l = new THREE.PointLight(col, 1.1, 7, 2); l.position.y = .8; g.add(l); } g.position.set(cx, groundY(cx, cz), cz); scene.add(g); });
     const vineMat = new THREE.MeshStandardMaterial({ color: 0x2f6b2a, roughness: .9 });
-    for (let i = 0; i < 9; i++) { const v = new THREE.Mesh(new THREE.CylinderGeometry(.03, .05, rng(1, 2.6), 5), vineMat); const vz = ez - 3.3 + i * .8; v.position.set(ex - .4 + rng(-.3, .3), gy0 + 4.5 - v.geometry.parameters.height / 2 + .2, vz); v.rotation.z = rng(-.12, .12); scene.add(v); const leaf = new THREE.Mesh(new THREE.SphereGeometry(.14, 6, 5), vineMat); leaf.scale.set(1, .4, 1.6); leaf.position.set(v.position.x, v.position.y - v.geometry.parameters.height / 2, vz + .1); scene.add(leaf); }
+    for (let i = 0; i < 13; i++) { const v = new THREE.Mesh(new THREE.CylinderGeometry(.03, .05, rng(1, 3), 5), vineMat); const vz = ez - 4.8 + i * .8; v.position.set(ex - .4 + rng(-.3, .3), gy0 + 6.3 - v.geometry.parameters.height / 2 + .2, vz); v.rotation.z = rng(-.12, .12); scene.add(v); const leaf = new THREE.Mesh(new THREE.SphereGeometry(.14, 6, 5), vineMat); leaf.scale.set(1, .4, 1.6); leaf.position.set(v.position.x, v.position.y - v.geometry.parameters.height / 2, vz + .1); scene.add(leaf); }
     const boneMat = new THREE.MeshStandardMaterial({ color: 0xe9e2cf, roughness: .8 });
     for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, rng(.5, .9), 6), boneMat); const bx = ex - 2 + rng(-2.5, 1.5), bz = ez + rng(-3.5, 3.5); b.position.set(bx, groundY(bx, bz) + .06, bz); b.rotation.set(Math.PI / 2, 0, Math.random() * 3); scene.add(b); }
     const skull = new THREE.Mesh(new THREE.SphereGeometry(.26, 10, 8), boneMat); skull.scale.set(1, .85, 1.1); skull.position.set(ex - 3.4, groundY(ex - 3.4, ez + 2.6) + .22, ez + 2.6); scene.add(skull);
     const puddle = new THREE.Mesh(new THREE.CircleGeometry(2.2, 16), new THREE.MeshStandardMaterial({ color: 0x1b3a45, roughness: .05, metalness: .3, transparent: true, opacity: .75 })); puddle.rotation.x = -Math.PI / 2; puddle.position.set(ex - 5.5, groundY(ex - 5.5, ez - 2) + .03, ez - 2); scene.add(puddle);
     for (let i = 0; i < 10; i++) { const mx = ex + rng(-6, 11), mz = ez + rng(-3.2, 3.2); const cap = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 6, 0, 6.3, 0, 1.6), new THREE.MeshStandardMaterial({ color: 0x7cff9b, emissive: 0x3fd66d, emissiveIntensity: .8 })); cap.position.set(mx, groundY(mx, mz) + .12, mz); scene.add(cap); const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, .14, 5), boneMat); st.position.set(mx, groundY(mx, mz) + .06, mz); scene.add(st); }
-    const lantern = new THREE.Group(); const lb = new THREE.Mesh(new THREE.BoxGeometry(.3, .45, .3), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: .6, roughness: .5 })); lantern.add(lb); const lg = new THREE.Mesh(new THREE.BoxGeometry(.22, .3, .22), new THREE.MeshBasicMaterial({ color: 0xffd27a })); lantern.add(lg); const ll = new THREE.PointLight(0xffc766, 1.5, 9, 2); lantern.add(ll); const chain = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .9, 5), new THREE.MeshStandardMaterial({ color: 0x333 })); chain.position.y = .65; lantern.add(chain); lantern.position.set(ex - .6, gy0 + 3.9, ez); scene.add(lantern); gate.userData.lantern = lantern;
+    const lantern = new THREE.Group(); const lb = new THREE.Mesh(new THREE.BoxGeometry(.3, .45, .3), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: .6, roughness: .5 })); lantern.add(lb); const lg = new THREE.Mesh(new THREE.BoxGeometry(.22, .3, .22), new THREE.MeshBasicMaterial({ color: 0xffd27a })); lantern.add(lg); const ll = new THREE.PointLight(0xffc766, 1.5, 9, 2); lantern.add(ll); const chain = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .9, 5), new THREE.MeshStandardMaterial({ color: 0x333 })); chain.position.y = .65; lantern.add(chain); lantern.position.set(ex - .6, gy0 + 5.4, ez); scene.add(lantern); gate.userData.lantern = lantern;
+    // Boss-Fassade: glühende Augen über dem Tor, Zahnreihe, Palisade mit Schädeln, Warnbanner, rotes Licht
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff2a2a, emissive: 0xff1a1a, emissiveIntensity: 2.2 });
+    for (const s of [-1, 1]) { const socket = new THREE.Mesh(new THREE.SphereGeometry(1.5, 14, 10), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 1 })); socket.position.set(ex - .6, gy0 + 9.2, ez + s * 3.2); socket.scale.set(.6, 1, 1); scene.add(socket); const eye = new THREE.Mesh(new THREE.SphereGeometry(.7, 12, 10), eyeMat); eye.position.set(ex - 1.2, gy0 + 9.2, ez + s * 3.2); scene.add(eye); const el = new THREE.PointLight(0xff2a2a, 1.6, 14, 2); el.position.set(ex - 2, gy0 + 9, ez + s * 3.2); scene.add(el); }
+    const toothMat = new THREE.MeshStandardMaterial({ color: 0xf1e8d2, roughness: .6 });
+    for (let i = 0; i < 11; i++) { const a = Math.PI * (i / 10); const t = new THREE.Mesh(new THREE.ConeGeometry(.28, 1.1 + Math.random() * .6, 6), toothMat); t.position.set(ex - .6, gy0 + .4 + Math.sin(a) * 5.0 - .2, ez + Math.cos(a) * 5.0); t.rotation.x = Math.PI + Math.cos(a) * .4; t.rotation.z = (Math.random() - .5) * .2; scene.add(t); }
+    for (let i = 0; i < 7; i++) { const a = Math.PI * (.12 + .76 * i / 6); const t = new THREE.Mesh(new THREE.ConeGeometry(.22, .8 + Math.random() * .5, 6), toothMat); t.position.set(ex - .6, gy0 + .4, ez + Math.cos(a) * 4.6); scene.add(t); }
+    const stakeMat = new THREE.MeshStandardMaterial({ color: 0x3b2a1a, roughness: 1 });
+    for (const s of [-1, 1]) for (let i = 0; i < 7; i++) { const sx = ex - 3 - i * 2.1, sz = ez + s * (7.5 + Math.sin(i) * .6); const st = new THREE.Mesh(new THREE.CylinderGeometry(.12, .2, rng(2.6, 3.6), 6), stakeMat); st.position.set(sx, groundY(sx, sz) + st.geometry.parameters.height / 2, sz); st.rotation.z = rng(-.12, .12) * s; st.castShadow = true; scene.add(st); if (i % 3 === 1) { const sk = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 8), toothMat); sk.scale.set(1, .85, 1.1); sk.position.set(sx, st.position.y + st.geometry.parameters.height / 2 + .25, sz); scene.add(sk); for (const e of [-1, 1]) { const h = new THREE.Mesh(new THREE.SphereGeometry(.07, 6, 6), new THREE.MeshStandardMaterial({ color: 0x110000 })); h.position.set(sx - .22, sk.position.y + .05, sz + e * .11); scene.add(h); } } }
+    const bannerCv = document.createElement('canvas'); bannerCv.width = 512; bannerCv.height = 128; const bc = bannerCv.getContext('2d'); bc.fillStyle = '#2a0606'; bc.fillRect(0, 0, 512, 128); bc.strokeStyle = '#ff2a3c'; bc.lineWidth = 8; bc.strokeRect(6, 6, 500, 116); bc.fillStyle = '#ff2a3c'; bc.font = 'bold 54px sans-serif'; bc.textAlign = 'center'; bc.fillText('☠ WALDTROLL', 256, 60); bc.font = 'bold 30px sans-serif'; bc.fillStyle = '#ffd166'; bc.fillText('BOSS · AB LEVEL 10', 256, 104);
+    const bannerTex = new THREE.CanvasTexture(bannerCv); bannerTex.encoding = THREE.sRGBEncoding; const banner = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.6), new THREE.MeshStandardMaterial({ map: bannerTex, side: THREE.DoubleSide, roughness: .9 })); banner.position.set(ex - 1.6, gy0 + 12, ez); banner.rotation.y = -Math.PI / 2; scene.add(banner);
+    for (const s of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 2.2, 6), stakeMat); pole.position.set(ex - 1.6, gy0 + 12, ez + s * 3.3); scene.add(pole); }
+    const bloodMat = new THREE.MeshStandardMaterial({ color: 0x4a0a0a, roughness: 1, transparent: true, opacity: .8 });
+    for (let i = 0; i < 6; i++) { const bx = ex - rng(1, 9), bz = ez + rng(-6, 6); const bl = new THREE.Mesh(new THREE.CircleGeometry(rng(.4, 1.1), 10), bloodMat); bl.rotation.x = -Math.PI / 2; bl.position.set(bx, groundY(bx, bz) + .02, bz); scene.add(bl); }
+    const redGlow = new THREE.PointLight(0xff3a2a, 2.4, 22, 2); redGlow.position.set(ex + 4, gy0 + 3, ez); scene.add(redGlow);
     // Gitter
     const iron = new THREE.MeshStandardMaterial({ color: 0x3b3f44, metalness: .8, roughness: .45 });
-    for (let i = 0; i < 6; i++) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 5.2, 8), iron); bar.position.set(0, 2.6, -3.1 + i * 1.24); bar.castShadow = true; gate.add(bar); }
-    const inner1 = new THREE.PointLight(0xffa040, 2.2, 16, 2); inner1.position.set(ex + 5, groundY(ex, ez) + 3, ez + 2.5); scene.add(inner1); const inner2 = new THREE.PointLight(0xff6a3d, 2.0, 16, 2); inner2.position.set(ex + 9, groundY(ex, ez) + 2.5, ez - 2.5); scene.add(inner2);
-    for (const s of [-1, 1]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(.16, .45, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.set(ex + 6, groundY(ex, ez) + 2.4, ez + s * 3.1); scene.add(fl); const holder = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 6), iron); holder.position.set(ex + 6, groundY(ex, ez) + 2.05, ez + s * 3.1); scene.add(holder); }
-    for (const y of [.6, 2.6, 4.6]) { const cross = new THREE.Mesh(new THREE.BoxGeometry(.18, .16, 6.6), iron); cross.position.set(0, y, 0); gate.add(cross); }
-    const lock = new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .9), new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .3 })); lock.position.set(0, 2.2, 0); gate.add(lock); gate.userData.lock = lock;
-    const sign = new THREE.Mesh(new THREE.BoxGeometry(.1, .7, 1.6), leatherLike(0x5a3b22)); sign.position.set(-.6, 3.9, 0); gate.add(sign);
+    for (let i = 0; i < 6; i++) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 7.2, 8), iron); bar.position.set(0, 3.6, -4.4 + i * 1.76); bar.castShadow = true; gate.add(bar); }
+    const inner1 = new THREE.PointLight(0xffa040, 2.2, 16, 2); inner1.position.set(ex + 6, groundY(ex, ez) + 4, ez + 3.5); scene.add(inner1); const inner2 = new THREE.PointLight(0xff6a3d, 2.0, 16, 2); inner2.position.set(ex + 11, groundY(ex, ez) + 3.5, ez - 3.5); scene.add(inner2);
+    for (const s of [-1, 1]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(.16, .45, 6), new THREE.MeshBasicMaterial({ color: 0xffb13d })); fl.position.set(ex + 7, groundY(ex, ez) + 3.2, ez + s * 4.4); scene.add(fl); const holder = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 6), iron); holder.position.set(ex + 7, groundY(ex, ez) + 2.85, ez + s * 4.4); scene.add(holder); }
+    for (const y of [.8, 3.6, 6.4]) { const cross = new THREE.Mesh(new THREE.BoxGeometry(.18, .16, 10.6), iron); cross.position.set(0, y, 0); gate.add(cross); }
+    const lock = new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .9), new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .3 })); lock.position.set(0, 3.2, 0); gate.add(lock); gate.userData.lock = lock;
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(.1, .7, 1.6), leatherLike(0x5a3b22)); sign.position.set(-.6, 5.2, 0); gate.add(sign);
     gate.position.set(ex - .2, groundY(ex, ez), ez); scene.add(gate);
   })();
   function leatherLike(c) { return new THREE.MeshStandardMaterial({ color: c, roughness: .85 }); }
@@ -269,7 +283,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     gate.userData.open = true; toast('Das Gitter hebt sich – der Waldtroll wartet in der Höhle'); gainXp(0);
   }
   function caveCollision() {
-    const dx = player.position.x - CAVE.x, dz = player.position.z - CAVE.z, d = Math.hypot(dx, dz), inCorridor = Math.abs(dz) < 3 && dx < 0;
+    const dx = player.position.x - CAVE.x, dz = player.position.z - CAVE.z, d = Math.hypot(dx, dz), inCorridor = Math.abs(dz) < 4.5 && dx < 0;
     if (d < CAVE.r - 1 && !(inCorridor && gate.userData.open)) { if (inCorridor) { player.position.x = gate.position.x - 1.2; } else { const k = (CAVE.r - 1) / d; player.position.x = CAVE.x + dx * k; player.position.z = CAVE.z + dz * k; } }
   }
 
@@ -300,6 +314,32 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     chest.position.set(x, groundY(x, z), z); chest.rotation.y = Math.random() * 6; scene.add(chest); chest.userData = { lid, open: false }; return chest;
   }
   const chests = [[-9, 12], [38, -28], [-55, 60], [95, 30], [-120, -40], [140, -90], [60, 140], [-80, 130], [150, 110], [-150, 20], [20, -130], [110, -160], [220, 60], [-220, -60], [40, 230], [-40, -240], [250, -120], [-250, 140], [190, 220], [-190, -220]].map(([x, z], i) => { const c = buildChest(x, z); if (i % 4 === 3) { c.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x9a6a33) o.material = new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .28 }); }); c.userData.gold = true; const l = new THREE.PointLight(0xffd166, 1.2, 6, 2); l.position.y = 1; c.add(l); } return c; });
+  // Hütten und Ruinen mit Beute
+  const hutMat = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 }), roofMat = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 1 }), stoneMat = new THREE.MeshStandardMaterial({ color: 0x7a7d78, roughness: 1 }), stoneDark = new THREE.MeshStandardMaterial({ color: 0x55585a, roughness: 1 });
+  const HUTS = [[-62, -34], [118, 42], [-112, 112], [84, -124], [160, 150], [-170, -70]];
+  HUTS.forEach(([hx, hz], i) => {
+    const g = new THREE.Group(); const gy = groundY(hx, hz);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(6, .4, 6), stoneDark); base.position.y = .2; g.add(base);
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(5.4, 3, 5.4), hutMat); walls.position.y = 1.9; walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
+    for (let k = 0; k < 4; k++) { const beam = new THREE.Mesh(new THREE.BoxGeometry(.25, 3.2, .25), roofMat); beam.position.set(k < 2 ? -2.75 : 2.75, 1.9, k % 2 ? -2.75 : 2.75); g.add(beam); }
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(4.6, 2.6, 4), roofMat); roof.position.y = 4.7; roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.2, .2), new THREE.MeshStandardMaterial({ color: 0x1a120c })); door.position.set(0, 1.5, 2.75); g.add(door);
+    for (const sx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(.9, .8, .2), new THREE.MeshStandardMaterial({ color: 0xffd27a, emissive: 0xffb13d, emissiveIntensity: .6 })); win.position.set(sx, 2.2, 2.75); g.add(win); }
+    const chim = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), stoneMat); chim.position.set(1.6, 5.2, -1.2); g.add(chim);
+    const wl = new THREE.PointLight(0xffb86b, 1.2, 10, 2); wl.position.set(0, 2.4, 3.6); g.add(wl);
+    g.position.set(hx, gy, hz); g.rotation.y = i * 1.1; scene.add(g);
+    const cx = hx + Math.sin(i * 1.1) * 4.6, cz = hz + Math.cos(i * 1.1) * 4.6; chests.push(buildChest(cx, cz)); chests[chests.length - 1].rotation.y = i * 1.1;
+  });
+  const RUINS = [[-30, 150], [140, -60], [-150, -150], [200, 10], [40, -200]];
+  RUINS.forEach(([rx, rz], i) => {
+    const gy = groundY(rx, rz);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, r = 5.5; const h = k % 2 ? rng(1, 2.2) : rng(3.5, 5.5); const col = new THREE.Mesh(new THREE.CylinderGeometry(.45, .55, h, 10), stoneMat); const cx = rx + Math.cos(a) * r, cz = rz + Math.sin(a) * r; col.position.set(cx, groundY(cx, cz) + h / 2, cz); col.rotation.z = rng(-.08, .08); col.castShadow = true; scene.add(col); if (h > 3) { const cap = new THREE.Mesh(new THREE.BoxGeometry(1.2, .35, 1.2), stoneMat); cap.position.set(cx, col.position.y + h / 2 + .17, cz); scene.add(cap); } }
+    for (let k = 0; k < 3; k++) { const a = k * 2.1 + i; const w = new THREE.Mesh(new THREE.BoxGeometry(rng(3, 5), rng(1.2, 2.6), .7), stoneDark); const wx = rx + Math.cos(a) * 6.5, wz = rz + Math.sin(a) * 6.5; w.position.set(wx, groundY(wx, wz) + w.geometry.parameters.height / 2 - .2, wz); w.rotation.y = -a + Math.PI / 2; w.castShadow = true; scene.add(w); }
+    for (let k = 0; k < 14; k++) { const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.25, .7), 0), stoneMat); const bx = rx + rng(-6, 6), bz = rz + rng(-6, 6); b.position.set(bx, groundY(bx, bz) + .2, bz); b.rotation.set(Math.random(), Math.random(), 0); scene.add(b); }
+    const floor = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, .25, 12), stoneDark); floor.position.set(rx, gy + .05, rz); floor.receiveShadow = true; scene.add(floor);
+    const moss = new THREE.Mesh(new THREE.CircleGeometry(2.5, 10), new THREE.MeshStandardMaterial({ color: 0x3f7a3a, roughness: 1, transparent: true, opacity: .7 })); moss.rotation.x = -Math.PI / 2; moss.position.set(rx + 1.5, gy + .2, rz - 1); scene.add(moss);
+    const c = buildChest(rx, rz); c.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x9a6a33) o.material = new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .28 }); }); c.userData.gold = true; const l = new THREE.PointLight(0xffd166, 1.2, 6, 2); l.position.y = 1; c.add(l); chests.push(c);
+  });
 
   // ---------- Figuren ----------
   function limb(len, r, c) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r * .8, r, len, 7), c); m.geometry.translate(0, -len / 2, 0); m.castShadow = true; return m; }
@@ -529,7 +569,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     g.add(tail); g.scale.setScalar(s); g.userData = { legs, tail, alpha, alive: true }; return g;
   }
 
-  const troll = buildTroll(); troll.position.set(CAVE.x + 1, groundY(CAVE.x + 1, CAVE.z), CAVE.z); troll.rotation.y = -Math.PI / 2; scene.add(troll);
+  const troll = buildTroll(); troll.position.set(CAVE.x + 2, groundY(CAVE.x + 2, CAVE.z), CAVE.z); troll.rotation.y = -Math.PI / 2; scene.add(troll);
   const trollLight = new THREE.PointLight(0xff6a3d, 1.6, 14, 2); trollLight.position.set(CAVE.x - 2, groundY(CAVE.x, CAVE.z) + 3, CAVE.z); scene.add(trollLight);
   // Troll-Krieger mit Waffen (Keule, Axt, Speer)
   function buildGrunt(weapon) {
@@ -698,7 +738,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   // Controller
   function pollPad() { const pads = navigator.getGamepads ? navigator.getGamepads() : []; const p = pads && pads[0]; if (!p) return null; if (p.axes.some(v => Math.abs(v) > .3) || p.buttons.some(b => b.pressed)) setInput('pad'); const ax = Math.abs(p.axes[0]) > .15 ? p.axes[0] : 0, ay = Math.abs(p.axes[1]) > .15 ? p.axes[1] : 0; if (p.buttons[0] && p.buttons[0].pressed && !pollPad.a) roll(); pollPad.a = p.buttons[0] && p.buttons[0].pressed; if (p.buttons[2] && p.buttons[2].pressed && !pollPad.x) interact(); pollPad.x = p.buttons[2] && p.buttons[2].pressed; if (p.buttons[3] && p.buttons[3].pressed && !pollPad.y) { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; } pollPad.y = p.buttons[3] && p.buttons[3].pressed; if (p.buttons[1] && p.buttons[1].pressed && !pollPad.b) toggleMount(); pollPad.b = p.buttons[1] && p.buttons[1].pressed; return { x: ax, y: ay }; }
 
-  let heading = Math.PI * .5, rolling = 0, t0 = performance.now(), walkPhase = 0, mountCalled = false, swimming = false;
+  let heading = Math.PI * .5, vy = 0, rolling = 0, t0 = performance.now(), walkPhase = 0, mountCalled = false, swimming = false;
   camera.position.set(14, 6, 0);
   // Maus / Finger-Wischen: Kamera um den Charakter drehen
   let camYaw = 0, camPitch = 0, dragId = null, dragX = 0, dragY = 0;
@@ -768,7 +808,9 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     if (mountMesh.userData.inst) { const a = mountMesh.userData.inst.action; if (a) { a.paused = !(moving || swimming); a.timeScale = swimming ? .5 : 1; } }
     const gy = groundY(player.position.x, player.position.z);
     const targetY = swimming ? WATER_Y - (state.mounted ? .75 : .95) + Math.sin(clock.t * 2) * .06 : (onBridge(player.position.x, player.position.z) ? 1.75 : gy) + (rolling > 0 ? Math.sin(rolling / .45 * Math.PI) * .7 : 0);
-    player.position.y += (targetY - player.position.y) * Math.min(1, dt * 10);
+    // Fallphysik: in der Luft fallen, harte Landung kostet HP
+    if (!swimming && player.position.y > targetY + .7) { vy -= 24 * dt; player.position.y += vy * dt; if (player.position.y <= targetY) { if (vy < -12) damage(Math.min(60, Math.round((-vy - 12) * 5)), 'Sturz aus ' + Math.round((vy * vy) / 48) + ' m Höhe'); player.position.y = targetY; vy = 0; } }
+    else { vy = 0; player.position.y += (targetY - player.position.y) * Math.min(1, dt * 10); }
     if (swimming) { state.air = Math.max(0, state.air - dt * 0); if (inWorld && !animateLegs.swimToast) { toast(state.mounted && prefs.tier === 'tiger' ? 'Schwimmen · Tiger ist im Wasser langsam' : 'Schwimmen'); animateLegs.swimToast = true; } } else animateLegs.swimToast = false;
     if (state.mounted) { animateLegs(mountMesh, moving || swimming ? 1 : 0); mountMesh.userData.head.rotation.x = moving ? Math.sin(walkPhase * 2) * .06 : Math.sin(clock.t * 1.2) * .05; hero.position.y = mountMesh.userData.seatY + (moving ? Math.abs(Math.sin(walkPhase)) * .08 : Math.sin(clock.t * 1.5) * .02); }
     else if (swimming) {
@@ -788,7 +830,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
     stations.forEach((s, i) => { s.c.rotation.y += dt; s.c.position.y = 1.4 + Math.sin(clock.t * 2.5 + i) * .15; s.ring.rotation.z += dt * .5; });
     flames.forEach((f, i) => { f.scale.y = 1 + Math.sin(clock.t * 14 + i) * .18; f.rotation.y += dt * 2; }); fire.intensity = 2.3 + Math.sin(clock.t * 9) * .5;
     const spPos = smoke.geometry.attributes.position; for (let i = 0; i < spPos.count; i++) { let y = spPos.getY(i) + dt * 1.2; if (y > 7) y = 2; spPos.setY(i, y); spPos.setX(i, 3 + Math.sin(clock.t * 2 + i) * .35 * (y - 2) * .3); } spPos.needsUpdate = true;
-    if (gate.userData.open && gate.userData.lift < 4.6) { gate.userData.lift = Math.min(4.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
+    if (gate.userData.open && gate.userData.lift < 6.6) { gate.userData.lift = Math.min(6.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
     wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
@@ -834,7 +876,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   const labels = $('labels'); const v3 = new THREE.Vector3();
   function updateLabels() {
     const w = stage.clientWidth, h = stage.clientHeight;
-    const show = (obj, name, hp, max, cls) => { let el = obj.userData.label; if (!el) { el = document.createElement('div'); el.className = 'lbl ' + (cls || ''); el.innerHTML = `<div class="n"></div><div class="b"><i></i></div>`; labels.appendChild(el); obj.userData.label = el; } v3.set(obj.position.x, obj.position.y + (obj.userData.alpha ? 3.6 : 2.7), obj.position.z).project(camera); const vis = v3.z < 1 && obj.visible && obj.position.distanceTo(player.position) < 32; el.style.display = vis ? 'block' : 'none'; if (vis) { el.style.left = ((v3.x + 1) / 2 * w) + 'px'; el.style.top = ((1 - v3.y) / 2 * h) + 'px'; el.querySelector('.n').textContent = name; el.querySelector('i').style.width = (hp / max * 100) + '%'; } };
+    const show = (obj, name, hp, max, cls) => { let el = obj.userData.label; if (!el) { el = document.createElement('div'); el.className = 'lbl ' + (cls || ''); el.innerHTML = `<div class="n"></div><div class="b"><i></i></div>`; labels.appendChild(el); obj.userData.label = el; } v3.set(obj.position.x, obj.position.y + (obj === troll ? 9.5 : obj.userData.alpha ? 4.8 : 3.5), obj.position.z).project(camera); const vis = v3.z < 1 && obj.visible && obj.position.distanceTo(player.position) < 32; el.style.display = vis ? 'block' : 'none'; if (vis) { el.style.left = ((v3.x + 1) / 2 * w) + 'px'; el.style.top = ((1 - v3.y) / 2 * h) + 'px'; el.querySelector('.n').textContent = name; el.querySelector('i').style.width = (hp / max * 100) + '%'; } };
     wolves.forEach(x => show(x, x.userData.alpha ? 'Troll-Häuptling · Lvl 5' : 'Troll-Krieger · Lvl 2', x.userData.hp, x.userData.maxHp, x.userData.alpha ? 'boss' : ''));
     show(troll, 'Waldtroll · Boss · Lvl 10', troll.userData.hp === undefined ? 220 : troll.userData.hp, 220, 'boss');
     const nl = npc.userData.label || (npc.userData.label = (() => { const el = document.createElement('div'); el.className = 'lbl npc'; el.innerHTML = '<div class="n">Bram · Quests</div>'; labels.appendChild(el); return el; })()); v3.set(npc.position.x, npc.position.y + 3.2, npc.position.z).project(camera); const nv = v3.z < 1 && npc.position.distanceTo(player.position) < 25; nl.style.display = nv ? 'block' : 'none'; if (nv) { nl.style.left = ((v3.x + 1) / 2 * w) + 'px'; nl.style.top = ((1 - v3.y) / 2 * h) + 'px'; }
@@ -1052,13 +1094,13 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   function setHeroModel() {
     const key = heroModelKey(); if (!gl[key]) return;
     if (heroInst) { player.remove(heroInst.obj); }
-    heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.75); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero();
+    heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.75); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero(); dressWeapons(heroInst);
   }
   function placeHero() { if (!heroInst) return; if (state.mounted) { heroInst.obj.position.set(0, mountMesh.userData.heroY !== undefined ? mountMesh.userData.heroY : mountMesh.userData.seatY - .5, .05); heroInst.obj.rotation.set(0, 0, 0); heroInst.play('Sit_Chair_Idle'); } else { heroInst.obj.position.set(0, 0, 0); heroInst.obj.rotation.set(0, 0, 0); } }
   const _rebuildHero = rebuildHero; rebuildHero = function () { _rebuildHero(); setHeroModel(); };
   const _setRiding = setRiding, _setWalking = setWalking; setRiding = function () { _setRiding(); placeHero(); }; setWalking = function () { _setWalking(); placeHero(); };
   // Inventar-Ansicht
-  const _openInv = openInv; openInv = function () { _openInv(); const key = heroModelKey(); if (!gl[key]) return; if (invInst) { invScene.remove(invInst.obj); anims.delete(invInst); } invInst = instance(gl[key]); invInst.obj.scale.setScalar(.75); invScene.add(invInst.obj); anims.add(invInst); invInst.play('Idle'); if (invHero) invHero.visible = false; };
+  const _openInv = openInv; openInv = function () { _openInv(); const key = heroModelKey(); if (!gl[key]) return; if (invInst) { invScene.remove(invInst.obj); anims.delete(invInst); } invInst = instance(gl[key]); invInst.obj.scale.setScalar(.75); invScene.add(invInst.obj); anims.add(invInst); invInst.play('Idle'); dressWeapons(invInst); if (invHero) invHero.visible = false; };
   // Pferd als Reittier
   function buildHorse() {
     const g = new THREE.Group(); const inst = instance(gl.horse); inst.obj.scale.setScalar(.011); inst.obj.rotation.y = 0; inst.obj.position.y = 0; g.add(inst.obj); anims.add(inst); inst.play('horse_A_'); inst.action.paused = true;
@@ -1068,8 +1110,20 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   // Gegner und Boss
   function dressEnemies() {
     wolves.forEach(w => { if (w.userData.inst || !gl.orc) return; w.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(w.userData.alpha ? 1.4 : 1.0); w.add(inst.obj); w.userData.inst = inst; anims.add(inst); inst.play('Idle'); w.scale.setScalar(1); });
-    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(1.9); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
+    if (gl.orc && !troll.userData.inst) { troll.children.forEach(c => { c.visible = false; }); const inst = instance(gl.orc); inst.obj.scale.setScalar(2.7); inst.obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(.55); o.material.emissive = new THREE.Color(0x1a2a0a); } }); troll.add(inst.obj); troll.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
     if (gl.barbarian && !npc.userData.inst) { npc.children.forEach(c => { if (c !== npc.userData.marker) c.visible = false; }); const inst = instance(gl.barbarian); inst.obj.scale.setScalar(.75); inst.obj.rotation.y = Math.PI; npc.add(inst.obj); npc.userData.inst = inst; anims.add(inst); inst.play('Idle'); }
   }
+  // Waffen/Rüstung an der Figur: KayKit-Figuren bringen alle Waffen als Meshes mit – wir zeigen nur die passenden
+  const WEAPON_RX = /Sword|Shield|Knife|Crossbow|Throwable|Spellbook|Wand|Staff|Axe|Mug|Helmet|Hat|Offhand/;
+  const WEAPON_SETS = { sword: ['1H_Sword', 'Knife', '1H_Wand', '1H_Axe'], bow: ['2H_Crossbow', '1H_Crossbow', '2H_Staff', '2H_Axe'], hammer: ['2H_Sword', 'Knife_Offhand', '2H_Staff', '2H_Axe'] };
+  function dressWeapons(inst) {
+    if (!inst) return; const names = new Set();
+    inst.obj.traverse(o => { if ((o.isMesh || o.isSkinnedMesh) && WEAPON_RX.test(o.name)) { o.visible = false; names.add(o.name); } });
+    const show = (list) => { for (const n of list) if (names.has(n)) { inst.obj.traverse(o => { if (o.name === n) o.visible = true; }); return true; } return false; };
+    show(WEAPON_SETS[equip.weapon] || WEAPON_SETS.sword);
+    if (equip.chest) show(['Round_Shield', 'Barbarian_Round_Shield', 'Spellbook']);
+    if (equip.helm) show(['Knight_Helmet', 'Mage_Hat', 'Barbarian_Hat']);
+  }
+  const _applyGear = applyGear; applyGear = function (h) { _applyGear(h); dressWeapons(heroInst); dressWeapons(invInst); };
   Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
 })();
