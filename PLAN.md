@@ -19,6 +19,7 @@ Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, auß
 - Hinweis-System (Grundkurs frei mit halbem Schaden, Erweiterungskurs über Hinweis-Punkte aus Quests), 10 Quests bei Bram, geheime Quest mit Mondklinge
 - Schnellreise über fünf Lagerfeuer (entdecken, dann auf der Karte anklicken)
 - Emotes (T/G/H), Rolle im Kampf mit Wirkung, Regenbogen nach Regen, Sternschnuppen, Vogelschwärme
+- Zweites Gebiet **Wüste** (nach dem Waldtroll über die Weltkarte): Dünen, Oase mit Palmen, Kakteen, Sandsturm, Sandräuber, Sandteufel, Sandkönig, Sandwurm-Arena ab Level 25, eigene Quests und Lagerfeuer
 - Begleiter Lumi: folgt dir, leuchtet gelb Richtung Truhe, findet Münzen
 - Lager-Ausbau: Schmiede (Waffe +1 Stärke je Stufe), Stall (Reittier-Skills), Trophäenwand
 - Vier Helden: Ritter, Schurkin, Magier, Barbar
@@ -34,9 +35,8 @@ Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, auß
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
 2. **Boss-Kampf testen.** Mit Level 10 durch das Tor, Waldtroll Phase 1 → 2, Trophäe Trollzahn, Drop-Chance Trollhammer.
 3. **Charakter-Farben.** Mit den KayKit-Modellen nur über Texturen möglich; vorerst stattdessen vier Helden zur Wahl.
-4. **Zweites Gebiet Wüste (Start).** Sand, Kakteen, Oase, Sandwurm-Arena als Rohbau, erreichbar nach dem Waldtroll.
-5. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen.
-6. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
+4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen.
+5. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
 
 ## Bekannte Grenzen
 - Browser begrenzt die Bildrate auf die Monitor-Hertz (60/144/240).
