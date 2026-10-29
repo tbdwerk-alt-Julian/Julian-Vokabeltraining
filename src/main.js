@@ -1218,10 +1218,12 @@ import * as A from './audio.js';
   const screens = ['start', 'create', 'battle', 'map', 'win'];
   function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); if (name === 'map') { drawWorldMap(); const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
   $('newGame').onclick = () => show('create'); $('backStart').onclick = () => show('start');
-  $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
+  $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; gameStarted = true; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
 
   // ---------- Speichern / Laden ----------
+  let gameStarted = false;
   function saveGame() {
+    if (!gameStarted) return false;
     const d = { zone: pendingZone || ZONE, name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login, gems: state.gems, stats: state.stats, daily: state.daily, buffs: state.buffs, camp: state.camp, tutDone: state.tutDone, hints: state.hints, camps: state.camps }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bags: { weapon: [...bags.weapon], armor: [...bags.armor], use: [...bags.use], misc: [...bags.misc] }, equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
     const ok = writeSave(d, curSlot);
     // Zusätzlich auf dem Dev-Server sichern (saves/spielstand.json) – der App-Browser leert seinen Speicher manchmal
@@ -1251,7 +1253,7 @@ import * as A from './audio.js';
   function renderSlots(extra) {
     const list = listSaves(); const box = $('slots'); box.innerHTML = '';
     list.forEach((d, i) => { const s = i + 1; if (!d) return; const row = document.createElement('div'); row.className = 'slotrow'; row.innerHTML = `<div class="slotinfo"><b>${d.name}</b><span>Level ${d.state ? d.state.level : 1} · ${d.state && d.state.coins !== undefined ? d.state.coins + ' 🪙' : ''} · ${fmtTime(d.savedAt)}</span></div><button class="btn primary small" data-play="${s}">Spielen</button><button class="btn small" data-del="${s}" title="Löschen">✕</button>`; box.appendChild(row); });
-    box.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const d = loadSave(+b.dataset.play); if (d) { if ((d.zone || 'forest') !== ZONE) { location.href = location.pathname + '?zone=' + (d.zone || 'forest') + '&slot=' + b.dataset.play; return; } curSlot = +b.dataset.play; applySave(d); show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } });
+    box.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const d = loadSave(+b.dataset.play); if (d) { if ((d.zone || 'forest') !== ZONE) { location.href = location.pathname + '?zone=' + (d.zone || 'forest') + '&slot=' + b.dataset.play; return; } curSlot = +b.dataset.play; applySave(d); gameStarted = true; show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } });
     const autoSlot = new URLSearchParams(location.search).get('slot'); if (autoSlot && !renderSlots.auto) { renderSlots.auto = true; const b = box.querySelector('[data-play="' + autoSlot + '"]'); if (b) setTimeout(() => b.click(), 50); }
     box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const s = +b.dataset.del; if (b.dataset.sure) { clearSave(s); if (import.meta.env && import.meta.env.DEV) fetch('/__save?del=' + s, { method: 'POST', body: '{}' }).catch(() => { }); renderSlots(); } else { b.dataset.sure = '1'; b.textContent = 'Wirklich löschen?'; setTimeout(() => { b.dataset.sure = ''; b.textContent = '✕'; }, 3000); } });
     const free = list.findIndex(d => !d); $('newGame').disabled = free < 0; $('startHint').textContent = free < 0 ? 'Alle 3 Spielstände belegt – einen löschen für ein neues Abenteuer' : (list.some(Boolean) ? 'Spielstand wählen oder neues Abenteuer starten' : 'Vokabeln eingeben, dann loslegen – dein Fortschritt wird gespeichert.');
@@ -1487,7 +1489,7 @@ import * as A from './audio.js';
   loginUI();
 
   renderAll(); updateTracker(); show('start');
-  window.__vq = { renderer, scene, state, settings, player, gainXp, gfx, time: h => { gfx.tod.t = (h / 24) % 1; }, setHeading: v => { heading = v; camYaw = 0; } }; // Diagnose in der Browser-Konsole
+  window.__vq = { renderer, scene, state, settings, player, gainXp, gfx, slot: () => curSlot, time: h => { gfx.tod.t = (h / 24) % 1; }, setHeading: v => { heading = v; camYaw = 0; } }; // Diagnose in der Browser-Konsole
   hideLoading(); // Welt steht – Ladebildschirm weg, unabhängig davon, ob der Browser schon Bilder zeichnet
   // Dev: Bildrate an den Dev-Server melden (perf.log), damit Ruckler auf fremden Geräten sichtbar werden
   if (import.meta.env && import.meta.env.DEV) setInterval(() => { if (!hud.classList.contains('on') || !window.__fpsNow) return; const i = renderer.info.render; fetch('/__fps', { method: 'POST', body: JSON.stringify({ fps: window.__fpsNow, q: settings.quality, pr: renderer.getPixelRatio(), calls: i.calls, tris: i.triangles, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: (window.__gpu || '').slice(0, 60), ua: navigator.userAgent.slice(-40) }) }).catch(() => { }); }, 5000);
