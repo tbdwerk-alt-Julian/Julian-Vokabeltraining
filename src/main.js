@@ -3,6 +3,7 @@ import { loadModel, instance, size as modelSize } from './assets.js';
 import * as V from './vocab.js';
 import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './save.js';
 import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js';
+import * as A from './audio.js';
 
 (function () {
   const $ = id => document.getElementById(id);
@@ -98,12 +99,12 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   const wp = waterGeo.attributes.position, wcol = [];
   for (let i = 0; i < wp.count; i++) {
     const depth = WATER_Y - groundY(wp.getX(i), wp.getZ(i));
-    const c = depth < .3 ? new THREE.Color(0xcfe9f2) : depth < 1.2 ? new THREE.Color(0x3fa6c4) : depth < 3 ? new THREE.Color(0x1f7aa6) : new THREE.Color(0x0d3d63);
+    const c = depth < .3 ? new THREE.Color(0x9fd0dc) : depth < 1.2 ? new THREE.Color(0x2f8fae) : depth < 3 ? new THREE.Color(0x176a94) : new THREE.Color(0x0b3454);
     wcol.push(c.r, c.g, c.b);
   }
   waterGeo.setAttribute('color', new THREE.Float32BufferAttribute(wcol, 3));
   const waterNrm = makeNormalTex(256, 5, 2.6, 4); waterNrm.repeat.set(36, 36);
-  const waterMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .14, metalness: .15, transparent: true, opacity: .9, envMapIntensity: .55, normalMap: waterNrm, normalScale: new THREE.Vector2(.7, .7) });
+  const waterMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .2, metalness: .1, transparent: true, opacity: .86, envMapIntensity: .3, normalMap: waterNrm, normalScale: new THREE.Vector2(.8, .8) });
   waterMat.onBeforeCompile = sh => { sh.uniforms.wt = { value: 0 }; waterMat.userData.wt = sh.uniforms.wt; sh.fragmentShader = 'uniform float wt;\n' + sh.fragmentShader.replace('#include <normal_fragment_maps>', `
     vec3 n1 = texture2D(normalMap, vUv + vec2(wt * .021, wt * .013)).xyz * 2.0 - 1.0;
     vec3 n2 = texture2D(normalMap, vUv * 1.9 - vec2(wt * .016, -wt * .012)).xyz * 2.0 - 1.0;
@@ -740,11 +741,11 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     $('equip').querySelectorAll('.slot').forEach(s => s.addEventListener('click', () => { const k = s.dataset.k; if (!equip[k] || k === 'weapon') return; const tgt = bagFor(equip[k]); const free = tgt.indexOf(null); if (free < 0) { toast('Rüstungs-Fach voll'); return; } tgt[free] = equip[k]; equip[k] = null; applyGear(hero); if (invHero) applyGear(invHero); stats(); renderAll(); }));
   }
   function hpUI() { const p = clamp(state.hp / state.maxHp * 100, 0, 100) + '%'; $('hpBar').style.width = p; $('hpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; $('bHp').style.width = p; $('bHpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; }
-  let hurtT; function damage(n, why) { if (state.hp <= 0) return; state.hp = Math.max(0, state.hp - n); hpUI(); $('hurt').classList.add('on'); clearTimeout(hurtT); hurtT = setTimeout(() => $('hurt').classList.remove('on'), 220); if (why) toast(why); if (state.hp <= 0) { if (battleOn) endBattle(); clearInterval(stTimer); $('station').hidden = true; $('deadWhy').textContent = why ? why.replace(/! −.*$/, '') : 'Im Kampf gefallen'; setTimeout(() => $('dead').classList.add('on'), 400); } }
+  let hurtT; function damage(n, why) { if (state.hp <= 0) return; A.sfx('hurt'); state.hp = Math.max(0, state.hp - n); hpUI(); $('hurt').classList.add('on'); clearTimeout(hurtT); hurtT = setTimeout(() => $('hurt').classList.remove('on'), 220); if (why) toast(why); if (state.hp <= 0) { if (battleOn) endBattle(); clearInterval(stTimer); $('station').hidden = true; $('deadWhy').textContent = why ? why.replace(/! −.*$/, '') : 'Im Kampf gefallen'; setTimeout(() => $('dead').classList.add('on'), 400); } }
   function respawn() { $('dead').classList.remove('on'); state.hp = state.maxHp; player.position.set(0, 1.2, 0); heading = Math.PI * .5; if (!state.mounted) { mountFree.position.set(2, 1.2, 3); } hpUI(); show('world'); toast('Wiederbelebt am Lagerfeuer'); }
   function renderAll() { renderHotbar(); renderBag(); hpUI(); $('coins').textContent = state.coins; $('gems').textContent = state.gems || 0; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
   function hearts(el, n, max) { el.innerHTML = Array.from({ length: max }, (_, i) => `<span class="h ${i < n ? '' : 'off'}">♥</span>`).join(''); }
-  function gainXp(n) { if (n > 0) gainSeasonXp(Math.max(1, Math.round(n * .6))); state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); state.hp = state.maxHp; } renderAll(); }
+  function gainXp(n) { if (n > 0) gainSeasonXp(Math.max(1, Math.round(n * .6))); state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); A.sfx('levelup'); state.hp = state.maxHp; } renderAll(); }
   function addItem(id, n) { const it = ITEMS[id]; const bag = bagFor(id); if (it.n !== undefined) { it.n += n || 1; const idx = bag.indexOf(id); if (idx < 0 && hotbar.indexOf(id) < 0) { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; } } else { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; else toast('Fach „' + BAG_CATS.find(c => c[0] === catOf(id))[2] + '“ voll (20/20)'); } renderAll(); }
 
   // Inventar-3D-Ansicht
@@ -770,7 +771,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   let tracked = null;
   function renderQuests() {
     $('qlist').innerHTML = QUESTS.map(q => { const s = qstate[q.id]; return `<div class="q"><div><div class="t">${s.done ? '✅ ' : ''}${q.t}</div><div class="d">${q.d} · ${q.xp} XP · ${q.coins} 🪙 · ${ITEMS[q.item].icon}</div></div>${s.done ? '<span class="tag">Erledigt</span>' : s.acc ? (s.prog >= q.need ? `<button class="btn small primary" data-q="${q.id}" data-a="turn">Abgeben</button>` : `<span class="tag">${s.prog}/${q.need}</span>`) : `<button class="btn small" data-q="${q.id}" data-a="acc">Annehmen</button>`}</div>`; }).join('');
-    $('qlist').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const q = QUESTS.find(x => x.id === b.dataset.q), s = qstate[q.id]; if (b.dataset.a === 'acc') { s.acc = true; tracked = q.id; toast('Quest angenommen: ' + q.t); } else { s.done = true; gainXp(q.xp); state.coins += q.coins; addItem(q.item); toast(`Quest erledigt · +${q.xp} XP · +${q.coins} 🪙 · ${ITEMS[q.item].name}`); if (tracked === q.id) tracked = QUESTS.find(x => qstate[x.id].acc && !qstate[x.id].done)?.id || null; } renderQuests(); updateTracker(); }));
+    $('qlist').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const q = QUESTS.find(x => x.id === b.dataset.q), s = qstate[q.id]; if (b.dataset.a === 'acc') { A.sfx('quest'); s.acc = true; tracked = q.id; toast('Quest angenommen: ' + q.t); } else { s.done = true; gainXp(q.xp); state.coins += q.coins; addItem(q.item); toast(`Quest erledigt · +${q.xp} XP · +${q.coins} 🪙 · ${ITEMS[q.item].name}`); if (tracked === q.id) tracked = QUESTS.find(x => qstate[x.id].acc && !qstate[x.id].done)?.id || null; } renderQuests(); updateTracker(); }));
   }
   function updateTracker() { const dt0 = dailyTask(); const de = $('dailyLine'); if (de) de.textContent = dt0 ? (state.daily.done ? '📋 Tagesaufgabe erledigt ✓' : `📋 ${dt0.t} · ${dailyProg()} / ${dt0.n}`) : '📋 Keine Tagesaufgabe gewählt'; const q = QUESTS.find(x => x.id === tracked); if (!q) { $('qtitle').textContent = 'Keine Quest'; $('qprog').textContent = 'Sprich mit Bram im Lager (E)'; npc.userData.marker.visible = true; return; } const s = qstate[q.id]; $('qtitle').textContent = q.t; $('qprog').textContent = s.prog >= q.need ? 'Erledigt · zurück zu Bram' : `${s.prog} / ${q.need} · ${q.d}`; npc.userData.marker.visible = QUESTS.some(x => !qstate[x.id].acc || (qstate[x.id].acc && !qstate[x.id].done && qstate[x.id].prog >= x.need)); }
   function progress(id, n) { const s = qstate[id]; if (s.acc && !s.done) { s.prog = Math.min(QUESTS.find(q => q.id === id).need, s.prog + (n || 1)); updateTracker(); } }
@@ -807,7 +808,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     if (on && heroInst) { let hand = null; heroInst.obj.traverse(o => { if (!hand && /^handslot.?l$/i.test(o.name)) hand = o; }); if (!hand) heroInst.obj.traverse(o => { if (!hand && /^hand.?l$/i.test(o.name)) hand = o; }); if (hand && torch.parent !== hand) { hand.add(torch); torch.position.set(0, 0, 0); torch.rotation.set(0, 0, 0); torch.scale.setScalar(1 / .75); } }
     if (heroInst) heroInst.obj.traverse(o => { if (/Shield|Spellbook|Offhand/.test(o.name) && o.isMesh) o.visible = on ? false : o.userData.wasVisible !== undefined ? o.userData.wasVisible : o.visible; if (on && o.isMesh && /Shield|Spellbook|Offhand/.test(o.name)) o.userData.wasVisible = true; });
     if (!on && heroInst) dressWeapons(heroInst);
-    if (on) toast('🔥 Es wird dunkel – du zündest eine Fackel an');
+    if (on) { toast('🔥 Es wird dunkel – du zündest eine Fackel an'); A.sfx('torch'); }
   }
   // Regenspritzer am Boden (Ringe, die aufblitzen)
   const SPLASH_N = 160; const splashGeo = new THREE.RingGeometry(.08, .16, 10); splashGeo.rotateX(-Math.PI / 2);
@@ -822,7 +823,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   function strike() {
     const px = player.position.x, pz = player.position.z, a = Math.random() * 6.3, d = rng(25, 80); const bx = px + Math.cos(a) * d, bz = pz + Math.sin(a) * d; const p = boltGeo.attributes.position; let x = bx, z = bz;
     for (let i = 0; i < 40; i++) { const y = 70 - i * (70 - groundY(bx, bz)) / 39; p.setXYZ(i, x, y, z); x += rng(-2.2, 2.2); z += rng(-2.2, 2.2); } p.needsUpdate = true;
-    const bp = branchGeo.attributes.position; for (let b = 0; b < 4; b++) { const i0 = 6 + b * 8; let bx2 = p.getX(i0), by = p.getY(i0), bz2 = p.getZ(i0); const dx = rng(-1, 1), dz = rng(-1, 1); for (let k = 0; k < 6; k++) { bp.setXYZ(b * 6 + k, bx2, by, bz2); bx2 += dx * 1.6 + rng(-.8, .8); by -= rng(1, 3); bz2 += dz * 1.6 + rng(-.8, .8); } } bp.needsUpdate = true; boltMat.opacity = 1; weather.flash = 1.4; weather.lightning = .25; toast('⚡ Blitz!');
+    const bp = branchGeo.attributes.position; for (let b = 0; b < 4; b++) { const i0 = 6 + b * 8; let bx2 = p.getX(i0), by = p.getY(i0), bz2 = p.getZ(i0); const dx = rng(-1, 1), dz = rng(-1, 1); for (let k = 0; k < 6; k++) { bp.setXYZ(b * 6 + k, bx2, by, bz2); bx2 += dx * 1.6 + rng(-.8, .8); by -= rng(1, 3); bz2 += dz * 1.6 + rng(-.8, .8); } } bp.needsUpdate = true; boltMat.opacity = 1; weather.flash = 1.4; weather.lightning = .25; toast('⚡ Blitz!'); A.sfx('thunder', { delay: .3 + Math.random() * .9 });
   }
   let wind = 0;
   function setWeather(kind, announce) {
@@ -887,8 +888,8 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   renderer.domElement.addEventListener('pointerdown', e => { if (!hud.classList.contains('on') || uiOpen()) return; dragId = e.pointerId; dragX = e.clientX; dragY = e.clientY; });
   window.addEventListener('pointermove', e => { if (e.pointerId !== dragId) return; const dx = e.clientX - dragX, dy = e.clientY - dragY; dragX = e.clientX; dragY = e.clientY; camYaw -= dx * .006 * settings.sens * (settings.invert ? -1 : 1); camPitch = clamp(camPitch + dy * .004, -.35, .6); });
   window.addEventListener('pointerup', e => { if (e.pointerId === dragId) dragId = null; }); window.addEventListener('pointercancel', e => { if (e.pointerId === dragId) dragId = null; });
-  function roll() { if (rolling <= 0 && !swimming) { rolling = .7; if (heroInst) { heroInst.current = null; heroInst.play('Dodge_Forward', .05, false); } toast('Ausweichrolle!'); } }
-  function toggleMount() {
+  function roll() { if (rolling <= 0 && !swimming) { rolling = .7; A.sfx('dodge'); if (heroInst) { heroInst.current = null; heroInst.play('Dodge_Forward', .05, false); } toast('Ausweichrolle!'); } }
+  function toggleMount() { A.sfx('mount');
     if (state.mounted) { state.mounted = false; player.remove(mountMesh); mountFree.add(mountMesh); mountFree.position.copy(player.position); mountFree.rotation.y = heading; setWalking(); toast('Abgestiegen · F = wieder aufsteigen / rufen'); $('mountBtn').textContent = '🐾 Aufsteigen'; $('stamLabel').textContent = 'Ausdauer'; }
     else { const d = mountFree.position.distanceTo(player.position); if (d < 3.5) { state.mounted = true; mountFree.remove(mountMesh); player.add(mountMesh); setRiding(); toast('Aufgestiegen'); $('mountBtn').textContent = '🐾 Absteigen'; } else { mountCalled = true; toast('Reittier gerufen – es kommt angelaufen'); } }
   }
@@ -896,7 +897,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   function interact() {
     if (merchant.visible && near(merchant, 4)) { openShop(); return; }
     if (near(npc, 3.5)) { renderQuests(); $('npc').hidden = false; return; }
-    for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; bumpStat('chests'); ch.userData.lid.rotation.x = -1.6; const loot = ch.userData.gold ? ['hammer', 'helmI', 'chestI', 'phoenix'][Math.floor(Math.random() * 4)] : ['heal', 'coin', 'stam', 'bootsI'][Math.floor(Math.random() * 4)]; if (loot === 'coin') { state.coins += 25; toast('Truhe · +25 🪙'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
+    for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; bumpStat('chests'); A.sfx('chest'); ch.userData.lid.rotation.x = -1.6; const loot = ch.userData.gold ? ['hammer', 'helmI', 'chestI', 'phoenix'][Math.floor(Math.random() * 4)] : ['heal', 'coin', 'stam', 'bootsI'][Math.floor(Math.random() * 4)]; if (loot === 'coin') { state.coins += 25; toast('Truhe · +25 🪙'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
     for (const s of stations) if (near(s.g, 2.5)) { if (s.done) { toast('Station erledigt · kommt morgen wieder'); return; } openStation(s); return; }
     for (const w of wolves) if (w.userData.alive && near(w, 3.5)) { startBattle(w.userData.kind, w); return; }
     if (gateDist() < 4.5 && !gate.userData.open) { tryGate(); return; }
@@ -923,7 +924,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   }
   function heroAttackAnim() {
     if (!heroInst) return; const w = equip.weapon; const names = w === 'bow' ? ['1H_Ranged_Shoot', '2H_Ranged_Shoot', 'Slice'] : w === 'hammer' ? ['2H_Melee_Attack_Chop', '2H_Melee_Attack_Slice', 'Chop'] : ['1H_Melee_Attack_Slice_Diagonal', '1H_Melee_Attack_Chop', 'Slice'];
-    for (const n of names) if (heroInst.play(n, .08, false)) break; heroLockUntil = performance.now() + 700; setTimeout(() => { if (heroInst && performance.now() >= heroLockUntil) heroInst.play('Idle', .2); }, 720);
+    A.sfx('swing'); for (const n of names) if (heroInst.play(n, .08, false)) break; heroLockUntil = performance.now() + 700; setTimeout(() => { if (heroInst && performance.now() >= heroLockUntil) heroInst.play('Idle', .2); }, 720);
   }
   function heroHitAnim() { if (!heroInst) return; if (heroInst.play('Hit_A', .05, false) || heroInst.play('Hit', .05, false)) { heroLockUntil = performance.now() + 500; setTimeout(() => heroInst && heroInst.play('Idle', .2), 520); } }
   function foeAnim(name, ms) { if (!foeObj || !foeObj.userData.inst) return; const inst = foeObj.userData.inst; if (inst.play(name, .08, false)) { foeObj.userData.animLock = performance.now() + ms; setTimeout(() => { if (foeObj && performance.now() >= foeObj.userData.animLock) inst.play('Idle', .2); }, ms + 20); } }
@@ -1015,6 +1016,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
       if (camShake > .004) { camera.position.x += (Math.random() - .5) * camShake; camera.position.y += (Math.random() - .5) * camShake * .7; camShake *= Math.pow(.01, dt); }
       drawMinimap(); if (frames % 2 === 0) updateLabels();
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
+    A.tick(dt, { moving: inWorld && moving, mounted: state.mounted, swimming, night: WORLD_U.night.value, rain: rainMat.opacity, wind: WORLD_U.wind.value, battle: battleOn });
     gfx.updateSky(dt, player.position); if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
     setTorch(hud.classList.contains('on') && gfx.sunElevation() < .04 && !swimming && !!heroInst);
     if (torch.visible) { const f = torch.userData.flame; f.scale.set(.75 + Math.sin(clock.t * 17) * .1, 1.2 + Math.sin(clock.t * 23) * .18, 1); torch.userData.light.intensity = 5.2 + Math.sin(clock.t * 19) * .8 + Math.sin(clock.t * 7) * .5; }
@@ -1173,7 +1175,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     if (t > state.season.claimed && t > (state.season.notified || 0)) { state.season.notified = t; toast(`🎫 Saison-Pass: Stufe ${t} erreicht – Belohnung im Saison-Pass einsammeln`); }
     if (!$('season').hidden) renderSeason();
   }
-  function claimTier() { const t = seasonTier(); if (state.season.claimed >= t) return; state.season.claimed++; const n = state.season.claimed, r = tierReward(n); if (r.coins) state.coins += r.coins; else addItem(r.item); const gems = n % 5 === 0 ? 15 : 4; state.gems = (state.gems || 0) + gems; toast(`🎫 Stufe ${n} eingesammelt: ${r.label} · +${gems} 💎`); renderAll(); renderSeason(); saveGame(); }
+  function claimTier() { const t = seasonTier(); if (state.season.claimed >= t) return; state.season.claimed++; const n = state.season.claimed, r = tierReward(n); if (r.coins) state.coins += r.coins; else addItem(r.item); const gems = n % 5 === 0 ? 15 : 4; state.gems = (state.gems || 0) + gems; toast(`🎫 Stufe ${n} eingesammelt: ${r.label} · +${gems} 💎`); A.sfx('gem'); renderAll(); renderSeason(); saveGame(); }
   function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
@@ -1249,7 +1251,9 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   $('camDist').oninput = e => { settings.camDist = +e.target.value; $('camVal').textContent = settings.camDist; };
   $('joySize').oninput = e => { settings.joy = +e.target.value; $('joyVal').textContent = settings.joy; joy.style.width = joy.style.height = settings.joy + 'px'; };
   $('invertCam').onchange = e => settings.invert = +e.target.value;
-  $('music').oninput = e => $('musVal').textContent = e.target.value; $('sfx').oninput = e => $('sfxVal').textContent = e.target.value;
+  $('music').oninput = e => { $('musVal').textContent = e.target.value; A.setVolumes(+e.target.value / 100, +$('sfx').value / 100); }; $('sfx').oninput = e => { $('sfxVal').textContent = e.target.value; A.setVolumes(+$('music').value / 100, +e.target.value / 100); };
+  window.addEventListener('pointerdown', () => A.unlock(), { passive: true }); window.addEventListener('keydown', () => A.unlock());
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.btn, .tab, .slot, .choice')) A.sfx('click'); });
   $('fps').onchange = e => settings.fps = +e.target.value; $('showFps').onchange = e => { settings.showFps = +e.target.value; $('fpsBox').style.display = settings.showFps ? 'block' : 'none'; };
   function applyQuality(q, silent) {
     settings.quality = q; $('quality').value = String(q);
@@ -1296,8 +1300,8 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   function hit(kind, msg, dmg) {
     const fb = $('feedback'); fb.className = 'feedback ' + kind; fb.textContent = msg;
     if (kind === 'bad' && state.buffs.shield > 0) { state.buffs.shield = 0; combo = 0; fb.className = 'feedback ok'; fb.textContent = '🛡️ Schutzschild! Der Fehler kostet keine HP · richtig: ' + cur.en; $('bcombo').textContent = 0; setTimeout(nextWord, 900); return; }
-    if (kind === 'bad') { combo = 0; const d = foe === FOES.troll ? 34 : foe === FOES.alpha ? 24 : 16; foeAnim('Punch', 700); setTimeout(() => { heroHitAnim(); popDmg(player, '-' + d, 'bad'); camShake = .5; }, 350); damage(d); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
-    else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10) * (state.buffs.fire > 0 ? (state.buffs.fire--, 1.5) : 1) * (state.buffs.str > Date.now() ? 1.3 : 1); bumpStat('words'); if (kind === 'crit') bumpStat('crits'); if (combo > state.stats.bestCombo) state.stats.bestCombo = combo; const applied = Math.round(dmg * mult); bossHp = Math.max(0, bossHp - applied); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; heroAttackAnim(); setTimeout(() => { foeAnim('HitReact', 600); if (foeObj) popDmg(foeObj, '-' + applied + (kind === 'crit' ? ' !' : ''), kind); camShake = kind === 'crit' ? .35 : .18; }, 260); }
+    if (kind === 'bad') { combo = 0; const d = foe === FOES.troll ? 34 : foe === FOES.alpha ? 24 : 16; foeAnim('Punch', 700); A.sfx('wrong'); setTimeout(() => { heroHitAnim(); popDmg(player, '-' + d, 'bad'); camShake = .5; }, 350); damage(d); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
+    else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10) * (state.buffs.fire > 0 ? (state.buffs.fire--, 1.5) : 1) * (state.buffs.str > Date.now() ? 1.3 : 1); bumpStat('words'); if (kind === 'crit') bumpStat('crits'); if (combo > state.stats.bestCombo) state.stats.bestCombo = combo; const applied = Math.round(dmg * mult); bossHp = Math.max(0, bossHp - applied); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; heroAttackAnim(); setTimeout(() => { foeAnim('HitReact', 600); A.sfx(kind === 'crit' ? 'crit' : 'hit'); if (foeObj) popDmg(foeObj, '-' + applied + (kind === 'crit' ? ' !' : ''), kind); camShake = kind === 'crit' ? .35 : .18; }, 260); }
     $('bcombo').textContent = combo; $('combo').textContent = combo;
     if (foe.phases > 1 && bossHp <= bossMax / 2 && phase === 1) { phase = 2; $('phase').textContent = 'Phase 2 · Wütend'; $('bossHp').style.background = 'linear-gradient(90deg,#ff3d3d,#8a0f2a)'; if (foe === FOES.troll) troll.userData.body.material.color.setHex(0x8a2f2f); toast(foe.name + ' wird wütend – stärker, anderes Aussehen!'); }
     if (bossHp <= 0) { endBattle(); win(); return; }
