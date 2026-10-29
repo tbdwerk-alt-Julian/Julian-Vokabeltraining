@@ -1059,6 +1059,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   }
   function applySave(d) {
     state.name = d.name || 'Held'; state.charIdx = d.charIdx || 0; Object.assign(prefs, d.prefs || {}); Object.assign(state, d.state || {});
+    if (!(state.maxHp >= 50 && state.maxHp <= 500)) state.maxHp = 100; state.hp = clamp(state.hp, 0, state.maxHp); // Schutz vor kaputten Werten
     $('pnameHud').textContent = state.name; $('pname').value = state.name;
     document.querySelectorAll('#char .choice').forEach(c => c.setAttribute('aria-pressed', +c.dataset.v === state.charIdx ? 'true' : 'false'));
     ['kurs', 'modus', 'tier'].forEach(g => document.querySelectorAll('#' + g + ' .choice').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === prefs[g] ? 'true' : 'false')));
