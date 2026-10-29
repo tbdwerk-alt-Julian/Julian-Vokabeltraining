@@ -616,6 +616,26 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="stats" id="statsGrid"></div>
     </div>
   </div>
+  <div class="overlay" id="forge" hidden>
+    <div class="card stack" style="width:min(520px,100%);">
+      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Lager · Schmiede</div><h2>⚒️ Schmiede</h2></div><button class="btn small" id="closeForge">Schließen</button></div>
+      <div class="sp-pills" id="forgeInfo"></div>
+      <p class="hint">Jede Stufe gibt +1 Stärke auf jede Waffe. Münzen gibt es für Kämpfe, Truhen, Stationen und von Lumi.</p>
+      <button class="btn primary" id="forgeBtn">Verbessern</button>
+    </div>
+  </div>
+  <div class="overlay" id="stable" hidden>
+    <div class="card wide sp">
+      <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#3a2a0d 0%,#a0761f 55%,#20160a 100%);">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div><div class="eyebrow">Lager · Stall</div><h2>🐎 Reittier trainieren</h2><div class="sp-pills" id="stableMeta"></div></div>
+          <button class="btn small" id="closeStable">Schließen</button>
+        </div>
+      </div>
+      <div class="sp-track" id="stableGrid" style="justify-content:center;"></div>
+      <p class="hint" style="padding:0 20px 16px;margin:0;">Drei Fähigkeiten mit je drei Stufen. Die letzte Stufe kostet Kristalle.</p>
+    </div>
+  </div>
   <div class="overlay" id="newWord" hidden style="z-index:5;">
     <div class="card stack" style="text-align:center;width:min(440px,100%);">
       <div class="eyebrow">Neues Wort</div>
