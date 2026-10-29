@@ -180,12 +180,12 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
     hemi.intensity = (.45 + day * .2 + low * .25) * (1 - night * .25) * (1 - grey * .15) + night * .1;
     // Nebel in Horizontfarbe
     scene.fog.color.copy(U.horizon.value).multiply(wx.fogTint); scene.fog.density = (.0042 + grey * .003) * wx.fogMul;
-    renderer.toneMappingExposure = 1.0 + night * .15 - grey * .05;
+    renderer.toneMappingExposure = (1.0 + night * .15 - grey * .05) * (wx.exposure || 1);
     // Sonne/Himmel folgen der Kamera
     skyMesh.position.copy(camera.position);
     glow.position.copy(camera.position).addScaledVector(e > -.03 ? U.sunDir.value : U.moonDir.value, 500); glow.material.opacity = e > -.03 ? (1 - grey * .85) : night * .5; glow.scale.setScalar(e > -.03 ? 70 + low * 40 : 40);
     flareHolder.position.copy(camera.position).addScaledVector(U.sunDir.value, 480); flare.visible = usePost && quality >= 2 && e > .02 && grey < .5;
-    grade.uniforms.warm.value = low * .5; grade.uniforms.vig.value = .4 + night * .15 + grey * .1;
+    grade.uniforms.warm.value = low * .5 + (wx.warm || 0); grade.uniforms.vig.value = .4 + night * .15 + grey * .1;
     WORLD_U.cloudT.value.x += dt * .006; WORLD_U.cloudT.value.y += dt * .002; WORLD_U.cloudShadow.value = Math.min(.55, wx.cloud * .6) * day * (1 - grey * .6);
     WORLD_U.time.value += dt;
     // Sonnenstrahlen: Sonne auf den Bildschirm projizieren
