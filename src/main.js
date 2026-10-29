@@ -909,6 +909,19 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     mountMesh.position.y = bob; mountMesh.rotation.x = sp > 0 ? Math.sin(walkPhase) * (gallop ? .07 : .03) * sp : 0;
     if (rider && heroInst) { heroInst.obj.position.y = (u.heroY !== undefined ? u.heroY : u.seatY - .5) + bob * .7; heroInst.obj.rotation.x = -.15 * sp; }
   }
+  let camShake = 0, heroLockUntil = 0;
+  // Schwebende Schadenszahl über einem Objekt
+  function popDmg(obj, text, cls) {
+    const el = document.createElement('div'); el.className = 'dmg ' + (cls || ''); el.textContent = text; $('labels').appendChild(el);
+    const v = obj.position.clone(); v.y += 2.3; v.project(camera); el.style.left = ((v.x * .5 + .5) * stage.clientWidth) + 'px'; el.style.top = ((-v.y * .5 + .5) * stage.clientHeight) + 'px';
+    setTimeout(() => el.remove(), 1100);
+  }
+  function heroAttackAnim() {
+    if (!heroInst) return; const w = equip.weapon; const names = w === 'bow' ? ['1H_Ranged_Shoot', '2H_Ranged_Shoot', 'Slice'] : w === 'hammer' ? ['2H_Melee_Attack_Chop', '2H_Melee_Attack_Slice', 'Chop'] : ['1H_Melee_Attack_Slice_Diagonal', '1H_Melee_Attack_Chop', 'Slice'];
+    for (const n of names) if (heroInst.play(n, .08, false)) break; heroLockUntil = performance.now() + 700; setTimeout(() => { if (heroInst && performance.now() >= heroLockUntil) heroInst.play('Idle', .2); }, 720);
+  }
+  function heroHitAnim() { if (!heroInst) return; if (heroInst.play('Hit_A', .05, false) || heroInst.play('Hit', .05, false)) { heroLockUntil = performance.now() + 500; setTimeout(() => heroInst && heroInst.play('Idle', .2), 520); } }
+  function foeAnim(name, ms) { if (!foeObj || !foeObj.userData.inst) return; const inst = foeObj.userData.inst; if (inst.play(name, .08, false)) { foeObj.userData.animLock = performance.now() + ms; setTimeout(() => { if (foeObj && performance.now() >= foeObj.userData.animLock) inst.play('Idle', .2); }, ms + 20); } }
   let lastWolfToast = 0, frames = 0, fpsT = 0, lastFrame = 0;
   function loop(now) {
     requestAnimationFrame(loop);
@@ -945,7 +958,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     }
     if (rolling > 0) rolling -= dt;
     // Animationen der GLTF-Figuren
-    if (heroInst) {
+    if (heroInst && performance.now() > heroLockUntil) {
       if (state.mounted) heroInst.play(swimming ? 'Sit_Floor_Idle' : 'Sit_Chair_Idle');
       else if (rolling > 0) { if (!state.mounted) heroInst.play('Dodge_Forward', .05, false); }
       else if (swimming) { heroInst.play(moving ? 'Walking_A' : 'Lie_Idle'); heroInst.obj.rotation.x = 1.2; heroInst.obj.position.y = .3; }
@@ -980,7 +993,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     if (npc.userData.inst) { const ph = clock.t % 9; npc.userData.inst.play(near(npc, 4) ? 'Interact' : ph < 2 ? 'Cheer' : 'Idle', .3); }
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
-    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) { const hunt = d < 14 && d > 2.5 && inWorld; w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : hunt ? 'Run' : 'Walk', .15); if (w.userData.inst.action) w.userData.inst.action.timeScale = hunt ? (w.userData.alpha ? 1.05 : 1.15) : .9; } if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
+    wolves.forEach(w => { if (!w.userData.alive) return; if (battleOn && w === foeObj) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); w.rotation.y = w.userData.dir; if (w.userData.inst && !(w.userData.animLock > performance.now())) w.userData.inst.play('Idle', .2); return; } w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) { const hunt = d < 14 && d > 2.5 && inWorld; w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : hunt ? 'Run' : 'Walk', .15); if (w.userData.inst.action) w.userData.inst.action.timeScale = hunt ? (w.userData.alpha ? 1.05 : 1.15) : .9; } if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     if (water.material.userData.wt) water.material.userData.wt.value = clock.t;
     if (settings.quality >= 2) { for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true; }
     const fpos = fireflies.geometry.attributes.position; if (settings.quality >= 2) for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = (.5 + Math.sin(clock.t * 4) * .3) * Math.max(.08, WORLD_U.night.value);
@@ -991,7 +1004,10 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
       if (moving && dragId === null) camYaw *= Math.pow(.15, dt);
       const cd = settings.camDist, cy = heading + camYaw, ch = cd * (.5 + camPitch);
       const camTarget = new THREE.Vector3(player.position.x - Math.sin(cy) * cd * Math.cos(camPitch), Math.max(player.position.y + ch, WATER_Y + 1.5), player.position.z - Math.cos(cy) * cd * Math.cos(camPitch));
-      camera.position.lerp(camTarget, 1 - Math.pow(.002, dt)); camera.lookAt(player.position.x, player.position.y + 1.8, player.position.z);
+      let lookX = player.position.x, lookY = player.position.y + 1.8, lookZ = player.position.z;
+      if (battleOn && foeObj) { const fx = foeObj.position.x, fz = foeObj.position.z; const mx = (player.position.x + fx) / 2, mz = (player.position.z + fz) / 2; const dx = fx - player.position.x, dz = fz - player.position.z; const L = Math.hypot(dx, dz) || 1; const sx = -dz / L, sz = dx / L; const dist = Math.max(6, L * 1.1 + 3); camTarget.set(mx + sx * dist - dx / L * 1.5, Math.max(player.position.y, foeObj.position.y) + 2.6, mz + sz * dist - dz / L * 1.5); lookX = mx; lookY = player.position.y + 1.4; lookZ = mz; }
+      camera.position.lerp(camTarget, 1 - Math.pow(battleOn ? .01 : .002, dt)); camera.lookAt(lookX, lookY, lookZ);
+      if (camShake > .004) { camera.position.x += (Math.random() - .5) * camShake; camera.position.y += (Math.random() - .5) * camShake * .7; camShake *= Math.pow(.01, dt); }
       drawMinimap(); if (frames % 2 === 0) updateLabels();
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     gfx.updateSky(dt, player.position); if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
@@ -1238,13 +1254,13 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     foe = FOES[kind]; foeObj = obj || (kind === 'troll' ? troll : null); battleOn = true; bossMax = foe.hp; bossHp = foeObj && foeObj.userData.hp !== undefined ? foeObj.userData.hp : bossMax; phase = bossHp <= bossMax / 2 && foe.phases > 1 ? 2 : 1; combo = 0;
     $('bossName').textContent = foe.name; $('bossEyebrow').textContent = foe.eyebrow; $('phase').textContent = foe.phases > 1 ? 'Phase 1' : ''; $('bossHp').style.width = '100%'; $('bossHp').style.background = ''; $('feedback').textContent = ''; $('feedback').className = 'feedback';
     $('modeTag').textContent = prefs.kurs === 'G' ? 'Grundkurs' : 'Erweiterung · ' + (prefs.modus === 'S' ? 'Sanft' : 'Streng');
-    hpUI(); $('bcombo').textContent = 0; if (kind === 'troll') troll.userData.body.material.color.setHex(0x5e7a3a); show('battle'); nextWord();
+    hpUI(); $('bcombo').textContent = 0; if (kind === 'troll') troll.userData.body.material.color.setHex(0x5e7a3a); if (foeObj) { heading = Math.atan2(foeObj.position.x - player.position.x, foeObj.position.z - player.position.z); camYaw = 0; player.rotation.y = heading; } if (state.mounted) toggleMount(); show('battle'); nextWord();
   }
   function endBattle() { battleOn = false; clearInterval(timerId); }
   function hit(kind, msg, dmg) {
     const fb = $('feedback'); fb.className = 'feedback ' + kind; fb.textContent = msg;
-    if (kind === 'bad') { combo = 0; damage(foe === FOES.troll ? 34 : foe === FOES.alpha ? 24 : 16); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
-    else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10); bossHp = Math.max(0, bossHp - Math.round(dmg * mult)); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; }
+    if (kind === 'bad') { combo = 0; const d = foe === FOES.troll ? 34 : foe === FOES.alpha ? 24 : 16; foeAnim('Punch', 700); setTimeout(() => { heroHitAnim(); popDmg(player, '-' + d, 'bad'); camShake = .5; }, 350); damage(d); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
+    else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10); const applied = Math.round(dmg * mult); bossHp = Math.max(0, bossHp - applied); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; heroAttackAnim(); setTimeout(() => { foeAnim('HitReact', 600); if (foeObj) popDmg(foeObj, '-' + applied + (kind === 'crit' ? ' !' : ''), kind); camShake = kind === 'crit' ? .35 : .18; }, 260); }
     $('bcombo').textContent = combo; $('combo').textContent = combo;
     if (foe.phases > 1 && bossHp <= bossMax / 2 && phase === 1) { phase = 2; $('phase').textContent = 'Phase 2 · Wütend'; $('bossHp').style.background = 'linear-gradient(90deg,#ff3d3d,#8a0f2a)'; if (foe === FOES.troll) troll.userData.body.material.color.setHex(0x8a2f2f); toast(foe.name + ' wird wütend – stärker, anderes Aussehen!'); }
     if (bossHp <= 0) { endBattle(); win(); return; }
