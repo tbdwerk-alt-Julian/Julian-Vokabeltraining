@@ -1,6 +1,6 @@
 # VocabQuest – Ablaufplan bis Sonntag (1. 11. 2026)
 
-Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die Punkte unter „Offen“.
+Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die Punkte unter „Offen“.
 
 ## Fertig (seit Donnerstag)
 
@@ -20,6 +20,8 @@ Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, auß
 - Schnellreise über fünf Lagerfeuer (entdecken, dann auf der Karte anklicken)
 - Emotes (T/G/H), Rolle im Kampf mit Wirkung, Regenbogen nach Regen, Sternschnuppen, Vogelschwärme
 - Zweites Gebiet **Wüste** (nach dem Waldtroll über die Weltkarte): Dünen, Oase mit Palmen, Kakteen, Sandsturm, Sandräuber, Sandteufel, Sandkönig, Sandwurm-Arena ab Level 25, eigene Quests und Lagerfeuer
+- Drittes bis fünftes Gebiet: **Kirschen-Gebiet** (rosa Wald, Blütenwind, Kirschgeist ab Level 50), **Vulkan** (Asche, Lavasee, Lavaspalten, Lavadrache ab Level 75 – fliegt in Phase 2) und **Schattenfestung** (Level 100, Ignatius der Schattenkönig mit 4 Phasen und Spiegeln der vier Bosse). Jedes Gebiet mit eigenen Gegnern, Quests, Wetter, Karte, Lagerfeuern und Trophäe
+- Boss-Belohnungen: Trophäen (Trollzahn, Wurmschuppe, Blütenkristall, Drachenkralle), Drop-Chance auf Boss-Waffe, alle 4 Trophäen = legendäre Waffe beim Schmied
 - Begleiter Lumi: folgt dir, leuchtet gelb Richtung Truhe, findet Münzen
 - Lager-Ausbau: Schmiede (Waffe +1 Stärke je Stufe), Stall (Reittier-Skills), Trophäenwand
 - Vier Helden: Ritter, Schurkin, Magier, Barbar
@@ -33,7 +35,7 @@ Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, auß
 ## Offen – Reihenfolge bis Sonntag
 
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
-2. **Boss-Kampf testen.** Mit Level 10 durch das Tor, Waldtroll Phase 1 → 2, Trophäe Trollzahn, Drop-Chance Trollhammer.
+2. **Boss-Kämpfe spielen.** Waldtroll, Sandwurm, Kirschgeist, Lavadrache, Ignatius einmal echt durchspielen (Phasenwechsel, Trophäen, Freischaltung des nächsten Gebiets).
 3. **Charakter-Farben.** Mit den KayKit-Modellen nur über Texturen möglich; vorerst stattdessen vier Helden zur Wahl.
 4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen.
 5. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
