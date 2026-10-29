@@ -327,8 +327,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* Lebensleiste und Ausdauer über der Hotbar */
 .vitals { width: min(440px, 94vw); display: flex; flex-direction: column; gap: 5px; }
-.vrow { display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 8px; }
-.vrow b { font-family: var(--display); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.8); text-align: right; text-shadow: 0 1px 2px #000; }
+.vit { display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 8px; }
+.vit b { font-family: var(--display); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.8); text-align: right; text-shadow: 0 1px 2px #000; }
 .vbar { position: relative; height: 20px; border-radius: 99px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.16); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,.6), 0 4px 14px rgba(0,0,0,.35); backdrop-filter: blur(6px); }
 .vbar > i { display: block; height: 100%; width: 100%; border-radius: 99px; transition: width .25s; }
 .vbar.hp > i { background: linear-gradient(90deg, #ff3d5e, #ff7a5c 70%, #ffb199); box-shadow: 0 0 16px rgba(255,77,109,.65); }
@@ -431,8 +431,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="center">
         <div class="combo"><span class="chip">COMBO <span id="combo">0</span></span><span class="chip">🪙 <span id="coins">0</span></span><span class="chip">💎 <span id="gems">0</span></span></div>
         <div class="vitals">
-          <div class="vrow"><b>HP</b><div class="vbar hp"><i id="hpBar" style="width:100%"></i><span id="hpNum">100 / 100</span></div></div>
-          <div class="vrow"><b id="stamLabel">Ausdauer</b><div class="vbar stam" id="stamBar"><i id="stam" style="width:100%"></i><span id="stamNum">100%</span></div></div>
+          <div class="vit"><b>HP</b><div class="vbar hp"><i id="hpBar" style="width:100%"></i><span id="hpNum">100 / 100</span></div></div>
+          <div class="vit"><b id="stamLabel">Ausdauer</b><div class="vbar stam" id="stamBar"><i id="stam" style="width:100%"></i><span id="stamNum">100%</span></div></div>
         </div>
         <div class="hotbar" id="hotbar"></div>
         <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Shift Sprint · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar</div>
@@ -560,7 +560,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="row" id="vocabStats"></div>
       <div class="tabs" id="vtabs"><button aria-selected="true" data-t="list">Liste</button><button aria-selected="false" data-t="add">Hinzufügen</button><button aria-selected="false" data-t="paste">Liste einfügen</button></div>
       <div class="tabpane" data-p="list">
-        <div class="row" style="align-items:center;gap:8px;margin-bottom:8px;"><label class="hint">Unit</label><select id="vUnitFilter"></select><button class="btn small" id="vDeleteUnit">Unit löschen</button></div>
+        <div class="row" style="align-items:center;gap:8px;margin-bottom:8px;"><label class="hint">Unit</label><select id="vUnitFilter"></select><input type="search" id="vSearch" placeholder="Suchen …" autocomplete="off" style="flex:1;min-width:120px;"><button class="btn small" id="vDeleteUnit">Unit löschen</button></div>
         <div class="vlist" id="vList"></div>
       </div>
       <div class="tabpane" data-p="add" hidden>

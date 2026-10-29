@@ -1285,11 +1285,12 @@ import * as A from './audio.js';
 
   // ---------- Vokabel-Menü ----------
   function openVocab() { $('vocabScreen').hidden = false; renderVocab(); }
+  $('vSearch').oninput = () => renderVocab();
   function renderVocab() {
     const units = V.units(); const sel = $('vUnitFilter'); const curU = sel.value; sel.innerHTML = '<option value="">Alle Units</option>' + units.map(u => `<option value="${u}">${u}</option>`).join(''); if (units.includes(curU)) sel.value = curU;
     $('vUnits').innerHTML = units.map(u => `<option value="${u}">`).join('');
     const s = V.stats(sel.value); $('vocabStats').innerHTML = `<span class="tag">${s.total} Wörter</span><span class="tag">neu ${s.unseen}</span><span class="tag">☆ ${s.stars[0]}</span><span class="tag">★ ${s.stars[1]}</span><span class="tag">★★ ${s.stars[2]}</span><span class="tag">★★★ ${s.stars[3]}</span>`;
-    const list = V.byUnit(sel.value); $('vList').innerHTML = list.length ? list.map(w => `<div class="vrow ${w.seen ? '' : 'new'}"><span class="de">${w.de}</span><span>${w.en}</span><span class="st s${w.stars}">${'★'.repeat(w.stars) || '☆'}</span><button class="x" data-id="${w.id}" title="Löschen">✕</button></div>`).join('') : '<p class="hint">Noch keine Wörter. Über „Hinzufügen" oder „Liste einfügen" eintragen.</p>';
+    const qs = ($('vSearch').value || '').trim().toLowerCase(); const list = V.byUnit(sel.value).filter(w => !qs || w.de.toLowerCase().includes(qs) || w.en.toLowerCase().includes(qs)); $('vList').innerHTML = list.length ? list.map(w => `<div class="vrow ${w.seen ? '' : 'new'}"><span class="de">${w.de}</span><span>${w.en}</span><span class="st s${w.stars}">${'★'.repeat(w.stars) || '☆'}</span><button class="x" data-id="${w.id}" title="Löschen">✕</button></div>`).join('') : '<p class="hint">Noch keine Wörter. Über „Hinzufügen" oder „Liste einfügen" eintragen.</p>';
     $('vList').querySelectorAll('.x').forEach(b => b.addEventListener('click', () => { V.remove(+b.dataset.id); renderVocab(); }));
   }
   $('vUnitFilter').onchange = renderVocab;
