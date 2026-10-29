@@ -21,7 +21,8 @@ import * as A from './audio.js';
   const CHARS = [
     { name: 'Kai', hair: 0x2a1a12, cloth: 0x2d6fd6, cloth2: 0x1f2a44, cape: 0x8b1f3a, style: 'spiky' },
     { name: 'Lena', hair: 0xf0d070, cloth: 0x7a4fd6, cloth2: 0x2a2440, cape: 0x1f8a4c, style: 'pony' },
-    { name: 'Ryo', hair: 0xcfd6e2, cloth: 0x1b1b22, cloth2: 0x2b2b33, cape: 0xd9a52a, style: 'long' }
+    { name: 'Ryo', hair: 0xcfd6e2, cloth: 0x1b1b22, cloth2: 0x2b2b33, cape: 0xd9a52a, style: 'long' },
+    { name: 'Bruno', hair: 0x6b3a1a, cloth: 0x7a4a2a, cloth2: 0x3a2a1a, cape: 0x5a7a3a, style: 'spiky' }
   ];
 
   // ---------- Renderer & Szene ----------
@@ -1386,7 +1387,7 @@ import * as A from './audio.js';
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
   setLoad('3D-Modelle werden geladen …');
   const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', bluedemon: '/models/monsters/BlueDemon.gltf', horse: '/models/animals/Horse.glb' };
-  const HERO_MODEL = ['knight', 'rogue', 'mage'];
+  const HERO_MODEL = ['knight', 'rogue', 'mage', 'barbarian'];
   const gl = {};
   function heroModelKey() { return HERO_MODEL[state.charIdx] || 'knight'; }
   // Held
