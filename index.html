@@ -373,6 +373,14 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .srow { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
 .srow b { font-family: var(--display); font-size: 16px; color: var(--accent); }
+
+.banner { position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%) scale(.8); text-align: center; pointer-events: none; opacity: 0; transition: opacity .35s, transform .35s; z-index: 6; }
+.banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.banner .bt { font-family: var(--display); font-weight: 900; font-size: clamp(34px, 7vw, 72px); letter-spacing: .12em; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.8), 0 0 40px rgba(124,255,155,.35); }
+.banner .bs { font-family: var(--display); font-weight: 700; font-size: clamp(13px, 2vw, 18px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.85); text-shadow: 0 2px 8px #000; margin-top: 6px; }
+.banner.gold .bt { color: #ffd166; text-shadow: 0 4px 18px rgba(0,0,0,.8), 0 0 46px rgba(255,177,61,.6); }
+.banner.boss .bt { color: #ff4d6d; text-shadow: 0 4px 18px rgba(0,0,0,.9), 0 0 50px rgba(255,77,109,.7); }
+.dmg.xp { color: #7cff9b; font-size: 22px; } .dmg.coin { color: #ffd166; font-size: 22px; }
 </style>
 </head>
 <body>
@@ -382,6 +390,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 <div id="loading"><div class="ldbox"><div class="ldtitle">Vocab<span>Quest</span></div><div class="ldbar"><i></i></div><div class="ldtext" id="loadText">Welt wird gebaut …</div></div></div>
 <div id="vignette"></div>
 <div id="labels"></div>
+<div id="banner" class="banner"></div>
 <div id="hurt"></div>
 <div id="dead"><div class="deadbox"><div class="deadtitle">Du bist gestorben</div><div class="deadwhy" id="deadWhy"></div><button class="btn primary" id="respawnBtn">Am Lagerfeuer wiederbeleben</button></div></div>
 
@@ -419,7 +428,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
           <div class="vrow"><b id="stamLabel">Ausdauer</b><div class="vbar stam" id="stamBar"><i id="stam" style="width:100%"></i><span id="stamNum">100%</span></div></div>
         </div>
         <div class="hotbar" id="hotbar"></div>
-        <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar</div>
+        <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Shift Sprint · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar</div>
       </div>
       <div class="actions">
         <button class="btn small" id="mountBtn">🐾 Absteigen</button>

@@ -745,7 +745,7 @@ import * as A from './audio.js';
   function respawn() { $('dead').classList.remove('on'); state.hp = state.maxHp; player.position.set(0, 1.2, 0); heading = Math.PI * .5; if (!state.mounted) { mountFree.position.set(2, 1.2, 3); } hpUI(); show('world'); toast('Wiederbelebt am Lagerfeuer'); }
   function renderAll() { renderHotbar(); renderBag(); hpUI(); $('coins').textContent = state.coins; $('gems').textContent = state.gems || 0; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
   function hearts(el, n, max) { el.innerHTML = Array.from({ length: max }, (_, i) => `<span class="h ${i < n ? '' : 'off'}">♥</span>`).join(''); }
-  function gainXp(n) { if (n > 0) gainSeasonXp(Math.max(1, Math.round(n * .6))); state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); A.sfx('levelup'); state.hp = state.maxHp; } renderAll(); }
+  function gainXp(n) { if (n > 0) { gainSeasonXp(Math.max(1, Math.round(n * .6))); if (hud.classList.contains('on')) popDmg(player, '+' + n + ' XP', 'xp'); } state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); banner('LEVEL ' + state.level, 'HP voll · weiter so!', 'gold'); A.sfx('levelup'); state.hp = state.maxHp; } renderAll(); }
   function addItem(id, n) { const it = ITEMS[id]; const bag = bagFor(id); if (it.n !== undefined) { it.n += n || 1; const idx = bag.indexOf(id); if (idx < 0 && hotbar.indexOf(id) < 0) { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; } } else { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; else toast('Fach „' + BAG_CATS.find(c => c[0] === catOf(id))[2] + '“ voll (20/20)'); } renderAll(); }
 
   // Inventar-3D-Ansicht
@@ -879,7 +879,7 @@ import * as A from './audio.js';
   function moveJoy(e) { const r = joy.getBoundingClientRect(); let x = (e.clientX - r.left - r.width / 2) / (r.width / 2), y = (e.clientY - r.top - r.height / 2) / (r.height / 2); const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; } joyVec = { x, y }; knob.style.transform = `translate(${x * r.width * .28}px, ${y * r.width * .28}px)`; }
   function endJoy() { joyId = null; joyVec = { x: 0, y: 0 }; knob.style.transform = ''; }
   // Controller
-  function pollPad() { const pads = navigator.getGamepads ? navigator.getGamepads() : []; const p = pads && pads[0]; if (!p) return null; if (p.axes.some(v => Math.abs(v) > .3) || p.buttons.some(b => b.pressed)) setInput('pad'); const ax = Math.abs(p.axes[0]) > .15 ? p.axes[0] : 0, ay = Math.abs(p.axes[1]) > .15 ? p.axes[1] : 0; if (p.buttons[0] && p.buttons[0].pressed && !pollPad.a) roll(); pollPad.a = p.buttons[0] && p.buttons[0].pressed; if (p.buttons[2] && p.buttons[2].pressed && !pollPad.x) interact(); pollPad.x = p.buttons[2] && p.buttons[2].pressed; if (p.buttons[3] && p.buttons[3].pressed && !pollPad.y) { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; } pollPad.y = p.buttons[3] && p.buttons[3].pressed; if (p.buttons[1] && p.buttons[1].pressed && !pollPad.b) toggleMount(); pollPad.b = p.buttons[1] && p.buttons[1].pressed; return { x: ax, y: ay }; }
+  function pollPad() { const pads = navigator.getGamepads ? navigator.getGamepads() : []; const p = pads && pads[0]; if (!p) return null; if (p.axes.some(v => Math.abs(v) > .3) || p.buttons.some(b => b.pressed)) setInput('pad'); const ax = Math.abs(p.axes[0]) > .15 ? p.axes[0] : 0, ay = Math.abs(p.axes[1]) > .15 ? p.axes[1] : 0; if (p.buttons[0] && p.buttons[0].pressed && !pollPad.a) roll(); pollPad.a = p.buttons[0] && p.buttons[0].pressed; if (p.buttons[2] && p.buttons[2].pressed && !pollPad.x) interact(); pollPad.x = p.buttons[2] && p.buttons[2].pressed; if (p.buttons[3] && p.buttons[3].pressed && !pollPad.y) { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; } pollPad.y = p.buttons[3] && p.buttons[3].pressed; if (p.buttons[1] && p.buttons[1].pressed && !pollPad.b) toggleMount(); pollPad.b = p.buttons[1] && p.buttons[1].pressed; return { x: ax, y: ay, sprint: !!((p.buttons[10] && p.buttons[10].pressed) || (p.buttons[5] && p.buttons[5].pressed)) }; }
 
   let heading = Math.PI * .5, vy = 0, rolling = 0, t0 = performance.now(), walkPhase = 0, mountCalled = false, swimming = false;
   camera.position.set(14, 6, 0);
@@ -897,7 +897,7 @@ import * as A from './audio.js';
   function interact() {
     if (merchant.visible && near(merchant, 4)) { openShop(); return; }
     if (near(npc, 3.5)) { renderQuests(); $('npc').hidden = false; return; }
-    for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; bumpStat('chests'); A.sfx('chest'); ch.userData.lid.rotation.x = -1.6; const loot = ch.userData.gold ? ['hammer', 'helmI', 'chestI', 'phoenix'][Math.floor(Math.random() * 4)] : ['heal', 'coin', 'stam', 'bootsI'][Math.floor(Math.random() * 4)]; if (loot === 'coin') { state.coins += 25; toast('Truhe · +25 🪙'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
+    for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; bumpStat('chests'); A.sfx('chest'); ch.userData.lid.rotation.x = -1.6; const loot = ch.userData.gold ? ['hammer', 'helmI', 'chestI', 'phoenix'][Math.floor(Math.random() * 4)] : ['heal', 'coin', 'stam', 'bootsI'][Math.floor(Math.random() * 4)]; if (loot === 'coin') { state.coins += 25; state.stats.coinsEarned += 25; popDmg(player, '+25 🪙', 'coin'); toast('Truhe · +25 🪙'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
     for (const s of stations) if (near(s.g, 2.5)) { if (s.done) { toast('Station erledigt · kommt morgen wieder'); return; } openStation(s); return; }
     for (const w of wolves) if (w.userData.alive && near(w, 3.5)) { startBattle(w.userData.kind, w); return; }
     if (gateDist() < 4.5 && !gate.userData.open) { tryGate(); return; }
@@ -915,7 +915,8 @@ import * as A from './audio.js';
     mountMesh.position.y = bob; mountMesh.rotation.x = sp > 0 ? Math.sin(walkPhase) * (gallop ? .07 : .03) * sp : 0;
     if (rider && heroInst) { heroInst.obj.position.y = (u.heroY !== undefined ? u.heroY : u.seatY - .5) + bob * .7; heroInst.obj.rotation.x = -.15 * sp; }
   }
-  let camShake = 0, heroLockUntil = 0;
+  let camShake = 0, heroLockUntil = 0, sprinting = false;
+  let bannerT = null; function banner(title, sub, cls) { const b = $('banner'); b.className = 'banner show ' + (cls || ''); b.innerHTML = '<div class="bt">' + title + '</div>' + (sub ? '<div class="bs">' + sub + '</div>' : ''); clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('show'), 2600); }
   // Schwebende Schadenszahl über einem Objekt
   function popDmg(obj, text, cls) {
     const el = document.createElement('div'); el.className = 'dmg ' + (cls || ''); el.textContent = text; $('labels').appendChild(el);
@@ -948,7 +949,9 @@ import * as A from './audio.js';
     const moving = inWorld && Math.abs(fwd) > .05;
     if (inWorld) {
       heading += turn * 2.4 * settings.sens * dt * (fwd < 0 ? -1 : 1);
-      let base = state.mounted ? (swimming ? mountMesh.userData.waterSpeed : mountMesh.userData.landSpeed) : (swimming ? 3.2 : 5.5);
+      sprinting = !state.mounted && !swimming && moving && (keys['shift'] || (pad && pad.sprint)) && state.stamina > 1;
+      let base = state.mounted ? (swimming ? mountMesh.userData.waterSpeed : mountMesh.userData.landSpeed) : (swimming ? 3.2 : sprinting ? 8.2 : 5.5);
+      if (sprinting) state.stamina = Math.max(0, state.stamina - dt * 9);
       if (state.stamina <= 0 && state.mounted) base *= .4;
       const sp = (rolling > 0 ? base * 2 : base) * dt * (fwd < 0 ? .6 : 1);
       if (moving || rolling > 0) {
@@ -968,7 +971,7 @@ import * as A from './audio.js';
       if (state.mounted) heroInst.play(swimming ? 'Sit_Floor_Idle' : 'Sit_Chair_Idle');
       else if (rolling > 0) { if (!state.mounted) heroInst.play('Dodge_Forward', .05, false); }
       else if (swimming) { heroInst.play(moving ? 'Walking_A' : 'Lie_Idle'); heroInst.obj.rotation.x = 1.2; heroInst.obj.position.y = .3; }
-      else { heroInst.obj.rotation.x = 0; heroInst.obj.position.y = 0; const slow = Math.abs(fwd) < .5; heroInst.play(moving ? (fwd < 0 ? 'Walking_Backwards' : slow ? 'Walking_A' : 'Running_A') : (Math.abs(turn) > .3 ? 'Walking_A' : 'Idle'), .15); if (heroInst.action) heroInst.action.timeScale = moving ? (slow ? clamp(Math.abs(fwd) * 2, .6, 1.1) : clamp(Math.abs(fwd), .85, 1.15)) : (Math.abs(turn) > .3 ? .8 : 1); }
+      else { heroInst.obj.rotation.x = 0; heroInst.obj.position.y = 0; const slow = Math.abs(fwd) < .5; heroInst.play(moving ? (fwd < 0 ? 'Walking_Backwards' : slow ? 'Walking_A' : 'Running_A') : (Math.abs(turn) > .3 ? 'Walking_A' : 'Idle'), .15); if (heroInst.action) heroInst.action.timeScale = moving ? (slow ? clamp(Math.abs(fwd) * 2, .6, 1.1) : clamp(Math.abs(fwd), .85, 1.15) * (sprinting ? 1.35 : 1)) : (Math.abs(turn) > .3 ? .8 : 1); }
     }
     if (mountMesh.userData.inst) { const a = mountMesh.userData.inst.action; if (a) { a.paused = !(moving || swimming); a.timeScale = swimming ? .5 : clamp(.5 + Math.abs(fwd) * .8, .6, 1.3); } }
     const gy = groundY(player.position.x, player.position.z);
@@ -1013,6 +1016,7 @@ import * as A from './audio.js';
       let lookX = player.position.x, lookY = player.position.y + 1.8, lookZ = player.position.z;
       if (battleOn && foeObj) { const fx = foeObj.position.x, fz = foeObj.position.z; const mx = (player.position.x + fx) / 2, mz = (player.position.z + fz) / 2; const dx = fx - player.position.x, dz = fz - player.position.z; const L = Math.hypot(dx, dz) || 1; const sx = -dz / L, sz = dx / L; const dist = Math.max(6, L * 1.1 + 3); camTarget.set(mx + sx * dist - dx / L * 1.5, Math.max(player.position.y, foeObj.position.y) + 2.6, mz + sz * dist - dz / L * 1.5); lookX = mx; lookY = player.position.y + 1.4; lookZ = mz; }
       camera.position.lerp(camTarget, 1 - Math.pow(battleOn ? .01 : .002, dt)); camera.lookAt(lookX, lookY, lookZ);
+      { const wantFov = sprinting ? 58 : (state.mounted && moving ? 56 : 50); if (Math.abs(camera.fov - wantFov) > .05) { camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); } }
       if (camShake > .004) { camera.position.x += (Math.random() - .5) * camShake; camera.position.y += (Math.random() - .5) * camShake * .7; camShake *= Math.pow(.01, dt); }
       drawMinimap(); if (frames % 2 === 0) updateLabels();
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
@@ -1294,7 +1298,7 @@ import * as A from './audio.js';
     foe = FOES[kind]; foeObj = obj || (kind === 'troll' ? troll : null); battleOn = true; bossMax = foe.hp; bossHp = foeObj && foeObj.userData.hp !== undefined ? foeObj.userData.hp : bossMax; phase = bossHp <= bossMax / 2 && foe.phases > 1 ? 2 : 1; combo = 0;
     $('bossName').textContent = foe.name; $('bossEyebrow').textContent = foe.eyebrow; $('phase').textContent = foe.phases > 1 ? 'Phase 1' : ''; $('bossHp').style.width = '100%'; $('bossHp').style.background = ''; $('feedback').textContent = ''; $('feedback').className = 'feedback';
     $('modeTag').textContent = prefs.kurs === 'G' ? 'Grundkurs' : 'Erweiterung · ' + (prefs.modus === 'S' ? 'Sanft' : 'Streng');
-    hpUI(); $('bcombo').textContent = 0; if (kind === 'troll') troll.userData.body.material.color.setHex(0x5e7a3a); if (foeObj) { heading = Math.atan2(foeObj.position.x - player.position.x, foeObj.position.z - player.position.z); camYaw = 0; player.rotation.y = heading; } if (state.mounted) toggleMount(); show('battle'); nextWord();
+    hpUI(); $('bcombo').textContent = 0; if (kind === 'troll') troll.userData.body.material.color.setHex(0x5e7a3a); if (foeObj) { heading = Math.atan2(foeObj.position.x - player.position.x, foeObj.position.z - player.position.z); camYaw = 0; player.rotation.y = heading; } if (state.mounted) toggleMount(); show('battle'); if (kind === 'troll') { banner('WALDTROLL', 'Boss · Phase 1 · 2 Phasen', 'boss'); A.sfx('thunder'); } else banner(foe.name, 'Kampf · Englisch tippen = Schlag', ''); nextWord();
   }
   function endBattle() { battleOn = false; clearInterval(timerId); }
   function hit(kind, msg, dmg) {
@@ -1303,7 +1307,7 @@ import * as A from './audio.js';
     if (kind === 'bad') { combo = 0; const d = foe === FOES.troll ? 34 : foe === FOES.alpha ? 24 : 16; foeAnim('Punch', 700); A.sfx('wrong'); setTimeout(() => { heroHitAnim(); popDmg(player, '-' + d, 'bad'); camShake = .5; }, 350); damage(d); if (state.hp <= 0) { fb.textContent = 'Besiegt. Respawn am Lagerfeuer …'; return; } }
     else { combo++; const mult = (combo >= 15 ? 1.5 : combo >= 10 ? 1.25 : combo >= 5 ? 1.1 : 1) * (1 + stats().atk / 10) * (state.buffs.fire > 0 ? (state.buffs.fire--, 1.5) : 1) * (state.buffs.str > Date.now() ? 1.3 : 1); bumpStat('words'); if (kind === 'crit') bumpStat('crits'); if (combo > state.stats.bestCombo) state.stats.bestCombo = combo; const applied = Math.round(dmg * mult); bossHp = Math.max(0, bossHp - applied); if (foeObj) foeObj.userData.hp = bossHp; $('bossHp').style.width = (bossHp / bossMax * 100) + '%'; heroAttackAnim(); setTimeout(() => { foeAnim('HitReact', 600); A.sfx(kind === 'crit' ? 'crit' : 'hit'); if (foeObj) popDmg(foeObj, '-' + applied + (kind === 'crit' ? ' !' : ''), kind); camShake = kind === 'crit' ? .35 : .18; }, 260); }
     $('bcombo').textContent = combo; $('combo').textContent = combo;
-    if (foe.phases > 1 && bossHp <= bossMax / 2 && phase === 1) { phase = 2; $('phase').textContent = 'Phase 2 · Wütend'; $('bossHp').style.background = 'linear-gradient(90deg,#ff3d3d,#8a0f2a)'; if (foe === FOES.troll) troll.userData.body.material.color.setHex(0x8a2f2f); toast(foe.name + ' wird wütend – stärker, anderes Aussehen!'); }
+    if (foe.phases > 1 && bossHp <= bossMax / 2 && phase === 1) { phase = 2; $('phase').textContent = 'Phase 2 · Wütend'; $('bossHp').style.background = 'linear-gradient(90deg,#ff3d3d,#8a0f2a)'; if (foe === FOES.troll) troll.userData.body.material.color.setHex(0x8a2f2f); toast(foe.name + ' wird wütend – stärker, anderes Aussehen!'); banner('PHASE 2', foe.name + ' ist wütend!', 'boss'); A.sfx('thunder'); }
     if (bossHp <= 0) { endBattle(); win(); return; }
     setTimeout(nextWord, 650);
   }
@@ -1311,7 +1315,7 @@ import * as A from './audio.js';
     gainXp(foe.xp); const luck = state.buffs.luck > Date.now(); state.coins += foe.coins * (luck ? 2 : 1); state.stats.coinsEarned += foe.coins * (luck ? 2 : 1); bumpStat('battles'); bumpStat('trolls'); let extra = luck ? ' · 🍀 doppelte Münzen' : '';
     if (foe === FOES.troll) { troll.userData.hp = 220; addItem('tooth'); progress('troll'); if (Math.random() < 1 / 3) { addItem('hammer'); extra = ' · Drop: Trollhammer!'; } else extra = ' · kein Drop (1 von 3)'; $('winTitle').innerHTML = 'Waldtroll <span>gefallen</span>'; $('winText').innerHTML = 'Trophäe: <b>Trollzahn</b> 🦷' + extra; }
     else { if (foeObj) { const fo = foeObj; fo.userData.alive = false; if (fo.userData.inst) { fo.userData.inst.play('Death', .1, false); setTimeout(() => { fo.visible = false; }, 1400); } else fo.visible = false; if (fo.userData.label) fo.userData.label.style.display = 'none'; setTimeout(() => { fo.userData.alive = true; fo.visible = true; fo.userData.hp = fo.userData.maxHp; }, 300000); } addItem('pelt'); if (foe === FOES.alpha) progress('alpha'); else progress('wolves'); $('winTitle').innerHTML = foe.name + ' <span>besiegt</span>'; $('winText').innerHTML = 'Trollfell erhalten · Gegner kommt in 5 Min wieder'; }
-    $('winSub').textContent = `+${foe.xp} XP · +${foe.coins} 🪙`; renderAll(); setTimeout(() => show('win'), 600);
+    $('winSub').textContent = `+${foe.xp} XP · +${foe.coins} 🪙`; banner(foe === FOES.troll ? 'SIEG!' : 'BESIEGT', foe.name, 'gold'); A.sfx('levelup'); renderAll(); setTimeout(() => show('win'), 600);
   }
   $('answerForm').addEventListener('submit', e => { e.preventDefault(); if (!battleOn || !cur || !$('newWord').hidden) return; clearInterval(timerId); const a = $('answer').value.trim().toLowerCase(), target = cur.en.toLowerCase(); if (a === target) { V.record(cur.id, true); hit('crit', '💥 Kritischer Treffer! Perfekt geschrieben · 2× Schaden', 20); } else if (a && lev(a, target) <= 2) { if (prefs.kurs === 'E' && prefs.modus === 'H') { V.record(cur.id, false); hit('bad', `Schreibfehler zählt als falsch · richtig: ${cur.en}`); } else { V.record(cur.id, true); hit('soft', `Fast: „${a}" → richtig: ${cur.en} · normaler Schaden`, 10); } } else { V.record(cur.id, false); hit('bad', `Falsch · richtig: ${cur.en}`); } });
   // Vokabel-Station: 6 Wörter, Ergebnis = XP
