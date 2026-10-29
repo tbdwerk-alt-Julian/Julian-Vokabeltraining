@@ -385,6 +385,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tut { position: absolute; left: 50%; bottom: 170px; transform: translateX(-50%); width: min(460px, 92vw); background: rgba(8,12,18,.8); border: 1px solid rgba(124,255,155,.5); border-radius: 16px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 24px rgba(124,255,155,.2); z-index: 4; pointer-events: auto; }
 .tut .tt { flex: 1; font-size: 13px; line-height: 1.4; } .tut .tt b { font-family: var(--display); font-size: 14px; display: block; margin-bottom: 2px; color: var(--accent); }
 @media (max-height: 520px) { .tut { bottom: 120px; } }
+
+.hintline { min-height: 18px; text-align: center; font-family: var(--display); font-size: 15px; letter-spacing: .12em; color: var(--accent-2); }
 </style>
 </head>
 <body>
@@ -689,7 +691,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <form id="answerForm" class="stack" style="gap:10px;">
         <input type="text" id="answer" placeholder="Englisch tippen … Enter = Schlag" autocomplete="off" autocapitalize="off" spellcheck="false">
         <div class="feedback" id="feedback"></div>
-        <div class="row" style="justify-content:space-between;"><button class="btn" type="button" id="dodge">🤸 Rolle</button><button class="btn" type="button" id="flee">Fliehen</button><button class="btn primary" type="submit">Schlag</button></div>
+        <div class="hintline" id="hintText"></div>
+        <div class="row" style="justify-content:space-between;"><button class="btn" type="button" id="hintBtn">💡 Hinweis</button><button class="btn" type="button" id="dodge">🤸 Rolle</button><button class="btn" type="button" id="flee">Fliehen</button><button class="btn primary" type="submit">Schlag</button></div>
       </form>
     </div>
   </div>
@@ -702,6 +705,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="timer"><i id="sTimer"></i></div>
       <form id="sForm" class="stack" style="gap:10px;">
         <input type="text" id="sAnswer" placeholder="Englisch tippen … Enter" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="hintline" id="sHintText"></div>
+        <div class="row"><button class="btn small" type="button" id="sHintBtn">💡 Hinweis</button></div>
         <div class="feedback" id="sFeedback"></div>
         <div class="row" style="justify-content:space-between;"><button class="btn" type="button" id="sQuit">Abbrechen</button><button class="btn primary" type="submit">Antworten</button></div>
       </form>
