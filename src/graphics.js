@@ -42,7 +42,7 @@ export function weatherize(material, opts = {}) {
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.95, 1.0), snowK);
         diffuseColor.rgb *= 1.0 - uWet * 0.5 * (1.0 - snowK);`);
   };
-  material.needsUpdate = true; return material;
+  material.envMapIntensity = .55; material.needsUpdate = true; return material;
 }
 
 // Prozedurale Normal-Map aus Wertrauschen (für Boden, Fels, Wasser)
@@ -65,7 +65,7 @@ function discTex(size, stops) { const cv = document.createElement('canvas'); cv.
 
 const SKY_VERT = `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; gl_Position.z = gl_Position.w; }`;
 const SKY_FRAG = `
-uniform vec3 zenith, horizon, sunHalo, sunCol, moonDir, sunDir; uniform float time, cloud, cloudDark, flash, night, haze; varying vec3 vDir;
+uniform vec3 zenith, horizon, sunHalo, sunCol, moonDir, sunDir; uniform float time, cloud, cloudDark, flash, night, haze, envDim; varying vec3 vDir;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }
 float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * noise(p); p = p * 2.03 + vec2(17.0, 9.0); a *= 0.5; } return v; }
@@ -91,7 +91,7 @@ void main(){
     c = mix(c, cc, cov * fade * 0.96);
   }
   c = mix(c, horizon, haze * (1.0 - t) * 0.5);
-  c += vec3(flash);
+  c += vec3(flash); c *= envDim;
   gl_FragColor = vec4(c, 1.0);
 }`;
 
@@ -122,14 +122,14 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
   // ---- Himmel ----
   const U = {
     zenith: { value: new THREE.Color(0x2b63b5) }, horizon: { value: new THREE.Color(0xbcd7ea) }, sunHalo: { value: new THREE.Color(0xffd9a0) }, sunCol: { value: new THREE.Color(0xfff4dc) },
-    sunDir: { value: new THREE.Vector3(-.5, .35, -.78).normalize() }, moonDir: { value: new THREE.Vector3(.5, .3, .78).normalize() }, time: { value: 0 }, cloud: { value: .3 }, cloudDark: { value: 0 }, flash: { value: 0 }, night: { value: 0 }, haze: { value: .3 }
+    sunDir: { value: new THREE.Vector3(-.5, .35, -.78).normalize() }, moonDir: { value: new THREE.Vector3(.5, .3, .78).normalize() }, time: { value: 0 }, cloud: { value: .3 }, cloudDark: { value: 0 }, flash: { value: 0 }, night: { value: 0 }, haze: { value: .3 }, envDim: { value: 1 }
   };
   const skyMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false });
   const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 48, 24), skyMat); skyMesh.renderOrder = -10; skyMesh.frustumCulled = false; scene.add(skyMesh);
   // Umgebungslicht/Reflexionen aus dem Himmel (wird bei Wetter- und Tageszeitwechsel erneuert)
   const pmrem = new THREE.PMREMGenerator(renderer); const envScene = new THREE.Scene(); const envSky = new THREE.Mesh(new THREE.SphereGeometry(50, 24, 12), skyMat); envScene.add(envSky);
   let envTex = null, envAge = 99;
-  function refreshEnv() { try { const t = pmrem.fromScene(envScene, .03).texture; if (envTex) envTex.dispose(); envTex = t; scene.environment = t; envAge = 0; } catch (e) { } }
+  function refreshEnv() { try { U.envDim.value = 1; const t = pmrem.fromScene(envScene, .03).texture; U.envDim.value = 1; if (envTex) envTex.dispose(); envTex = t; scene.environment = t; envAge = 0; } catch (e) { } }
   refreshEnv();
 
   // Sonnenglühen + Linsenreflexe

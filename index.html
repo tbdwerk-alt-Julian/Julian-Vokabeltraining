@@ -353,6 +353,12 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .zone { border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 12px 14px; background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.25)); }
 .zone.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(124,255,155,.25); background: linear-gradient(180deg, rgba(124,255,155,.18), rgba(0,0,0,.25)); }
 @media (max-width: 600px) { .vitals { width: 96vw; } .slot { width: 44px; height: 44px; } }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs .tab { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; color: var(--muted); font-family: var(--display); font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.tabs .tab.on { background: rgba(124,255,155,.18); border-color: var(--accent); color: var(--fg); }
+.tabs .tab .cnt { font-size: 10px; opacity: .7; }
+.btn kbd { font-size: 10px; background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.2); border-radius: 5px; padding: 1px 5px; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -402,7 +408,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="actions">
         <button class="btn small" id="mountBtn">🐾 Absteigen</button>
         <button class="btn small" id="useBtn">E</button>
-        <button class="btn small" id="invBtn">🎒 Inventar</button>
+        <button class="btn small" id="invBtn">🎒 Inventar <kbd>I</kbd></button>
         <button class="btn small" id="vocabBtn">📚 Vokabeln</button>
         <button class="btn small" id="seasonBtn">🎫 Saison</button>
         <button class="btn small" id="mapBtn">🗺 Karte</button>
@@ -467,7 +473,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
           <div class="itemname" id="equipInfo">Rüstung anklicken, um sie anzulegen</div>
         </div>
         <div class="stack" style="gap:10px;">
-          <h3>20 Plätze</h3>
+          <div class="tabs" id="bagTabs"></div>
           <div class="grid20" id="bag"></div>
           <div class="itemname" id="bagInfo"></div>
           <div class="row"><span class="tag">Stärke <b id="statAtk">5</b></span><span class="tag">Rüstung <b id="statDef">0</b></span><span class="tag">Herzen <b id="statHp">5</b></span></div>
