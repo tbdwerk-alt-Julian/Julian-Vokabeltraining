@@ -172,7 +172,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [];
   for (let i = 0; i < 1700; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
-    if (Math.hypot(x, z) < 11 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || Math.hypot(x - 60, z - 30) < 6) continue;
+    if (Math.hypot(x, z) < 11 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
     const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; (Math.random() < (gy > 6 ? .8 : .5) ? con : broad).push(it); treeSpots.push([x, z]);
   }
   for (let i = 0; i < 600; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
@@ -213,7 +213,7 @@ import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './sav
   const gate = new THREE.Group(); gate.userData = { open: false, lift: 0 };
   (function () {
     const gy0 = groundY(CAVE.x - CAVE.r, CAVE.z), ex = CAVE.x - CAVE.r + 1, ez = CAVE.z; // Torlinie
-    const stone = new THREE.MeshStandardMaterial({ color: 0x4b4f4c, roughness: .95 }), stoneD = new THREE.MeshStandardMaterial({ color: 0x33363a, roughness: 1 }), wood = new THREE.MeshStandardMaterial({ color: 0x3b2a1a, roughness: 1 });
+    const stone = new THREE.MeshStandardMaterial({ color: 0x2a2e2c, roughness: .95 }), stoneD = new THREE.MeshStandardMaterial({ color: 0x1b1e21, roughness: 1 }), wood = new THREE.MeshStandardMaterial({ color: 0x3b2a1a, roughness: 1 });
     const iron = new THREE.MeshStandardMaterial({ color: 0x3b3f44, metalness: .8, roughness: .45 });
     // Felswand: große Platten im Halbkreis hinter der Mauer (keine runde Kuppel mehr)
     for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + Math.PI * (i / 25); const r = CAVE.r + rng(-1.5, 1.5); const x = CAVE.x + Math.cos(a) * r, z = CAVE.z + Math.sin(a) * r; const h = rng(9, 16); const slab = new THREE.Mesh(new THREE.BoxGeometry(rng(3, 5), h, rng(3, 5)), i % 3 ? stone : stoneD); slab.position.set(x, groundY(x, z) + h / 2 - 1, z); slab.rotation.set(rng(-.08, .08), a + rng(-.3, .3), rng(-.1, .1)); slab.castShadow = true; slab.receiveShadow = true; scene.add(slab); }
