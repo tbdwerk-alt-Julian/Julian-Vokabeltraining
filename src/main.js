@@ -130,15 +130,20 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
 
   // Gras – wird um den Spieler herum neu verteilt
   // Grashalm: 4 Segmente, nach oben schmaler, leicht gebogen, unten dunkler
+  // Grasbüschel: drei Halme je Instanz (um 120° gedreht), nach oben schmaler, leicht gebogen, unten dunkler
   const bladeGeo = (function () {
-    const pos = [], col = [], idx = [], ROWS = 4, H = .8;
-    for (let r = 0; r <= ROWS; r++) { const t = r / ROWS, w = .055 * (1 - t * .85), y = t * H, z = t * t * .28; pos.push(-w, y, z, w, y, z); const sh = .45 + t * .55; col.push(sh * .9, sh, sh * .75, sh * .9, sh, sh * .75); }
-    for (let r = 0; r < ROWS; r++) { const a = r * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    const pos = [], col = [], idx = [], ROWS = 3, H = .8; let base = 0;
+    for (let k = 0; k < 3; k++) {
+      const a = k * Math.PI * 2 / 3, ca = Math.cos(a), sa = Math.sin(a), hh = H * (.75 + k * .15), off = .06;
+      for (let r = 0; r <= ROWS; r++) { const t = r / ROWS, w = .06 * (1 - t * .8), y = t * hh, bend = t * t * .3; const px = -w * ca - (off + bend) * sa, pz = -w * sa + (off + bend) * ca, qx = w * ca - (off + bend) * sa, qz = w * sa + (off + bend) * ca; pos.push(px, y, pz, qx, y, qz); const sh = .4 + t * .6; col.push(sh * .9, sh, sh * .72, sh * .9, sh, sh * .72); }
+      for (let r = 0; r < ROWS; r++) { const i0 = base + r * 2; idx.push(i0, i0 + 1, i0 + 2, i0 + 1, i0 + 3, i0 + 2); }
+      base += (ROWS + 1) * 2;
+    }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
   })();
   const grassMat = weatherize(new THREE.MeshStandardMaterial({ color: 0x6db552, roughness: .9, side: THREE.DoubleSide, vertexColors: true }), { snowLow: -1, snowMax: .8 });
   grassMat.onBeforeCompile = sh => { sh.uniforms.t = { value: 0 }; sh.uniforms.uWind = { value: 0 }; grassMat.userData.u = sh.uniforms.t; grassMat.userData.w = sh.uniforms.uWind; sh.vertexShader = 'uniform float t; uniform float uWind;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float ph = instanceMatrix[3][0] * .6 + instanceMatrix[3][2] * .4; transformed.x += (sin(t * 1.8 + ph) * .18 + uWind * .35) * position.y; transformed.z += cos(t * 1.3 + ph) * .1 * position.y;'); };
-  const GRASS = 11000, GR = 42;
+  const GRASS = 9000, GR = 42;
   const grass = new THREE.InstancedMesh(bladeGeo, grassMat, GRASS); grass.receiveShadow = true; scene.add(grass);
   const dummy = new THREE.Object3D(), gcolor = new THREE.Color();
   let grassCenter = { x: 1e9, z: 1e9 };

@@ -28,3 +28,8 @@ Hinweis: Der Spielstand liegt im Browser des jeweiligen Geräts – Handy und PC
 - `src/main.js` – Spiel (Three.js): Welt, Figuren, Steuerung, Kampf, Quests
 - `preview/` – frühe Design-Vorschau als einzelne HTML-Datei (Referenz)
 - `KONZEPT.md` – das abgestimmte Spielkonzept
+
+
+## Grafik (Stand 29.10.2026)
+
+Die Grafik liegt in `src/graphics.js`: Himmel mit Atmosphäre, Wolken, Sonne, Mond und Sternen, Tag-Nacht-Zyklus (ein Tag = 25 Minuten, in den Einstellungen auf Tag/Abend/Nacht festlegbar), Nachbearbeitung (Bloom, FXAA, Farbkorrektur, Vignette), Linsenreflexe, Umgebungslicht aus dem Himmel, ferne Bergkette. Bäume sind gezeichnete Texturen auf drei gekreuzten Flächen, Boden und Wasser haben Normal-Maps, Schnee und Nässe liegen als Uniforms auf allen Materialien (`weatherize`). Qualitätsstufen: Niedrig (keine Nachbearbeitung), Mittel (FXAA + Farbkorrektur), Schön (+ Schatten, Bloom), Sehr schön (+ weiche Schatten 4096, höhere Auflösung).
