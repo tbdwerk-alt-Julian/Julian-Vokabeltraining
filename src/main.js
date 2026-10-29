@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { loadModel, instance, size as modelSize } from './assets.js';
 import * as V from './vocab.js';
-import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
+import { loadSave, writeSave, clearSave, fmtTime, listSaves, SLOTS } from './save.js';
 
 (function () {
   const $ = id => document.getElementById(id);
@@ -10,7 +10,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- Spielzustand ----------
-  const state = { level: 1, xp: 0, xpNeed: 100, hp: 100, maxHp: 100, hearts: 5, maxHearts: 5, coins: 0, stamina: 100, air: 100, mounted: true, charIdx: 0, name: 'Held', hot: 0, quests: { wolves: 0, chest: false, accepted: {} }, wolvesKilled: 0 };
+  const state = { level: 1, xp: 0, xpNeed: 100, hp: 100, maxHp: 100, hearts: 5, maxHearts: 5, coins: 0, gems: 0, stamina: 100, air: 100, mounted: true, charIdx: 0, name: 'Held', hot: 0, quests: { wolves: 0, chest: false, accepted: {} }, wolvesKilled: 0 };
   const settings = { sens: 1, camDist: 8.5, joy: 120, invert: 0, quality: 2, fps: 0, showFps: 0 };
   const prefs = { kurs: 'E', modus: 'S', tier: 'horse' };
   const CHARS = [
@@ -635,7 +635,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   function hpUI() { const p = clamp(state.hp / state.maxHp * 100, 0, 100) + '%'; $('hpBar').style.width = p; $('hpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; $('bHp').style.width = p; $('bHpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; }
   let hurtT; function damage(n, why) { if (state.hp <= 0) return; state.hp = Math.max(0, state.hp - n); hpUI(); $('hurt').classList.add('on'); clearTimeout(hurtT); hurtT = setTimeout(() => $('hurt').classList.remove('on'), 220); if (why) toast(why); if (state.hp <= 0) { if (battleOn) endBattle(); clearInterval(stTimer); $('station').hidden = true; $('deadWhy').textContent = why ? why.replace(/! −.*$/, '') : 'Im Kampf gefallen'; setTimeout(() => $('dead').classList.add('on'), 400); } }
   function respawn() { $('dead').classList.remove('on'); state.hp = state.maxHp; player.position.set(0, 1.2, 0); heading = Math.PI * .5; if (!state.mounted) { mountFree.position.set(2, 1.2, 3); } hpUI(); show('world'); toast('Wiederbelebt am Lagerfeuer'); }
-  function renderAll() { renderHotbar(); renderBag(); hpUI(); $('coins').textContent = state.coins; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
+  function renderAll() { renderHotbar(); renderBag(); hpUI(); $('coins').textContent = state.coins; $('gems').textContent = state.gems || 0; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
   function hearts(el, n, max) { el.innerHTML = Array.from({ length: max }, (_, i) => `<span class="h ${i < n ? '' : 'off'}">♥</span>`).join(''); }
   function gainXp(n) { if (n > 0) gainSeasonXp(Math.max(1, Math.round(n * .6))); state.xp += n; while (state.xp >= state.xpNeed) { state.xp -= state.xpNeed; state.level++; state.xpNeed = Math.round(state.xpNeed * 1.25); toast('Level ' + state.level + '!'); state.hp = state.maxHp; } renderAll(); }
   function addItem(id, n) { const it = ITEMS[id]; if (it.n !== undefined) { it.n += n || 1; const idx = bag.indexOf(id); if (idx < 0 && hotbar.indexOf(id) < 0) { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; } } else { const f = bag.indexOf(null); if (f >= 0) bag[f] = id; else toast('Inventar voll'); } renderAll(); }
@@ -791,7 +791,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (gate.userData.open && gate.userData.lift < 4.6) { gate.userData.lift = Math.min(4.6, gate.userData.lift + dt * 1.6); gate.children.forEach(c => { if (c !== gate.userData.lock) c.position.y = (c.userData.y0 === undefined ? (c.userData.y0 = c.position.y) : c.userData.y0) + gate.userData.lift; }); gate.userData.lock.visible = false; }
     troll.userData.body.scale.y = 1.15 + Math.sin(clock.t * 1.7) * .03; troll.userData.head.rotation.y = Math.sin(clock.t * .7) * .35; troll.userData.arms[0].rotation.x = Math.sin(clock.t * 1.2) * .15;
     npc.userData.marker.position.y = 2.7 + Math.sin(clock.t * 3) * .12; npc.userData.marker.rotation.y += dt * 2; npc.userData.cape.rotation.x = .2 + Math.sin(clock.t * 2) * .05;
-    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const hunting = inWorld && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
+    wolves.forEach(w => { if (!w.userData.alive) return; w.userData.t -= dt; const d = w.position.distanceTo(player.position); const safe = Math.hypot(player.position.x, player.position.z) < 22; const hunting = inWorld && !safe && d < 18 && d > 2.8; if (hunting) { w.userData.dir = Math.atan2(player.position.x - w.position.x, player.position.z - w.position.z); } else if (w.userData.t <= 0) { w.userData.t = rng(2, 5); w.userData.dir = Math.random() * 6.3; } w.rotation.y = w.userData.dir; if (d > 2.8) { const spd = hunting ? (w.userData.alpha ? 4.2 : 3.4) : 1.6; const nx = w.position.x + Math.sin(w.userData.dir) * dt * spd, nz = w.position.z + Math.cos(w.userData.dir) * dt * spd; if (!inWater(nx, nz)) { w.position.x = clamp(nx, -HALF, HALF); w.position.z = clamp(nz, -HALF, HALF); } } w.position.y = groundY(w.position.x, w.position.z); w.userData.legs.forEach((l, i) => { l.hip.rotation.x = Math.sin(clock.t * 8 + i * 1.6) * .5; }); if (inWorld && d < 4 && now - lastWolfToast > 2500) { lastWolfToast = now; toast((w.userData.alpha ? 'Troll-Häuptling' : 'Troll-Krieger') + ' greift an! E = kämpfen, weglaufen = fliehen'); } w.userData.atk = (w.userData.atk || 0) - dt; if (w.userData.inst) w.userData.inst.play(d < 3.2 && inWorld ? 'Punch' : (d < 14 && d > 2.5 && inWorld) ? 'Run' : 'Walk'); if (w.userData.arms) { const a = w.userData.arms[1]; a.rotation.x = d < 3.2 ? -1.6 + Math.sin(clock.t * 6) * .8 : Math.sin(clock.t * 2) * .1; w.userData.arms[0].rotation.x = Math.sin(clock.t * 2 + 1) * .1; } if (inWorld && !safe && d < 3.2 && w.userData.atk <= 0) { w.userData.atk = 1.0; const dm = w.userData.alpha ? 20 : w.userData.weapon === 'axe' ? 15 : w.userData.weapon === 'spear' ? 12 : 10; damage(dm, (w.userData.alpha ? 'Häuptlings-Axt' : { club: 'Keulenschlag', axe: 'Axthieb', spear: 'Speerstich' }[w.userData.weapon]) + '! −' + dm + ' HP'); } });
     clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > 420) c.position.x = -420; });
     if (settings.quality >= 2) { for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), z = wp.getZ(i); wp.setY(i, Math.sin(x * .4 + clock.t * 1.4) * .06 + Math.cos(z * .3 + clock.t) * .05); } wp.needsUpdate = true; }
     const fpos = fireflies.geometry.attributes.position; if (settings.quality >= 2) for (let i = 0; i < fpos.count; i++) fpos.setY(i, 2.5 + Math.sin(clock.t * 1.4 + i * 1.7) * .8); fpos.needsUpdate = true; fireflies.material.opacity = .5 + Math.sin(clock.t * 4) * .3;
@@ -845,14 +845,14 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   const screens = ['start', 'create', 'battle', 'map', 'win'];
   function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); if (name === 'map') { const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
   $('newGame').onclick = () => show('create'); $('backStart').onclick = () => show('start');
-  $('startWorld').onclick = () => { state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
+  $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
 
   // ---------- Speichern / Laden ----------
   function saveGame() {
-    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
-    const ok = writeSave(d);
+    const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login, gems: state.gems }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
+    const ok = writeSave(d, curSlot);
     // Zusätzlich auf dem Dev-Server sichern (saves/spielstand.json) – der App-Browser leert seinen Speicher manchmal
-    if (import.meta.env && import.meta.env.DEV) { let vocabRaw = null; try { vocabRaw = localStorage.getItem('vocabquest.vocab.v1'); } catch (e) { } fetch('/__save', { method: 'POST', body: JSON.stringify({ save: d, vocabRaw, savedAt: Date.now() }) }).catch(() => { }); }
+    if (import.meta.env && import.meta.env.DEV) { let vocabRaw = null; try { vocabRaw = localStorage.getItem('vocabquest.vocab.v1'); } catch (e) { } fetch('/__save', { method: 'POST', body: JSON.stringify({ slot: curSlot, save: d, vocabRaw, savedAt: Date.now() }) }).catch(() => { }); }
     return ok;
   }
   function applySave(d) {
@@ -871,13 +871,24 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   }
   let autosaveT = 0; function autosave() { const n = Date.now(); if (n - autosaveT > 15000 && hud.classList.contains('on')) { autosaveT = n; saveGame(); } }
   setInterval(() => { if (hud.classList.contains('on') && !uiOpen()) saveGame(); }, 30000);
-  function showContinue(d) { $('continueGame').hidden = false; $('continueGame').textContent = `Weiter spielen · ${d.name} · Level ${d.state ? d.state.level : 1}`; $('startHint').textContent = 'Zuletzt gespeichert: ' + fmtTime(d.savedAt); }
+  // ---------- Spielstand-Slots (3, benennbar) ----------
+  let curSlot = 1;
+  function renderSlots(extra) {
+    const list = listSaves(); const box = $('slots'); box.innerHTML = '';
+    list.forEach((d, i) => { const s = i + 1; if (!d) return; const row = document.createElement('div'); row.className = 'slotrow'; row.innerHTML = `<div class="slotinfo"><b>${d.name}</b><span>Level ${d.state ? d.state.level : 1} · ${d.state && d.state.coins !== undefined ? d.state.coins + ' 🪙' : ''} · ${fmtTime(d.savedAt)}</span></div><button class="btn primary small" data-play="${s}">Spielen</button><button class="btn small" data-del="${s}" title="Löschen">✕</button>`; box.appendChild(row); });
+    box.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const d = loadSave(+b.dataset.play); if (d) { curSlot = +b.dataset.play; applySave(d); show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } });
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const s = +b.dataset.del; if (b.dataset.sure) { clearSave(s); if (import.meta.env && import.meta.env.DEV) fetch('/__save?del=' + s, { method: 'POST', body: '{}' }).catch(() => { }); renderSlots(); } else { b.dataset.sure = '1'; b.textContent = 'Wirklich löschen?'; setTimeout(() => { b.dataset.sure = ''; b.textContent = '✕'; }, 3000); } });
+    const free = list.findIndex(d => !d); $('newGame').disabled = free < 0; $('startHint').textContent = free < 0 ? 'Alle 3 Spielstände belegt – einen löschen für ein neues Abenteuer' : (list.some(Boolean) ? 'Spielstand wählen oder neues Abenteuer starten' : 'Vokabeln eingeben, dann loslegen – dein Fortschritt wird gespeichert.');
+  }
   (async function () {
-    const local = loadSave(); if (local) showContinue(local);
+    renderSlots();
     if (!(import.meta.env && import.meta.env.DEV)) return;
     try {
-      const r = await fetch('/__save'); if (!r.ok) return; const srv = await r.json(); if (!srv || !srv.save) return;
-      if (!local || (srv.savedAt || 0) > (local.savedAt || 0) + 60000) { writeSave(srv.save); showContinue(srv.save); if (srv.vocabRaw) { const mine = V.all().filter(w => w.unit !== 'Beispiel-Unit').length; const theirs = (JSON.parse(srv.vocabRaw).words || []).filter(w => w.unit !== 'Beispiel-Unit').length; if (theirs >= mine) { localStorage.setItem('vocabquest.vocab.v1', srv.vocabRaw); V.load(); } } toast('Spielstand vom Server wiederhergestellt'); }
+      const r = await fetch('/__save'); if (!r.ok) return; const srv = await r.json(); if (!srv) return;
+      const slots = srv.slots || (srv.save ? { 1: srv.save } : {}); let restored = 0;
+      Object.entries(slots).forEach(([s, sv]) => { const local = loadSave(+s); if (sv && (!local || (sv.savedAt || 0) > (local.savedAt || 0) + 60000)) { writeSave(sv, +s); restored++; } });
+      if (srv.vocabRaw) { const mine = V.all().filter(w => w.unit !== 'Beispiel-Unit').length; const theirs = (JSON.parse(srv.vocabRaw).words || []).filter(w => w.unit !== 'Beispiel-Unit').length; if (theirs > mine) { localStorage.setItem('vocabquest.vocab.v1', srv.vocabRaw); V.load(); } }
+      if (restored) { renderSlots(); toast('Spielstände vom Server wiederhergestellt'); }
     } catch (e) { }
   })();
 
@@ -893,20 +904,21 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   function checkSeason() { const info = seasonInfo(); if (state.season.id !== info.id) { state.season = { id: info.id, xp: 0, claimed: 0 }; toast('Neue Saison: ' + info.icon + ' ' + info.name); } }
   function gainSeasonXp(n) {
     checkSeason(); state.season.xp += n; const t = seasonTier();
-    while (state.season.claimed < t) { state.season.claimed++; const r = tierReward(state.season.claimed); if (r.coins) state.coins += r.coins; else addItem(r.item); toast(`🎫 Saison-Pass Stufe ${state.season.claimed}: ${r.label}`); }
+    if (t > state.season.claimed && t > (state.season.notified || 0)) { state.season.notified = t; toast(`🎫 Saison-Pass: Stufe ${t} erreicht – Belohnung im Saison-Pass einsammeln`); }
     if (!$('season').hidden) renderSeason();
   }
+  function claimTier() { const t = seasonTier(); if (state.season.claimed >= t) return; state.season.claimed++; const n = state.season.claimed, r = tierReward(n); if (r.coins) state.coins += r.coins; else addItem(r.item); const gems = n % 5 === 0 ? 15 : 4; state.gems = (state.gems || 0) + gems; toast(`🎫 Stufe ${n} eingesammelt: ${r.label} · +${gems} 💎`); renderAll(); renderSeason(); saveGame(); }
   function openSeason() { checkSeason(); $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
   const _show = show; show = function (name) { _show(name); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } };
   function renderSeason() {
     const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP;
-    $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · noch ${info.daysLeft} Tage · kostenlos, nur durch Lernen`;
+    $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · ${t - state.season.claimed} zum Einsammeln · ${state.gems || 0} 💎 Kristalle · noch ${info.daysLeft} Tage`;
     $('seasonBar').style.width = (t >= TIERS ? 100 : into / TIER_XP * 100) + '%'; $('seasonNext').textContent = t >= TIERS ? 'Alle Stufen erreicht!' : `${into} / ${TIER_XP} XP bis Stufe ${t + 1}`;
     // Straße: Stufen als Stationen auf einem geschwungenen Weg
-    $('seasonGrid').innerHTML = `<div class="road"><div class="road-line"></div>` + Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n === t + 1 ? 'next' : 'lock'; const big = n % 5 === 0; return `<div class="stop ${st} ${big ? 'big' : ''}" style="--i:${i}"><div class="node"><div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><b>${n}</b></div><span>${r.label}</span></div>`; }).join('') + `</div>`;
-    const nextEl = $('seasonGrid').querySelector('.stop.next'); if (nextEl) nextEl.scrollIntoView({ inline: 'center', block: 'nearest' });
+    $('seasonGrid').innerHTML = `<div class="road"><div class="road-line"></div>` + Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n <= t ? 'ready' : n === t + 1 ? 'next' : 'lock'; const big = n % 5 === 0; return `<div class="stop ${st} ${big ? 'big' : ''}" style="--i:${i}"><div class="node">${st === 'ready' && n === state.season.claimed + 1 ? '<button class="btn primary small claim">Einsammeln</button>' : ''}<div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><b>${n}</b></div><span>${r.label}</span></div>`; }).join('') + `</div>`;
+    const cb = $('seasonGrid').querySelector('.claim'); if (cb) cb.onclick = claimTier; const nextEl = $('seasonGrid').querySelector('.stop.ready, .stop.next'); if (nextEl) nextEl.scrollIntoView({ inline: 'center', block: 'nearest' });
   }
   $('seasonBtn').onclick = openSeason; $('pSeason').onclick = () => { $('pause').hidden = true; openSeason(); }; $('closeSeason').onclick = () => $('season').hidden = true;
 
@@ -927,10 +939,9 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   $('mapBtn').onclick = () => show('map'); $('closeMap').onclick = () => show('world'); $('winBack').onclick = () => show('world');
   $('saveBtn').onclick = () => { if (saveGame()) toast('Gespeichert · Level ' + state.level); else toast('Speichern nicht möglich (Browser blockiert Speicher)'); }; $('mountBtn').onclick = toggleMount; $('useBtn').onclick = interact;
   $('vocabBtn').onclick = openVocab; $('vocabBtnStart').onclick = openVocab; $('closeVocab').onclick = () => $('vocabScreen').hidden = true; $('pVocab').onclick = () => { $('pause').hidden = true; openVocab(); };
-  $('continueGame').onclick = () => { const d = loadSave(); if (d) { applySave(d); show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } };
   $('invBtn').onclick = () => { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; }; $('closeInv').onclick = () => $('inventory').hidden = true;
   $('settingsBtn').onclick = () => $('settings').hidden = false; $('respawnBtn').onclick = respawn;
-  $('pResume').onclick = () => $('pause').hidden = true; $('pSettings').onclick = () => { $('pause').hidden = true; $('settings').hidden = false; }; $('pInv').onclick = () => { $('pause').hidden = true; openInv(); }; $('pMap').onclick = () => { $('pause').hidden = true; show('map'); }; $('pSave').onclick = () => { $('pause').hidden = true; if (saveGame()) toast('Gespeichert · Level ' + state.level); }; $('pMenu').onclick = () => { $('pause').hidden = true; show('start'); };
+  $('pResume').onclick = () => $('pause').hidden = true; $('pSettings').onclick = () => { $('pause').hidden = true; $('settings').hidden = false; }; $('pInv').onclick = () => { $('pause').hidden = true; openInv(); }; $('pMap').onclick = () => { $('pause').hidden = true; show('map'); }; $('pSave').onclick = () => { $('pause').hidden = true; if (saveGame()) toast('Gespeichert · Level ' + state.level); }; $('pMenu').onclick = () => { $('pause').hidden = true; saveGame(); renderSlots(); show('start'); };
   if (lastInput !== 'touch') { joy.style.display = 'none'; $('ctrlHint').textContent = 'W/S laufen · A/D drehen · Leertaste Rolle · F auf/absteigen · E benutzen · I Inventar · Esc Pause'; } $('closeSettings').onclick = () => $('settings').hidden = true; $('closeNpc').onclick = () => { $('npc').hidden = true; updateTracker(); };
   ['char', 'kurs', 'modus', 'tier'].forEach(g => $(g).querySelectorAll('.choice').forEach(c => c.addEventListener('click', () => { $(g).querySelectorAll('.choice').forEach(x => x.setAttribute('aria-pressed', 'false')); c.setAttribute('aria-pressed', 'true'); if (g === 'char') { state.charIdx = +c.dataset.v; rebuildHero(); } else prefs[g] = c.dataset.v; $('modusField').hidden = prefs.kurs === 'G'; if (g === 'tier') setMount(prefs.tier); })));
   // Einstellungen
