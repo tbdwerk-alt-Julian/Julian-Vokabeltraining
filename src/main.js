@@ -1317,6 +1317,7 @@ import * as A from './audio.js';
     if (!silent) toast('Grafik: ' + ['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][q] + ' · Sichtweite unverändert');
   }
   $('quality').onchange = e => applyQuality(+e.target.value);
+  $('fullBtn').onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) { toast('Vollbild hier nicht möglich'); } };
   $('tod').onchange = e => { const v = e.target.value; if (v === 'auto') gfx.tod.paused = false; else { gfx.tod.paused = true; gfx.tod.t = { day: .45, sunset: .74, night: .04 }[v]; } };
   // Startqualität nach Grafikkarte: integrierte Intel-Grafik → Mittel, Software-Renderer → Niedrig
   (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; else if (/Intel|Iris|UHD/i.test(gpu)) settings.quality = 2; if (/Electron/i.test(navigator.userAgent)) settings.quality = 0; } catch (e) { } })();
