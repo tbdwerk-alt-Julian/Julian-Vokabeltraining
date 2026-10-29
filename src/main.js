@@ -331,7 +331,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     for (const s of [-1, 1]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(.06, 8, 6), smooth(0x111111)); eye.position.set(s * .17, .1, .3); head.add(eye); }
     head.position.set(0, .75, 1.6); g.add(head);
     const legs = []; for (const [x, z] of [[-.8, .8], [.8, .8], [-.8, -.8], [.8, -.8]]) { const hip = new THREE.Group(); hip.position.set(x, .5, z); const l = limb(.6, .2, smooth(0x7cb563)); l.rotation.z = x > 0 ? -.7 : .7; hip.add(l); g.add(hip); legs.push({ hip, knee: hip }); }
-    g.userData = { legs, tail: new THREE.Group(), head, seatY: 1.15, landSpeed: 6.5, waterSpeed: 11 }; return g;
+    g.userData = { legs, tail: new THREE.Group(), head, seatY: 1.15, heroY: .95, landSpeed: 6.5, waterSpeed: 11 }; return g;
   }
   function buildHero(ch) {
     const g = new THREE.Group();
@@ -505,7 +505,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     // Schwanz: 8 Glieder, schwarze Spitze
     const tail = new THREE.Group(); tail.position.set(0, 1.3, -1.35); let parent = tail;
     for (let i = 0; i < 8; i++) { const seg = new THREE.Mesh(new THREE.CylinderGeometry(.055 - i * .004, .06 - i * .004, .26, 10), i >= 6 ? black : (i % 2 ? black : fur)); seg.geometry.rotateX(Math.PI / 2); seg.position.z = -.13; const j = new THREE.Group(); j.add(seg); j.position.z = i ? -.26 : 0; j.rotation.x = -.18; parent.add(j); parent = j; }
-    g.add(tail); g.userData = { legs, tail, head, seatY: 1.6, landSpeed: 13, waterSpeed: 2.8 }; return g;
+    g.add(tail); g.userData = { legs, tail, head, seatY: 1.6, heroY: 1.2, landSpeed: 13, waterSpeed: 2.8 }; return g;
   }
 
   function buildWolf(alpha) {
@@ -1043,7 +1043,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
     if (heroInst) { player.remove(heroInst.obj); }
     heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.75); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero();
   }
-  function placeHero() { if (!heroInst) return; if (state.mounted) { heroInst.obj.position.set(0, mountMesh.userData.seatY - .5, .05); heroInst.obj.rotation.set(0, 0, 0); heroInst.play('Sit_Chair_Idle'); } else { heroInst.obj.position.set(0, 0, 0); heroInst.obj.rotation.set(0, 0, 0); } }
+  function placeHero() { if (!heroInst) return; if (state.mounted) { heroInst.obj.position.set(0, mountMesh.userData.heroY !== undefined ? mountMesh.userData.heroY : mountMesh.userData.seatY - .5, .05); heroInst.obj.rotation.set(0, 0, 0); heroInst.play('Sit_Chair_Idle'); } else { heroInst.obj.position.set(0, 0, 0); heroInst.obj.rotation.set(0, 0, 0); } }
   const _rebuildHero = rebuildHero; rebuildHero = function () { _rebuildHero(); setHeroModel(); };
   const _setRiding = setRiding, _setWalking = setWalking; setRiding = function () { _setRiding(); placeHero(); }; setWalking = function () { _setWalking(); placeHero(); };
   // Inventar-Ansicht
@@ -1051,7 +1051,7 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // Pferd als Reittier
   function buildHorse() {
     const g = new THREE.Group(); const inst = instance(gl.horse); inst.obj.scale.setScalar(.011); inst.obj.rotation.y = 0; inst.obj.position.y = 0; g.add(inst.obj); anims.add(inst); inst.play('horse_A_'); inst.action.paused = true;
-    g.userData = { legs: [], tail: new THREE.Group(), head: new THREE.Group(), seatY: 1.75, landSpeed: 12, waterSpeed: 3.5, inst }; return g;
+    g.userData = { legs: [], tail: new THREE.Group(), head: new THREE.Group(), seatY: 1.75, heroY: 1.28, landSpeed: 12, waterSpeed: 3.5, inst }; return g;
   }
   const _setMount = setMount; setMount = function (kind) { if (kind === 'horse' && gl.horse) { const wasIn = mountMesh.parent; wasIn.remove(mountMesh); mountMesh = buildHorse(); wasIn.add(mountMesh); if (state.mounted) setRiding(); } else _setMount(kind); };
   // Gegner und Boss
