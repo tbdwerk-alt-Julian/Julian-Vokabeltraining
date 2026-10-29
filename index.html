@@ -631,6 +631,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="sp-pills" id="forgeInfo"></div>
       <p class="hint">Jede Stufe gibt +1 Stärke auf jede Waffe. Münzen gibt es für Kämpfe, Truhen, Stationen und von Lumi.</p>
       <button class="btn primary" id="forgeBtn">Verbessern</button>
+      <button class="btn" id="legendBtn" hidden>⚔️ Klinge der vier Bosse schmieden (4 Trophäen)</button>
     </div>
   </div>
   <div class="overlay" id="stable" hidden>
@@ -720,9 +721,9 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="map">
         <div class="zone active" data-zone="forest"><div class="n">🌲 Wald</div><div class="s">Waldtroll · Lvl 10<br>Großer See im Osten</div></div>
         <div class="zone lock" data-zone="desert"><div class="n">🏜️ Wüste</div><div class="s">Sandwurm · Lvl 25<br>Oase, Mesa, Sandsturm · anklicken = reisen</div></div>
-        <div class="zone lock" data-zone="cherry"><div class="n">🌸 Kirschen</div><div class="s">Kirschgeist · Lvl 50<br>🔒 Sandwurm besiegen</div></div>
-        <div class="zone lock" data-zone="volcano"><div class="n">🌋 Vulkan</div><div class="s">Lavadrache · Lvl 75<br>🔒 Alle Gebiete</div></div>
-        <div class="zone lock" data-zone="shadow"><div class="n">👑 ???</div><div class="s">Lvl 100<br>🔒 4 Trophäen</div></div>
+        <div class="zone lock" data-zone="cherry"><div class="n">🌸 Kirschen</div><div class="s">Kirschgeist · Lvl 50<br>Blütenbäume, Spiegelsee, Blütenwind</div></div>
+        <div class="zone lock" data-zone="volcano"><div class="n">🌋 Vulkan</div><div class="s">Lavadrache · Lvl 75<br>Asche, Lavaseen, Krater</div></div>
+        <div class="zone lock" data-zone="shadow"><div class="n">👑 Schattenfestung</div><div class="s">Ignatius · Lvl 100<br>4 Phasen, 4 Schwerter</div></div>
       </div>
       <p class="hint">Händler erscheint um <b id="merchant">—</b> · Truhen setzen sich um Mitternacht zurück</p>
       <div class="row"><button class="btn primary" id="closeMap">Zurück in den Wald</button></div>
