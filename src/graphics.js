@@ -13,15 +13,27 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // Gemeinsame Uniforms, die viele Materialien lesen (Schnee auf Oberflächen, nasser Boden)
-export const WORLD_U = { snow: { value: 0 }, wet: { value: 0 }, night: { value: 0 } };
+export const WORLD_U = { snow: { value: 0 }, wet: { value: 0 }, night: { value: 0 }, time: { value: 0 }, wind: { value: 0 }, cloudT: { value: new THREE.Vector2() }, cloudShadow: { value: 0 } };
 
 // Fügt einem Material Schnee (weiße Decke auf nach oben zeigenden Flächen) und Nässe (dunkler, glänzender) hinzu
 export function weatherize(material, opts = {}) {
   const prev = material.onBeforeCompile;
   material.onBeforeCompile = (sh, r) => {
     if (prev) prev(sh, r);
-    sh.uniforms.uSnow = WORLD_U.snow; sh.uniforms.uWet = WORLD_U.wet;
-    sh.fragmentShader = 'uniform float uSnow; uniform float uWet;\n' + sh.fragmentShader
+    sh.uniforms.uSnow = WORLD_U.snow; sh.uniforms.uWet = WORLD_U.wet; sh.uniforms.uCloudT = WORLD_U.cloudT; sh.uniforms.uCloudShadow = WORLD_U.cloudShadow;
+    sh.vertexShader = `uniform vec2 uCloudT; uniform float uCloudShadow; varying float vCloudS;
+      float wzHash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float wzNoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(wzHash(i), wzHash(i + vec2(1.0, 0.0)), f.x), mix(wzHash(i + vec2(0.0, 1.0)), wzHash(i + vec2(1.0, 1.0)), f.x), f.y); }
+      float wzFbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 3; i++) { v += a * wzNoise(p); p = p * 2.03 + vec2(17.0, 9.0); a *= 0.5; } return v; }
+      
+` + sh.vertexShader.replace('#include <fog_vertex>', `#include <fog_vertex>
+        { vec4 wpC = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          wpC = instanceMatrix * wpC;
+        #endif
+        wpC = modelMatrix * wpC; float cn = wzFbm(wpC.xz * 0.011 + uCloudT); vCloudS = 1.0 - smoothstep(0.5, 0.78, cn) * uCloudShadow; }`);
+    sh.fragmentShader = 'uniform float uSnow; uniform float uWet; varying float vCloudS;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= vCloudS;')
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(roughnessFactor, ${opts.wetRough === undefined ? '0.35' : opts.wetRough.toFixed(2)}, uWet);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -83,6 +95,15 @@ void main(){
   gl_FragColor = vec4(c, 1.0);
 }`;
 
+const SHAFTS = {
+  uniforms: { tDiffuse: { value: null }, sunPos: { value: new THREE.Vector2(.5, .5) }, strength: { value: 0 }, decay: { value: .94 }, density: { value: .9 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 sunPos; uniform float strength, decay, density; varying vec2 vUv;
+  void main(){ vec4 base = texture2D(tDiffuse, vUv); if (strength <= 0.001) { gl_FragColor = base; return; }
+    vec2 delta = (vUv - sunPos) * density / 16.0; vec2 uv = vUv; float w = 1.0; vec3 acc = vec3(0.0);
+    for (int i = 0; i < 16; i++) { uv -= delta; vec3 s = texture2D(tDiffuse, uv).rgb; float l = dot(s, vec3(0.3, 0.59, 0.11)); acc += s * smoothstep(0.55, 1.0, l) * w; w *= decay; }
+    acc /= 16.0; gl_FragColor = vec4(base.rgb + acc * strength * vec3(1.0, 0.92, 0.75), 1.0); }`
+};
 const GRADE = {
   uniforms: { tDiffuse: { value: null }, res: { value: new THREE.Vector2(1, 1) }, vig: { value: .42 }, sat: { value: 1.1 }, con: { value: 1.12 }, time: { value: 0 }, grain: { value: .025 }, aber: { value: .0015 }, flash: { value: 0 }, warm: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -123,6 +144,7 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
   composer.renderTarget1.texture.encoding = THREE.sRGBEncoding; composer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
   const renderPass = new RenderPass(scene, camera); composer.addPass(renderPass);
   const bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), .42, .55, .82); composer.addPass(bloom);
+  const shafts = new ShaderPass(SHAFTS); composer.addPass(shafts);
   const fxaa = new ShaderPass(FXAAShader); composer.addPass(fxaa);
   const grade = new ShaderPass(GRADE); composer.addPass(grade);
   let usePost = true, quality = 2;
@@ -164,6 +186,10 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
     glow.position.copy(camera.position).addScaledVector(e > -.03 ? U.sunDir.value : U.moonDir.value, 500); glow.material.opacity = e > -.03 ? (1 - grey * .85) : night * .5; glow.scale.setScalar(e > -.03 ? 70 + low * 40 : 40);
     flareHolder.position.copy(camera.position).addScaledVector(U.sunDir.value, 480); flare.visible = usePost && quality >= 2 && e > .02 && grey < .5;
     grade.uniforms.warm.value = low * .5; grade.uniforms.vig.value = .4 + night * .15 + grey * .1;
+    WORLD_U.cloudT.value.x += dt * .006; WORLD_U.cloudT.value.y += dt * .002; WORLD_U.cloudShadow.value = Math.min(.55, wx.cloud * .6) * day * (1 - grey * .6);
+    WORLD_U.time.value += dt;
+    // Sonnenstrahlen: Sonne auf den Bildschirm projizieren
+    if (shafts.enabled) { const sp = U.sunDir.value.clone().multiplyScalar(1000).add(camera.position).project(camera); const inFront = sp.z < 1 && Math.abs(sp.x) < 1.6 && Math.abs(sp.y) < 1.6; shafts.uniforms.sunPos.value.set(sp.x * .5 + .5, sp.y * .5 + .5); const edge = inFront ? Math.max(0, 1 - Math.max(Math.abs(sp.x), Math.abs(sp.y)) * .55) : 0; shafts.uniforms.strength.value = edge * .55 * day * (1 - grey * .9) * (1 - night); }
     envAge += dt; if (envAge > 12) refreshEnv();
     return { day, low, night, e };
   }
@@ -190,7 +216,7 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
   // ---- Qualität / Größe ----
   function setQuality(q) {
     quality = q; usePost = q >= 1;
-    bloom.enabled = q >= 2; bloom.strength = q >= 3 ? .5 : .38; bloom.resolution.set(q >= 3 ? 768 : 384, q >= 3 ? 768 : 384);
+    bloom.enabled = q >= 2; shafts.enabled = q >= 2; bloom.strength = q >= 3 ? .5 : .38; bloom.resolution.set(q >= 3 ? 768 : 384, q >= 3 ? 768 : 384);
     grade.uniforms.aber.value = q >= 2 ? .0015 : 0; grade.uniforms.grain.value = q >= 2 ? .022 : 0;
     skyMesh.geometry = q >= 2 ? new THREE.SphereGeometry(600, 48, 24) : new THREE.SphereGeometry(600, 24, 12);
     renderer.shadowMap.type = q >= 3 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
@@ -200,5 +226,5 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
   function render(dt) { grade.uniforms.time.value += dt; if (usePost) composer.render(dt); else renderer.render(scene, camera); }
   function flash(v) { U.flash.value = v; grade.uniforms.flash.value = v * .35; }
 
-  return { skyMesh, U, wx, tod, updateSky, setQuality, setSize, render, flash, refreshEnv, composer, bloom, grade, sunElevation };
+  return { skyMesh, U, wx, tod, updateSky, setQuality, setSize, render, flash, refreshEnv, composer, bloom, grade, shafts, sunElevation };
 }

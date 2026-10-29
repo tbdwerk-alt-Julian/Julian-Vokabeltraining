@@ -294,6 +294,36 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .field label { font-size: 10px; }
   input[type="text"] { padding: 8px 10px; font-size: 15px; }
 }
+
+/* Saison-Pass (modern) */
+#season .card.sp { padding: 0; overflow: hidden; width: min(980px, 100%); gap: 0; }
+.sp-head { position: relative; padding: 22px 24px 18px; background: var(--sp-bg, linear-gradient(135deg,#3a1d08,#8a4a14 55%,#1d1008)); overflow: hidden; }
+.sp-head::before { content: ""; position: absolute; inset: 0; background: radial-gradient(700px 240px at 85% -10%, rgba(255,255,255,.22), transparent 60%), radial-gradient(400px 200px at 10% 120%, rgba(0,0,0,.45), transparent 70%); pointer-events: none; }
+.sp-head > * { position: relative; }
+.sp-head h2 { margin: 2px 0 0; font-size: 32px; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+.sp-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.pill { background: rgba(0,0,0,.38); border: 1px solid rgba(255,255,255,.2); border-radius: 99px; padding: 4px 11px; font-size: 12px; backdrop-filter: blur(6px); }
+.pill.hot { background: rgba(124,255,155,.18); border-color: rgba(124,255,155,.6); color: #dfffe7; }
+.sp-level { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.sp-ring { width: 68px; height: 68px; border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), rgba(255,255,255,.14) 0); display: grid; place-items: center; flex: none; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.sp-ring i { width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,.6); display: grid; place-items: center; font-family: var(--display); font-size: 20px; font-style: normal; color: var(--fg); }
+.sp-track { display: flex; gap: 10px; padding: 18px 20px 20px; overflow-x: auto; scroll-snap-type: x proximity; background: linear-gradient(180deg, rgba(0,0,0,.25), transparent 30%); }
+.tier { flex: none; width: 112px; min-height: 150px; scroll-snap-align: center; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.35)); padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; text-align: center; font-size: 11px; color: var(--muted); position: relative; transition: transform .2s, box-shadow .2s; }
+.tier:hover { transform: translateY(-3px); }
+.tier .n { position: absolute; left: 9px; top: 7px; font-family: var(--display); font-size: 11px; color: var(--muted); }
+.tier .ic { width: 46px; height: 46px; margin-top: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); } .tier .ic svg { width: 100%; height: 100%; }
+.tier b { color: var(--fg); font-size: 11.5px; line-height: 1.2; }
+.tier .gem { font-size: 10.5px; color: #b9e2ff; }
+.tier .lk { font-size: 13px; opacity: .7; }
+.tier.big { width: 138px; border-color: var(--accent-2); background: linear-gradient(180deg, rgba(255,177,61,.28), rgba(0,0,0,.42)); }
+.tier.big .ic { width: 56px; height: 56px; }
+.tier.lock { opacity: .55; } .tier.lock .ic { filter: grayscale(.85); }
+.tier.ready { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(124,255,155,.35), 0 0 28px rgba(124,255,155,.4); color: var(--fg); }
+.tier.next { border-color: var(--accent-2); box-shadow: 0 0 18px rgba(255,177,61,.35); }
+.tier.done { border-color: rgba(124,255,155,.55); } .tier.done::after { content: "✓"; position: absolute; right: 6px; top: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #06130b; font-weight: 800; font-size: 12px; display: grid; place-items: center; }
+.tier .claim { font-size: 11px; padding: 5px 9px; margin-top: 4px; }
+.btn.glow { box-shadow: 0 0 0 3px rgba(124,255,155,.3), 0 0 26px rgba(124,255,155,.55); animation: pulse 1.6s ease-in-out infinite; }
+@media (max-width: 600px) { .sp-head { padding: 16px; } .sp-head h2 { font-size: 24px; } .tier { width: 100px; } }
 </style>
 </head>
 <body>
@@ -480,11 +510,16 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   </div>
 
   <div class="overlay" id="season" hidden>
-    <div class="card wide stack">
-      <div class="row" style="justify-content:space-between;align-items:center;"><div><div class="eyebrow">Saison-Pass</div><h2 id="seasonTitle">Saison</h2><p class="hint" id="seasonMeta"></p></div><div class="row"><button class="btn primary small" id="claimAll">Alles einsammeln</button><button class="btn small" id="closeSeason">Schließen</button></div></div>
-      <div><div class="bar" style="height:10px;"><i id="seasonBar"></i></div><div class="hint" id="seasonNext" style="margin-top:4px;"></div></div>
-      <div class="tiers" id="seasonGrid"></div>
-      <p class="hint">Saison-XP gibt es für alles, was XP bringt: Stationen, Kämpfe, Quests, Truhen. Stufe 30 = seltener Saison-Skin, den es danach nie wieder gibt.</p>
+    <div class="card wide sp">
+      <div class="sp-head">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div><div class="eyebrow">Saison-Pass · kostenlos · 30 Stufen</div><h2 id="seasonTitle">Saison</h2><div class="sp-pills" id="seasonMeta"></div></div>
+          <div class="row"><button class="btn primary small" id="claimAll">Alles einsammeln</button><button class="btn small" id="closeSeason">Schließen</button></div>
+        </div>
+        <div class="sp-level"><div class="sp-ring" id="seasonRing"><i id="seasonLvl">0</i></div><div style="flex:1;min-width:160px;"><div class="bar" style="height:10px;"><i id="seasonBar"></i></div><div class="hint" id="seasonNext" style="margin-top:6px;"></div></div></div>
+      </div>
+      <div class="sp-track" id="seasonGrid"></div>
+      <p class="hint" style="padding:0 20px 16px;margin:0;">Stufe 30 = seltener Saison-Skin, den es danach nie wieder gibt. Alle 4 Wochen beginnt eine neue Saison.</p>
     </div>
   </div>
 

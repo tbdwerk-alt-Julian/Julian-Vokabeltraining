@@ -225,7 +225,7 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   }
   const coniferTex = drawConifer(), broadTex = drawBroadleaf();
   // Flächen werden wie "nach oben zeigend" beleuchtet, damit keine Seite schwarz wird; Schatten über Tiefen-Material mit Alpha
-  const treeMat = (tex) => { const m = weatherize(new THREE.MeshStandardMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, roughness: .95, color: 0xffffff }), { snowLow: -1, snowMax: .55 }); const prev = m.onBeforeCompile; m.onBeforeCompile = (sh, r) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n normal = normalize(normal * 0.35 + (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz); geometryNormal = normal;'); prev(sh, r); }; return m; };
+  const treeMat = (tex) => { const m = weatherize(new THREE.MeshStandardMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, roughness: .95, color: 0xffffff }), { snowLow: -1, snowMax: .55 }); const prev = m.onBeforeCompile; m.onBeforeCompile = (sh, r) => { sh.uniforms.uT = WORLD_U.time; sh.uniforms.uWind2 = WORLD_U.wind; sh.vertexShader = 'uniform float uT; uniform float uWind2;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n { float ph = instanceMatrix[3][0] * .37 + instanceMatrix[3][2] * .23; float sw = (sin(uT * 1.1 + ph) * .5 + sin(uT * 2.3 + ph * 1.7) * .25) * (.06 + uWind2 * .22) * uv.y * uv.y; transformed.x += sw; transformed.z += sw * .4; }'); sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n normal = normalize(normal * 0.35 + (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz); geometryNormal = normal;'); prev(sh, r); }; return m; };
   const treeDepth = (tex) => new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: .5 });
   const treePlane = new THREE.PlaneGeometry(1, 1); treePlane.translate(0, .5, 0);
   instanced(new THREE.CylinderGeometry(.14, .32, 3, 7), barkMat, con.length, put => con.forEach(t => put(t.x, groundY(t.x, t.z) - .15 + 1.5 * t.s, t.z, 0, t.rot, 0, t.s, t.s, t.s)));
@@ -632,6 +632,8 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   setRiding();
 
   const ffGeo = new THREE.BufferGeometry(); const fp = []; for (let i = 0; i < 140; i++) fp.push(rng(-45, 45), 2 + Math.random() * 3, rng(-45, 45)); ffGeo.setAttribute('position', new THREE.Float32BufferAttribute(fp, 3));
+  const pollenGeo = new THREE.BufferGeometry(); const pp = []; for (let i = 0; i < 260; i++) pp.push(rng(-30, 30), rng(.5, 7), rng(-30, 30)); pollenGeo.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
+  const pollen = new THREE.Points(pollenGeo, new THREE.PointsMaterial({ color: 0xfff1b0, size: .09, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending })); pollen.frustumCulled = false; scene.add(pollen);
   const fireflies = new THREE.Points(ffGeo, new THREE.PointsMaterial({ color: 0xd8ff8a, size: .18, transparent: true, opacity: .9 })); scene.add(fireflies);
   // Schmetterlinge (zwei Flügel, flattern) und fallende Blätter
   const butterflies = [];
@@ -751,9 +753,39 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
   // Blitz: gezackte Linie vom Himmel
   const boltMat = new THREE.LineBasicMaterial({ color: 0xeaf4ff, transparent: true, opacity: 0, fog: false }); const boltGeo = new THREE.BufferGeometry(); boltGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(3 * 40), 3));
   const bolt = new THREE.Line(boltGeo, boltMat); bolt.frustumCulled = false; scene.add(bolt);
+  const branchGeo = new THREE.BufferGeometry(); branchGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(3 * 24), 3)); const branches = new THREE.LineSegments(branchGeo, boltMat); branches.frustumCulled = false; scene.add(branches);
+  // Fackel: Stiel, glühender Kopf, Flammen-Sprite, kleines Licht – nachts automatisch in der linken Hand
+  const torch = new THREE.Group(); torch.visible = false;
+  (function () {
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .9, 7), new THREE.MeshStandardMaterial({ color: 0x3a2412, roughness: 1 })); stick.position.y = .3; torch.add(stick);
+    const wrap = new THREE.Mesh(new THREE.CylinderGeometry(.075, .07, .22, 8), new THREE.MeshStandardMaterial({ color: 0x5a3b1a, roughness: .9 })); wrap.position.y = .72; torch.add(wrap);
+    const ember = new THREE.Mesh(new THREE.SphereGeometry(.085, 10, 8), new THREE.MeshStandardMaterial({ color: 0xff6a1a, emissive: 0xff5a10, emissiveIntensity: 2.2, roughness: .6 })); ember.position.y = .86; torch.add(ember);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const c = cv.getContext('2d'); const gr = c.createRadialGradient(32, 36, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(255,240,180,1)'); gr.addColorStop(.3, 'rgba(255,160,40,.9)'); gr.addColorStop(.7, 'rgba(255,80,10,.35)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+    const flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); flame.position.y = 1.0; flame.scale.set(.45, .7, 1); torch.add(flame); torch.userData.flame = flame;
+    const light = new THREE.PointLight(0xffa550, 1.6, 14, 2); light.position.y = 1.0; torch.add(light); torch.userData.light = light;
+    torch.userData.on = false;
+  })();
+  function setTorch(on) {
+    if (torch.userData.on === on) return; torch.userData.on = on; torch.visible = on;
+    if (on && heroInst) { let hand = null; heroInst.obj.traverse(o => { if (!hand && /^handslot.?l$/i.test(o.name)) hand = o; }); if (!hand) heroInst.obj.traverse(o => { if (!hand && /^hand.?l$/i.test(o.name)) hand = o; }); if (hand && torch.parent !== hand) { hand.add(torch); torch.position.set(0, 0, 0); torch.rotation.set(0, 0, 0); torch.scale.setScalar(1 / .75); } }
+    if (heroInst) heroInst.obj.traverse(o => { if (/Shield|Spellbook|Offhand/.test(o.name) && o.isMesh) o.visible = on ? false : o.userData.wasVisible !== undefined ? o.userData.wasVisible : o.visible; if (on && o.isMesh && /Shield|Spellbook|Offhand/.test(o.name)) o.userData.wasVisible = true; });
+    if (!on && heroInst) dressWeapons(heroInst);
+    if (on) toast('🔥 Es wird dunkel – du zündest eine Fackel an');
+  }
+  // Regenspritzer am Boden (Ringe, die aufblitzen)
+  const SPLASH_N = 160; const splashGeo = new THREE.RingGeometry(.08, .16, 10); splashGeo.rotateX(-Math.PI / 2);
+  const splash = new THREE.InstancedMesh(splashGeo, new THREE.MeshBasicMaterial({ color: 0xdff0ff, transparent: true, opacity: .55, depthWrite: false }), SPLASH_N); splash.frustumCulled = false; splash.visible = false; scene.add(splash);
+  const splashPh = Array.from({ length: SPLASH_N }, () => Math.random()), splashPos = Array.from({ length: SPLASH_N }, () => [0, 0]);
+  const splashD = new THREE.Object3D();
+  function updateSplashes(dt, strength) {
+    const px = player.position.x, pz = player.position.z;
+    for (let i = 0; i < SPLASH_N; i++) { splashPh[i] += dt * 2.2; if (splashPh[i] > 1) { splashPh[i] = 0; splashPos[i] = [px + rng(-14, 14), pz + rng(-14, 14)]; } const [x, z] = splashPos[i]; const s = .2 + splashPh[i] * .9; splashD.position.set(x, groundY(x, z) + .03, z); splashD.scale.set(s, 1, s); splashD.updateMatrix(); splash.setMatrixAt(i, splashD.matrix); }
+    splash.instanceMatrix.needsUpdate = true; splash.material.opacity = .28 * strength;
+  }
   function strike() {
     const px = player.position.x, pz = player.position.z, a = Math.random() * 6.3, d = rng(25, 80); const bx = px + Math.cos(a) * d, bz = pz + Math.sin(a) * d; const p = boltGeo.attributes.position; let x = bx, z = bz;
-    for (let i = 0; i < 40; i++) { const y = 70 - i * (70 - groundY(bx, bz)) / 39; p.setXYZ(i, x, y, z); x += rng(-2.2, 2.2); z += rng(-2.2, 2.2); } p.needsUpdate = true; boltMat.opacity = 1; weather.flash = 1.4; weather.lightning = .25; toast('⚡ Blitz!');
+    for (let i = 0; i < 40; i++) { const y = 70 - i * (70 - groundY(bx, bz)) / 39; p.setXYZ(i, x, y, z); x += rng(-2.2, 2.2); z += rng(-2.2, 2.2); } p.needsUpdate = true;
+    const bp = branchGeo.attributes.position; for (let b = 0; b < 4; b++) { const i0 = 6 + b * 8; let bx2 = p.getX(i0), by = p.getY(i0), bz2 = p.getZ(i0); const dx = rng(-1, 1), dz = rng(-1, 1); for (let k = 0; k < 6; k++) { bp.setXYZ(b * 6 + k, bx2, by, bz2); bx2 += dx * 1.6 + rng(-.8, .8); by -= rng(1, 3); bz2 += dz * 1.6 + rng(-.8, .8); } } bp.needsUpdate = true; boltMat.opacity = 1; weather.flash = 1.4; weather.lightning = .25; toast('⚡ Blitz!');
   }
   let wind = 0;
   function setWeather(kind, announce) {
@@ -777,7 +809,8 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     if (k === 'storm' && weather.lightning <= 0 && wx.cloudDark > .8 && Math.random() < dt * .2) strike();
     if (weather.lightning > 0) weather.lightning -= dt; weather.flash = Math.max(0, weather.flash - dt * 6); boltMat.opacity = Math.max(0, boltMat.opacity - dt * 5);
     gfx.flash(weather.flash * .9);
-    grassMat.userData.wind = wind;
+    grassMat.userData.wind = wind; WORLD_U.wind.value = wind;
+    splash.visible = rain.visible && settings.quality >= 2 && rainMat.opacity > .1; if (splash.visible) updateSplashes(dt, rainMat.opacity);
   }
   window.__weather = setWeather;
   // ---------- Steuerung ----------
@@ -921,6 +954,9 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
       drawMinimap(); if (frames % 2 === 0) updateLabels();
     } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     gfx.updateSky(dt, player.position); if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
+    setTorch(hud.classList.contains('on') && gfx.sunElevation() < .04 && !swimming && !!heroInst);
+    if (torch.visible) { const f = torch.userData.flame; f.scale.set(.4 + Math.sin(clock.t * 17) * .06, .65 + Math.sin(clock.t * 23) * .1, 1); torch.userData.light.intensity = 1.5 + Math.sin(clock.t * 19) * .3 + Math.sin(clock.t * 7) * .2; }
+    pollen.visible = settings.quality >= 2 && WORLD_U.night.value < .5 && gfx.wx.cloudDark < .4; if (pollen.visible) { const pa = pollenGeo.attributes.position; for (let i = 0; i < pa.count; i++) { let x = pa.getX(i) + Math.sin(clock.t * .5 + i) * dt * .4 + dt * WORLD_U.wind.value * 1.5, y = pa.getY(i) + Math.cos(clock.t * .7 + i * 1.3) * dt * .25, z = pa.getZ(i) + Math.cos(clock.t * .4 + i) * dt * .3; if (Math.abs(x) > 30) x = -x * .95; if (y < .3) y = 6; if (y > 8) y = .5; pa.setXYZ(i, x, y, z); } pa.needsUpdate = true; pollen.position.set(player.position.x, groundY(player.position.x, player.position.z), player.position.z); pollen.material.opacity = .35 + Math.sin(clock.t * 2) * .1; }
     gfx.render(dt); renderInv();
   }
   function hideLoading() { const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
@@ -1046,19 +1082,22 @@ import { setupGraphics, weatherize, makeNormalTex, WORLD_U } from './graphics.js
     if (!$('season').hidden) renderSeason();
   }
   function claimTier() { const t = seasonTier(); if (state.season.claimed >= t) return; state.season.claimed++; const n = state.season.claimed, r = tierReward(n); if (r.coins) state.coins += r.coins; else addItem(r.item); const gems = n % 5 === 0 ? 15 : 4; state.gems = (state.gems || 0) + gems; toast(`🎫 Stufe ${n} eingesammelt: ${r.label} · +${gems} 💎`); renderAll(); renderSeason(); saveGame(); }
-  function openSeason() { checkSeason(); $('season').hidden = false; renderSeason(); }
+  function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
   const _show = show; show = function (name) { _show(name); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } };
+  const SEASON_BG = ['linear-gradient(135deg,#3a1d08 0%,#8a4a14 55%,#1d1008 100%)', 'linear-gradient(135deg,#0d2238 0%,#2a6ea3 55%,#08131f 100%)', 'linear-gradient(135deg,#3a1030 0%,#b0487c 55%,#1a0a16 100%)', 'linear-gradient(135deg,#0a2a2a 0%,#1f8a7a 55%,#06201e 100%)'];
   function renderSeason() {
-    const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP;
-    $('seasonTitle').textContent = info.icon + ' ' + info.name; $('seasonMeta').textContent = `Stufe ${t} / ${TIERS} · ${state.season.xp} Saison-XP · ${t - state.season.claimed} zum Einsammeln · ${state.gems || 0} 💎 Kristalle · noch ${info.daysLeft} Tage`;
-    $('seasonBar').style.width = (t >= TIERS ? 100 : into / TIER_XP * 100) + '%'; $('seasonNext').textContent = t >= TIERS ? 'Alle Stufen erreicht!' : `${into} / ${TIER_XP} XP bis Stufe ${t + 1}`;
-    // Straße: Stufen als Stationen auf einem geschwungenen Weg
-    $('seasonGrid').innerHTML = `<div class="road"><div class="road-line"></div>` + Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n <= t ? 'ready' : n === t + 1 ? 'next' : 'lock'; const big = n % 5 === 0; return `<div class="stop ${st} ${big ? 'big' : ''}" style="--i:${i}"><div class="node">${st === 'ready' && n === state.season.claimed + 1 ? '<button class="btn primary small claim">Einsammeln</button>' : ''}<div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><b>${n}</b></div><span>${r.label}</span></div>`; }).join('') + `</div>`;
-    const cb = $('seasonGrid').querySelector('.claim'); if (cb) cb.onclick = claimTier; $('claimAll').disabled = state.season.claimed >= t; const nextEl = $('seasonGrid').querySelector('.stop.ready, .stop.next'); if (nextEl) nextEl.scrollIntoView({ inline: 'center', block: 'nearest' });
+    const info = seasonInfo(), t = seasonTier(), into = state.season.xp - t * TIER_XP, open = t - state.season.claimed;
+    $('seasonTitle').textContent = info.icon + ' ' + info.name; $('season').querySelector('.sp-head').style.setProperty('--sp-bg', SEASON_BG[info.id % SEASON_BG.length]);
+    $('seasonMeta').innerHTML = `<span class="pill">⏳ noch ${info.daysLeft} Tage</span><span class="pill">💎 ${state.gems || 0} Kristalle</span><span class="pill">${state.season.xp} Saison-XP</span>` + (open ? `<span class="pill hot">🎁 ${open} Belohnung${open > 1 ? 'en' : ''} offen</span>` : '');
+    $('seasonLvl').textContent = t; $('seasonRing').style.setProperty('--p', t >= TIERS ? 100 : into / TIER_XP * 100);
+    $('seasonBar').style.width = (t >= TIERS ? 100 : into / TIER_XP * 100) + '%'; $('seasonNext').textContent = t >= TIERS ? 'Alle Stufen erreicht!' : `${into} / ${TIER_XP} XP bis Stufe ${t + 1} · Saison-XP gibt es für Stationen, Kämpfe, Quests und Truhen`;
+    $('seasonGrid').innerHTML = Array.from({ length: TIERS }, (_, i) => { const n = i + 1, r = tierReward(n), st = n <= state.season.claimed ? 'done' : n <= t ? 'ready' : n === t + 1 ? 'next' : 'lock'; const big = n % 5 === 0; const gems = n % 5 === 0 ? 15 : 4; return `<div class="tier ${st} ${big ? 'big' : ''}"><div class="n">${n}</div><div class="ic">${r.item ? icon(r.item) : ICON.coin}</div><b>${r.label}</b><span class="gem">+${gems} 💎</span>${st === 'ready' && n === state.season.claimed + 1 ? '<button class="btn primary small claim">Einsammeln</button>' : st === 'lock' ? '<span class="lk">🔒</span>' : ''}</div>`; }).join('');
+    const cb = $('seasonGrid').querySelector('.claim'); if (cb) cb.onclick = claimTier; $('claimAll').textContent = open ? `Alles einsammeln (${open})` : 'Alles einsammeln'; $('claimAll').classList.toggle('glow', open > 0);
+    const nextEl = $('seasonGrid').querySelector('.tier.ready, .tier.next'); if (nextEl) nextEl.scrollIntoView({ inline: 'center', block: 'nearest' });
   }
-  $('claimAll').onclick = () => { let k = 0; while (state.season.claimed < seasonTier() && k < 40) { claimTier(); k++; } if (!k) toast('Nichts zum Einsammeln – erst Saison-XP sammeln'); }; $('seasonBtn').onclick = openSeason; $('pSeason').onclick = () => { $('pause').hidden = true; openSeason(); }; $('closeSeason').onclick = () => $('season').hidden = true;
+  $('claimAll').onclick = () => { let k = 0; while (state.season.claimed < seasonTier() && k < 40) { claimTier(); k++; } if (!k) { const t = seasonTier(); toast(t >= TIERS ? 'Alles eingesammelt – Saison komplett!' : `Nichts offen · noch ${TIER_XP - (state.season.xp - t * TIER_XP)} Saison-XP bis Stufe ${t + 1}`); } else toast(`🎉 ${k} Stufe${k > 1 ? 'n' : ''} eingesammelt`); }; $('seasonBtn').onclick = openSeason; $('pSeason').onclick = () => { $('pause').hidden = true; openSeason(); }; $('closeSeason').onclick = () => $('season').hidden = true;
 
   // ---------- Vokabel-Menü ----------
   function openVocab() { $('vocabScreen').hidden = false; renderVocab(); }
