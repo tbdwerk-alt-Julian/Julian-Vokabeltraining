@@ -850,7 +850,10 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   // ---------- Speichern / Laden ----------
   function saveGame() {
     const d = { name: state.name, charIdx: state.charIdx, prefs: { ...prefs }, state: { level: state.level, xp: state.xp, xpNeed: state.xpNeed, hp: state.hp, maxHp: state.maxHp, coins: state.coins, stamina: state.stamina, mounted: state.mounted, hot: state.hot, season: state.season, login: state.login }, pos: [player.position.x, player.position.y, player.position.z], heading, hotbar: [...hotbar], bag: [...bag], equip: { ...equip }, counts: Object.fromEntries(Object.entries(ITEMS).filter(([, it]) => it.n !== undefined).map(([k, it]) => [k, it.n])), quests: JSON.parse(JSON.stringify(qstate)), tracked, chests: chests.map(c => !!c.userData.open), stations: stations.map(s => !!s.done), secs, gate: gate.userData.open };
-    return writeSave(d);
+    const ok = writeSave(d);
+    // Zusätzlich auf dem Dev-Server sichern (saves/spielstand.json) – der App-Browser leert seinen Speicher manchmal
+    if (import.meta.env && import.meta.env.DEV) { let vocabRaw = null; try { vocabRaw = localStorage.getItem('vocabquest.vocab.v1'); } catch (e) { } fetch('/__save', { method: 'POST', body: JSON.stringify({ save: d, vocabRaw, savedAt: Date.now() }) }).catch(() => { }); }
+    return ok;
   }
   function applySave(d) {
     state.name = d.name || 'Held'; state.charIdx = d.charIdx || 0; Object.assign(prefs, d.prefs || {}); Object.assign(state, d.state || {});
@@ -868,7 +871,15 @@ import { loadSave, writeSave, clearSave, fmtTime } from './save.js';
   }
   let autosaveT = 0; function autosave() { const n = Date.now(); if (n - autosaveT > 15000 && hud.classList.contains('on')) { autosaveT = n; saveGame(); } }
   setInterval(() => { if (hud.classList.contains('on') && !uiOpen()) saveGame(); }, 30000);
-  (function () { const d = loadSave(); if (d) { $('continueGame').hidden = false; $('continueGame').textContent = `Weiter spielen · ${d.name} · Level ${d.state ? d.state.level : 1}`; $('startHint').textContent = 'Zuletzt gespeichert: ' + fmtTime(d.savedAt); } })();
+  function showContinue(d) { $('continueGame').hidden = false; $('continueGame').textContent = `Weiter spielen · ${d.name} · Level ${d.state ? d.state.level : 1}`; $('startHint').textContent = 'Zuletzt gespeichert: ' + fmtTime(d.savedAt); }
+  (async function () {
+    const local = loadSave(); if (local) showContinue(local);
+    if (!(import.meta.env && import.meta.env.DEV)) return;
+    try {
+      const r = await fetch('/__save'); if (!r.ok) return; const srv = await r.json(); if (!srv || !srv.save) return;
+      if (!local || (srv.savedAt || 0) > (local.savedAt || 0) + 60000) { writeSave(srv.save); showContinue(srv.save); if (srv.vocabRaw) { const mine = V.all().filter(w => w.unit !== 'Beispiel-Unit').length; const theirs = (JSON.parse(srv.vocabRaw).words || []).filter(w => w.unit !== 'Beispiel-Unit').length; if (theirs >= mine) { localStorage.setItem('vocabquest.vocab.v1', srv.vocabRaw); V.load(); } } toast('Spielstand vom Server wiederhergestellt'); }
+    } catch (e) { }
+  })();
 
   // ---------- Saison-Pass (kostenlos, alle 4 Wochen, 30 Stufen) ----------
   const SEASONS = [{ name: 'Herbstwald', icon: '🍂' }, { name: 'Eiswinter', icon: '❄️' }, { name: 'Kirschblüte', icon: '🌸' }, { name: 'Sommersee', icon: '☀️' }];
