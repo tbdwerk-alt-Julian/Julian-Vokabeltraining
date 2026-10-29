@@ -1,6 +1,6 @@
 # VocabQuest – Ablaufplan bis Sonntag (1. 11. 2026)
 
-Stand: Donnerstagnacht, 30. 10. 2026. Alles unten ist im Spiel und committet, außer die Punkte unter „Offen“.
+Stand: Freitag früh, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die Punkte unter „Offen“.
 
 ## Fertig (seit Donnerstag)
 
@@ -16,6 +16,9 @@ Stand: Donnerstagnacht, 30. 10. 2026. Alles unten ist im Spiel und committet, au
 - Kampf: Seitenkamera, Schlag-/Treffer-Animationen, Schadenszahlen, Bildschirmwackeln, Banner (Boss, Phase 2, Sieg, Level-Up)
 - Gegner: Troll-Krieger (Ork), Schattenwichte (blaue Dämonen, schnell), Häuptling (roter Dämon), Waldtroll-Boss mit 2 Phasen hinter dem Festungstor (ab Level 10)
 - Bewegung: Laufen/Rennen nach Tempo, Sprint mit Shift, Ausweichrolle, Reiten mit Galopp, Schwimmen, Fallschaden
+- Hinweis-System (Grundkurs frei mit halbem Schaden, Erweiterungskurs über Hinweis-Punkte aus Quests), 10 Quests bei Bram, geheime Quest mit Mondklinge
+- Schnellreise über fünf Lagerfeuer (entdecken, dann auf der Karte anklicken)
+- Emotes (T/G/H), Rolle im Kampf mit Wirkung, Regenbogen nach Regen, Sternschnuppen, Vogelschwärme
 - Begleiter Lumi: folgt dir, leuchtet gelb Richtung Truhe, findet Münzen
 - Lager-Ausbau: Schmiede (Waffe +1 Stärke je Stufe), Stall (Reittier-Skills), Trophäenwand
 - Vier Helden: Ritter, Schurkin, Magier, Barbar
