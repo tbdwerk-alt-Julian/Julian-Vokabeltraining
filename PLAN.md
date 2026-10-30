@@ -36,14 +36,16 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - HP wachsen mit dem Level (+3 pro Level, Level 100 = ca. 400 HP), Rüstung senkt Boss-Schaden, ein Fehler kostet nie mehr als 45 % der HP
 - Kamera stößt nicht mehr durch Baumstämme, Kakteen und große Felsen; Held wird ausgeblendet, wenn die Kamera ganz nah ist
 - Boss-Hallen: ebener Boden, keine Felsen und kein Gras, Sonne innen abgeblendet (Fackellicht), Lavadrache mit Stacheln, Beinen, Krallen und Glutbauch
-- Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel)
+- Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel) und erst nach dem Tutorial
+- Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
+- Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 
 ## Offen – Reihenfolge bis Sonntag
 
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
 2. **Boss-Kämpfe:** alle fünf (Waldtroll, Sandwurm, Kirschgeist, Lavadrache, Ignatius mit 4 Phasen) bis zum Sieg getestet – Trophäen, Drops und Freischaltungen kommen an. Erledigt.
 3. **Charakter-Farben.** Mit den KayKit-Modellen nur über Texturen möglich; vorerst stattdessen vier Helden zur Wahl.
-4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen.
+4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen. Vorbereitet: `npm run build` erzeugt den Ordner `dist/` (geprüft, Modelle laden), alle Pfade sind relativ, läuft also auch unter einem Unterordner wie GitHub Pages. Es fehlt nur noch ein Konto.
 5. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
 
 ## Bekannte Grenzen

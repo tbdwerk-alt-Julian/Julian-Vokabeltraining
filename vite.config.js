@@ -35,4 +35,4 @@ function devEndpoints() {
   };
 }
 
-export default defineConfig({ plugins: [devEndpoints()], server: { host: true, port: 5173 } });
+export default defineConfig({ base: './', plugins: [devEndpoints()], server: { host: true, port: 5173 } });

@@ -1370,7 +1370,7 @@ import * as A from './audio.js';
   function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
-  const _show = show; show = function (name) { _show(name); if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; checkSeason(); const today = new Date().toDateString(); if (state.season.shownDay !== today) { state.season.shownDay = today; setTimeout(openSeason, 600); } } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
+  const _show = show; show = function (name) { _show(name); if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; checkSeason(); const today = new Date().toDateString(); if (state.tutDone && state.season.shownDay !== today) { state.season.shownDay = today; setTimeout(openSeason, 600); } } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
   // Einführung beim ersten Spielstart
   const touch = matchMedia('(pointer: coarse)').matches;
   const TUT = [
@@ -1492,8 +1492,9 @@ import * as A from './audio.js';
   (function () { try { const gl2 = renderer.getContext(); const ext = gl2.getExtension('WEBGL_debug_renderer_info'); const gpu = ext ? String(gl2.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''; window.__gpu = gpu; if (/SwiftShader|Basic Render|llvmpipe/i.test(gpu)) settings.quality = 0; else if (/Mali|Adreno|Apple GPU/i.test(gpu)) settings.quality = 1; else if (/Intel|Iris|UHD/i.test(gpu)) settings.quality = 2; if (/Electron/i.test(navigator.userAgent)) settings.quality = 0; } catch (e) { } })();
   applyQuality(settings.quality, true);
   // Automatik: bei dauerhaft niedriger Bildrate eine Stufe runter
-  let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0;
-  window.__adapt = (now) => { adaptFrames++; if (now - adaptT < 2000) return; const fps = adaptFrames * 1000 / (now - adaptT); adaptT = now; adaptFrames = 0; if (!hud.classList.contains('on')) return; if (fps < 28 && settings.quality > 0 && now > adaptCooldown) { adaptCooldown = now + 8000; applyQuality(settings.quality - 1, true); toast(`Ruckelt (${Math.round(fps)} FPS) · Grafik automatisch auf „${['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][settings.quality]}" gestellt`); } };
+  let adaptT = performance.now(), adaptFrames = 0, adaptCooldown = 0, adaptLast = 0, adaptStall = false, adaptLow = 0, hudOnSince = 0;
+  // Nur bei DAUERHAFT niedriger Bildrate: drei Messfenster à 2 s hintereinander unter 28 FPS, keine Hänger (Shader-Kompilierung) im Fenster, und frühestens 20 s nach Spielstart
+  window.__adapt = (now) => { adaptFrames++; const gap = now - adaptLast; adaptLast = now; if (gap > 400) adaptStall = true; if (now - adaptT < 2000) return; const fps = adaptFrames * 1000 / (now - adaptT); adaptT = now; adaptFrames = 0; const stalled = adaptStall; adaptStall = false; if (!hud.classList.contains('on')) { hudOnSince = 0; adaptLow = 0; return; } if (!hudOnSince) hudOnSince = now; if (now - hudOnSince < 20000 || stalled) { adaptLow = 0; return; } adaptLow = fps < 28 ? adaptLow + 1 : 0; if (adaptLow >= 3 && settings.quality > 0 && now > adaptCooldown) { adaptLow = 0; adaptCooldown = now + 8000; applyQuality(settings.quality - 1, true); toast(`Ruckelt (${Math.round(fps)} FPS) · Grafik automatisch auf „${['Niedrig', 'Mittel', 'Schön', 'Sehr schön'][settings.quality]}" gestellt`); } };
 
   // ---------- Kampf ----------
   V.load();
@@ -1578,7 +1579,7 @@ import * as A from './audio.js';
 
   // ---------- Echte 3D-Modelle (GLTF, CC0: KayKit Adventurers, Quaternius Monsters; Pferd aus three.js) ----------
   setLoad(ZN.name + ' · 3D-Modelle werden geladen …');
-  const MODELS = { knight: '/models/heroes/Knight.glb', rogue: '/models/heroes/Rogue.glb', mage: '/models/heroes/Mage.glb', barbarian: '/models/heroes/Barbarian.glb', orc: '/models/monsters/Orc.gltf', demon: '/models/monsters/Demon.gltf', bluedemon: '/models/monsters/BlueDemon.gltf', horse: '/models/animals/Horse.glb' };
+  const BASE = (import.meta.env && import.meta.env.BASE_URL) || '/'; const MODELS = { knight: BASE + 'models/heroes/Knight.glb', rogue: BASE + 'models/heroes/Rogue.glb', mage: BASE + 'models/heroes/Mage.glb', barbarian: BASE + 'models/heroes/Barbarian.glb', orc: BASE + 'models/monsters/Orc.gltf', demon: BASE + 'models/monsters/Demon.gltf', bluedemon: BASE + 'models/monsters/BlueDemon.gltf', horse: BASE + 'models/animals/Horse.glb' };
   const HERO_MODEL = ['knight', 'rogue', 'mage', 'barbarian'];
   const gl = {};
   function heroModelKey() { return HERO_MODEL[state.charIdx] || 'knight'; }

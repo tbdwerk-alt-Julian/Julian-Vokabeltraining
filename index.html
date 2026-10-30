@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VocabQuest">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icons/icon-192.png">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <title>VocabQuest</title>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap">
@@ -744,7 +744,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 
 <script>window.addEventListener('error', e => { const t = document.getElementById('loadText'); if (t && !document.getElementById('loading').classList.contains('off')) { t.textContent = 'Fehler beim Start: ' + (e.message || e.type); t.style.color = '#ff5c6c'; } });</script>
-<script type="module" src="/src/main.js"></script>
-<script>if ('serviceWorker' in navigator && !/Electron/i.test(navigator.userAgent)) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }</script>
+<script type="module" src="./src/main.js"></script>
+<script>if ('serviceWorker' in navigator && !/Electron/i.test(navigator.userAgent)) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {})); }</script>
 </body>
 </html>

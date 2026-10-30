@@ -7,7 +7,7 @@ self.addEventListener('activate', e => { e.waitUntil((async () => { const keys =
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
-  if (!(url.pathname.startsWith('/models/') || url.pathname.startsWith('/icons/'))) return;
+  if (!(url.pathname.includes('/models/') || url.pathname.includes('/icons/'))) return;
   e.respondWith((async () => {
     try {
       const res = await fetch(e.request);
