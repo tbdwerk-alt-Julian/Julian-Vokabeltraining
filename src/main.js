@@ -834,6 +834,7 @@ import * as A from './audio.js';
     $('equip').querySelectorAll('.slot').forEach(s => s.addEventListener('click', () => { const k = s.dataset.k; if (!equip[k] || k === 'weapon') return; const tgt = bagFor(equip[k]); const free = tgt.indexOf(null); if (free < 0) { toast('Rüstungs-Fach voll'); return; } tgt[free] = equip[k]; equip[k] = null; applyGear(hero); if (invHero) applyGear(invHero); stats(); renderAll(); }));
   }
   function hpUI() { const p = clamp(state.hp / state.maxHp * 100, 0, 100) + '%'; $('hpBar').style.width = p; $('hpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; $('bHp').style.width = p; $('bHpNum').textContent = Math.round(state.hp) + ' / ' + state.maxHp; }
+  let regenT = 0;
   let hurtT; function damage(n, why) { if (state.hp <= 0) return; A.sfx('hurt'); state.hp = Math.max(0, state.hp - n); hpUI(); $('hurt').classList.add('on'); clearTimeout(hurtT); hurtT = setTimeout(() => $('hurt').classList.remove('on'), 220); if (why) toast(why); if (state.hp <= 0) { if (battleOn) endBattle(); clearInterval(stTimer); $('station').hidden = true; $('deadWhy').textContent = why ? why.replace(/! −.*$/, '') : 'Im Kampf gefallen'; setTimeout(() => $('dead').classList.add('on'), 400); } }
   function respawn() { $('dead').classList.remove('on'); state.hp = state.maxHp; player.position.set(0, 1.2, 0); heading = Math.PI * .5; if (!state.mounted) { mountFree.position.set(2, 1.2, 3); } hpUI(); show('world'); toast('Wiederbelebt am Lagerfeuer'); }
   function renderAll() { renderHotbar(); renderBag(); hpUI(); if (typeof drawTrophies === 'function') drawTrophies(); $('coins').textContent = state.coins; $('gems').textContent = state.gems || 0; $('lvl').textContent = state.level; $('xp').style.width = (state.xp / state.xpNeed * 100) + '%'; }
@@ -1175,6 +1176,7 @@ import * as A from './audio.js';
     setTorch(hud.classList.contains('on') && gfx.sunElevation() < .04 && !swimming && !!heroInst);
     campFires.forEach((g, i) => { g.userData.flames.forEach((f, k) => { f.scale.y = 1 + Math.sin(clock.t * 13 + i + k) * .2; f.rotation.y += dt * 2; }); g.userData.light.intensity = 1.5 + Math.sin(clock.t * 9 + i) * .4; if (inWorld && !state.camps[g.userData.camp.id] && Math.hypot(player.position.x - g.position.x, player.position.z - g.position.z) < 5) { state.camps[g.userData.camp.id] = true; banner('LAGERFEUER ENTDECKT', g.userData.camp.name + ' · Schnellreise über die Karte', ''); A.sfx('quest'); saveGame(); } });
     if (battleOn) dodgeUI();
+    if (inWorld && !battleOn && state.hp > 0 && state.hp < state.maxHp) { const px = player.position.x, pz = player.position.z; const foeNear = wolves.some(w => w.userData.alive && Math.hypot(w.position.x - px, w.position.z - pz) < 10); if (!foeNear) { const atFire = Math.hypot(px, pz) < 7 || campFires.some(g => Math.hypot(g.position.x - px, g.position.z - pz) < 5); state.hp = Math.min(state.maxHp, state.hp + state.maxHp * (atFire ? .08 : .012) * dt); regenT = (regenT || 0) + dt; if (regenT > .5) { regenT = 0; hpUI(); } } }
     { // Regenbogen
       const day = 1 - WORLD_U.night.value; if (rainbowT > 0) { rainbowT -= dt; const s = gfx.U.sunDir.value; const dx = -s.x, dz = -s.z, l = Math.hypot(dx, dz) || 1; rainbow.position.set(player.position.x + dx / l * 220, groundY(player.position.x, player.position.z) - 40, player.position.z + dz / l * 220); rainbow.lookAt(player.position.x, rainbow.position.y, player.position.z); rainbow.visible = true; rainbow.material.opacity = Math.min(1, rainbowT / 20) * .55 * day * (1 - gfx.wx.cloudDark); } else rainbow.visible = false;
       // Sternschnuppe
@@ -1209,7 +1211,7 @@ import * as A from './audio.js';
   function hideLoading() { const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
   // Lade-Overlay bleibt, bis der Browser die Shader kompiliert hat (erst nach 6 flüssigen Bildern in Folge weg, spätestens nach 90 s)
   let prepT = 0, prepLast = 0, prepSmooth = 0;
-  function showPrep(t) { let p = $('prep'); if (!p) { p = document.createElement('div'); p.id = 'prep'; p.innerHTML = '<div class="ldbox"><div class="ldbar"><i></i></div><div class="ldtext" id="prepText"></div></div>'; document.body.appendChild(p); } $('prepText').textContent = t; p.classList.remove('off'); prepT = performance.now(); prepSmooth = 0; }
+  function showPrep(t) { if ($('loading')) { prepT = performance.now(); prepSmooth = 0; return; } let p = $('prep'); if (!p) { p = document.createElement('div'); p.id = 'prep'; p.innerHTML = '<div class="ldbox"><div class="ldbar"><i></i></div><div class="ldtext" id="prepText"></div></div>'; document.body.appendChild(p); } $('prepText').textContent = t; p.classList.remove('off'); prepT = performance.now(); prepSmooth = 0; }
   function prepTick(now) { const gap = now - prepLast; prepLast = now; const ld = $('loading'); const p = $('prep'); const pOn = p && !p.classList.contains('off'); if (!ld && !pOn) return; prepSmooth = gap < 120 ? prepSmooth + 1 : 0; if (now - prepT < 400) return; if (prepSmooth >= 6 || now - prepT > 90000) { if (ld) hideLoading(); if (pOn) p.classList.add('off'); } }
   requestAnimationFrame(loop);
 
@@ -1318,7 +1320,7 @@ import * as A from './audio.js';
   function applySave(d) {
     state.name = d.name || 'Held'; state.charIdx = d.charIdx || 0; Object.assign(prefs, d.prefs || {}); Object.assign(state, d.state || {});
     if (!(state.maxHp >= 50 && state.maxHp <= 1500)) state.maxHp = 100; state.hp = clamp(state.hp, 0, state.maxHp); // Schutz vor kaputten Werten
-    ensureState();
+    ensureState(); if (state.hp < state.maxHp * .5) state.hp = Math.round(state.maxHp * .5); // ausgeruht weiterspielen
     $('pnameHud').textContent = state.name; $('pname').value = state.name;
     document.querySelectorAll('#char .choice').forEach(c => c.setAttribute('aria-pressed', +c.dataset.v === state.charIdx ? 'true' : 'false'));
     ['kurs', 'modus', 'tier'].forEach(g => document.querySelectorAll('#' + g + ' .choice').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === prefs[g] ? 'true' : 'false')));
