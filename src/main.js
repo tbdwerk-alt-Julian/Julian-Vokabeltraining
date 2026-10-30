@@ -106,7 +106,7 @@ import * as A from './audio.js';
     [[0, 0], [8, -3], [16, -6], [24, -6]],                                   // Lager → Boss-Halle
     [[0, 0], [14, 14], [30, 32], [LAKE.x - LAKE.r * .62 - 6, LAKE.z - LAKE.r * .62 - 6]], // Lager → See
     [[0, 0], [-12, -30], [-24, -70], [-38, -110], [-50, -150], [-60, -172]],  // Lager → Süden (Trollgrube / Dunkelwald)
-    [[0, 0], [-20, -8], [-42, -22], [-62, -30]]                               // Lager → Westhütte
+    [[0, 0], [-14, 5], [-28, 9], [-40, 10], [-52, 6], [-58, -12], [-62, -30]]  // Lager → über die Brücke (z=10) → Westhütte
   ];
   const roadPts = []; ROADS.forEach(r => { for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(2, Math.ceil(L / 1.5)); for (let k = 0; k < n; k++) { const t = k / n; roadPts.push([ax + (bx - ax) * t, az + (bz - az) * t]); } } });
   const roadCell = new Map(); roadPts.forEach(([x, z]) => { const k = ((x / 12) | 0) + ',' + ((z / 12) | 0); let a = roadCell.get(k); if (!a) roadCell.set(k, a = []); a.push([x, z]); });
