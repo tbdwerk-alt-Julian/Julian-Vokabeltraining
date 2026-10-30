@@ -40,6 +40,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Lernen: Falsch beantwortete Wörter kommen im Kampf bald noch einmal („Revanche“, bis zu 3 gemerkt, 60 % Chance pro Zug); das Vokabelfenster zeigt die „Sorgenkinder“ (am häufigsten falsch)
 - Boss-Tod als Kinoszene: 3,2 s Kamerafahrt um den fallenden Boss mit Kinobalken, Zeitlupe und Todesanimation, danach erst das Siegfenster. Intro und Todesszene laufen nach echter Uhrzeit (bei niedriger Bildrate vorher zu langsam)
 - Handy quer im Kampf: kompakte Kampfkarte, Hotbar/Knöpfe/Minimap ausgeblendet, alle Kampfknöpfe im Bild
 - Finisher: Boss oder Häuptling unter 20 % HP → Wortkarte pulsiert rot, „FINISHER BEREIT“; das nächste perfekte Wort macht 3× Schaden mit Zeitlupe, Blitz und Banner (zählt in der Statistik)
