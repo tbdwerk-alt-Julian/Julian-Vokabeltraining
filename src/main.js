@@ -1183,7 +1183,11 @@ import * as A from './audio.js';
   function pollPad() { const pads = navigator.getGamepads ? navigator.getGamepads() : []; const p = pads && pads[0]; if (!p) return null; if (p.axes.some(v => Math.abs(v) > .3) || p.buttons.some(b => b.pressed)) setInput('pad'); const ax = Math.abs(p.axes[0]) > .15 ? p.axes[0] : 0, ay = Math.abs(p.axes[1]) > .15 ? p.axes[1] : 0; if (p.buttons[0] && p.buttons[0].pressed && !pollPad.a) roll(); pollPad.a = p.buttons[0] && p.buttons[0].pressed; if (p.buttons[2] && p.buttons[2].pressed && !pollPad.x) interact(); pollPad.x = p.buttons[2] && p.buttons[2].pressed; if (p.buttons[3] && p.buttons[3].pressed && !pollPad.y) { if ($('inventory').hidden) openInv(); else $('inventory').hidden = true; } pollPad.y = p.buttons[3] && p.buttons[3].pressed; if (p.buttons[1] && p.buttons[1].pressed && !pollPad.b) toggleMount(); pollPad.b = p.buttons[1] && p.buttons[1].pressed; return { x: ax, y: ay, sprint: !!((p.buttons[10] && p.buttons[10].pressed) || (p.buttons[5] && p.buttons[5].pressed)) }; }
 
   let heading = Math.PI * .5, vy = 0, rolling = 0, t0 = performance.now(), walkPhase = 0, mountCalled = false, swimming = false;
-  camera.position.set(14, 6, 0);
+  // Titelsequenz: Kameraflug über Lager, Hauptweg, Windmühle, See, Steinkreis (nicht in Lava-Gebieten)
+  const menuPath = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 9, 20), new THREE.Vector3(12, 6, 4), new THREE.Vector3(20, 7, 18), new THREE.Vector3(34, 10, 52), new THREE.Vector3(10, 16, 40), new THREE.Vector3(26, 12, -40), new THREE.Vector3(-12, 10, -22)], true, 'catmullrom', .5);
+  const menuLook = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 2, 0), new THREE.Vector3(24, 3, -6), new THREE.Vector3(36, 5, 40), new THREE.Vector3(70, 2, 80), new THREE.Vector3(0, 2, 0), new THREE.Vector3(40, 2, -62), new THREE.Vector3(0, 3, 0)], true, 'catmullrom', .5);
+  const camFlyV = new THREE.Vector3(), lookFlyV = new THREE.Vector3();
+  camera.position.set(14, 6, 0); if (menuPath) { menuPath.getPointAt(0, camFlyV); camFlyV.y = Math.max(camFlyV.y + 6, groundY(camFlyV.x, camFlyV.z) + 18); camera.position.copy(camFlyV); }
   // Maus / Finger-Wischen: Kamera um den Charakter drehen
   let camYaw = 0, camPitch = 0, dragId = null, dragX = 0, dragY = 0;
   renderer.domElement.addEventListener('pointerdown', e => { if (!hud.classList.contains('on') || uiOpen()) return; dragId = e.pointerId; dragX = e.clientX; dragY = e.clientY; });
@@ -1344,7 +1348,8 @@ import * as A from './audio.js';
       { const wantFov = sprinting ? 58 : (state.mounted && moving ? 56 : 50); if (Math.abs(camera.fov - wantFov) > .05) { camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); } }
       if (camShake > .004) { camera.position.x += (Math.random() - .5) * camShake; camera.position.y += (Math.random() - .5) * camShake * .7; camShake *= Math.pow(.01, dt); }
       drawMinimap(); if (frames % 2 === 0) updateLabels();
-    } else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
+    } else if (menuPath) { const T = 75000; const u = (now % T) / T; menuPath.getPointAt(u, camFlyV); camFlyV.y = Math.max(camFlyV.y + 6, groundY(camFlyV.x, camFlyV.z) + 18); camera.position.lerp(camFlyV, 1 - Math.pow(.03, dt)); menuLook.getPointAt(u, lookFlyV); lookFlyV.y = Math.max(lookFlyV.y, groundY(lookFlyV.x, lookFlyV.z) + 1); camera.lookAt(lookFlyV); }
+    else { const a = now / 16000; camera.position.lerp(new THREE.Vector3(Math.cos(a) * 15, 6.5 + Math.sin(a * 2) * 1.2, Math.sin(a) * 15), 1 - Math.pow(.02, dt)); camera.lookAt(1, 3, -1); }
     A.tick(dt, { moving: inWorld && moving, mounted: state.mounted, swimming, night: WORLD_U.night.value, rain: rainMat.opacity, wind: WORLD_U.wind.value, battle: battleOn });
     gfx.updateSky(dt, player.position); { const ad = Math.hypot(player.position.x - CAVE.x, player.position.z - CAVE.z); const inHall = clamp((CAVE.r + 1 - ad) / 5, 0, 1); if (inHall > 0) { sun.intensity *= 1 - inHall * .82; hemi.intensity *= 1 - inHall * .4; } }
     if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
@@ -1487,7 +1492,7 @@ import * as A from './audio.js';
   // ---------- UI / Screens ----------
   let toastT; function toast(msg) { const t = $('toast'); if (t.textContent === msg && t.classList.contains('show')) return; t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
   const screens = ['start', 'create', 'battle', 'map', 'win'];
-  function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); hud.classList.toggle('battle', name === 'battle'); if (name === 'map') { drawWorldMap(); const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
+  function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); $('cinebars').classList.toggle('on', name === 'start'); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); hud.classList.toggle('battle', name === 'battle'); if (name === 'map') { drawWorldMap(); const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
   $('newGame').onclick = () => show('create'); $('backStart').onclick = () => show('start');
   $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; gameStarted = true; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
 
