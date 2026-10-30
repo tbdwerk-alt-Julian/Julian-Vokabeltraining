@@ -428,6 +428,12 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #battle .card { transition: opacity .35s, transform .35s; }
 #hud.cine .hud-top, #hud.cine .hud-bottom, #hud.cine .mmwrap, #hud.cine .interact { opacity: 0; transition: opacity .3s; }
 #hud .hud-top, #hud .hud-bottom, #hud .mmwrap { transition: opacity .4s; }
+/* Finisher */
+.finisher-tag { text-align: center; font-family: var(--display); font-weight: 800; font-size: 12px; letter-spacing: .14em; color: #ff4d6d; text-shadow: 0 0 12px rgba(255,77,109,.7); animation: finpulse 1s ease-in-out infinite; }
+@keyframes finpulse { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+#battle.finisher .card { border-color: rgba(255,77,109,.7); box-shadow: 0 0 0 1px rgba(255,77,109,.35), 0 0 40px rgba(255,77,109,.35), 0 30px 80px rgba(0,0,0,.55); animation: fincard 1s ease-in-out infinite; }
+@keyframes fincard { 0%, 100% { box-shadow: 0 0 0 1px rgba(255,77,109,.3), 0 0 30px rgba(255,77,109,.25), 0 30px 80px rgba(0,0,0,.55); } 50% { box-shadow: 0 0 0 2px rgba(255,77,109,.6), 0 0 60px rgba(255,77,109,.5), 0 30px 80px rgba(0,0,0,.55); } }
+#battle.finisher .word { color: #ff8da1; text-shadow: 0 0 18px rgba(255,77,109,.6); }
 </style>
 </head>
 <body>
@@ -729,6 +735,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <div class="bosshead"><div><div class="eyebrow" id="bossEyebrow">Boss · Wald</div><h2 id="bossName">Waldtroll</h2></div><div class="phase" id="phase">Phase 1</div></div>
       <div class="bossbar"><i id="bossHp"></i></div>
       <div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;min-width:120px;"><div class="bar hp"><i id="bHp" style="width:100%"></i></div><div class="hpnum" id="bHpNum">100 / 100</div></div><div class="combo">COMBO <span id="bcombo">0</span></div><span class="tag" id="modeTag">Erweiterung · Sanft</span></div>
+      <div class="finisher-tag" id="finisher" hidden>FINISHER BEREIT · perfekt schreiben = 3× Schaden</div>
       <div class="word" id="word">—</div>
       <div class="timer"><i id="timer"></i></div>
       <form id="answerForm" class="stack" style="gap:10px;">
