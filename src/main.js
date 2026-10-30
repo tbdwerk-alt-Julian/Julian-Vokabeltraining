@@ -1565,7 +1565,7 @@ import * as A from './audio.js';
   function nextWord() {
     cur = V.pick(1)[0]; if (!cur) { toast('Keine Vokabeln – erst unter 📚 Vokabeln eintragen'); endBattle(); show('world'); return; }
     $('word').textContent = '…'; $('timer').style.width = '100%'; clearInterval(timerId); hintUsed = false; $('hintText').textContent = ''; $('hintBtn').textContent = prefs.kurs === 'G' ? '💡 Hinweis' : '💡 Hinweis (' + (state.hints || 0) + ')';
-    introWord(cur, () => { if (!battleOn) return; $('word').textContent = cur.de; $('answer').value = ''; $('answer').focus(); const T = prefs.kurs === 'G' ? 15 : 9; timeLeft = T; clearInterval(timerId); timerId = setInterval(() => { timeLeft -= .1; $('timer').style.width = Math.max(0, timeLeft / T * 100) + '%'; if (timeLeft <= 0) { V.record(cur.id, false); hit('bad', 'Zu langsam! Treffer kassiert.'); } }, 100); });
+    introWord(cur, () => { if (!battleOn) return; $('word').textContent = cur.de; $('answer').value = ''; $('answer').focus(); const T = prefs.kurs === 'G' ? 15 : 9; timeLeft = T; clearInterval(timerId); timerId = setInterval(() => { timeLeft -= .1; $('timer').style.width = Math.max(0, timeLeft / T * 100) + '%'; if (timeLeft <= 0) { clearInterval(timerId); V.record(cur.id, false); hit('bad', 'Zu langsam! Treffer kassiert · richtig: ' + cur.en); } }, 100); });
   }
   let hintUsed = false;
   const hintFor = (en) => en.split(' ').map(w => w.length <= 2 ? w : w.slice(0, 2) + ' ' + '_ '.repeat(w.length - 2).trim()).join('  ·  ');
