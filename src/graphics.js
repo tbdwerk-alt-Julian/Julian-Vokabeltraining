@@ -106,13 +106,14 @@ const SHAFTS = {
     acc /= 16.0; gl_FragColor = vec4(base.rgb + acc * strength * vec3(1.0, 0.92, 0.75), 1.0); }`
 };
 const GRADE = {
-  uniforms: { tDiffuse: { value: null }, res: { value: new THREE.Vector2(1, 1) }, vig: { value: .42 }, sat: { value: 1.1 }, con: { value: 1.12 }, time: { value: 0 }, grain: { value: .025 }, aber: { value: .0015 }, flash: { value: 0 }, warm: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, res: { value: new THREE.Vector2(1, 1) }, vig: { value: .48 }, sat: { value: 1.12 }, con: { value: 1.16 }, time: { value: 0 }, grain: { value: .025 }, aber: { value: .0015 }, flash: { value: 0 }, warm: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 res; uniform float vig, sat, con, time, grain, aber, flash, warm; varying vec2 vUv;
   float hash(vec2 p){ return fract(sin(mod(dot(p, vec2(12.9898, 78.233)), 6.28318)) * 43758.5453); }
   void main(){ vec2 d = vUv - 0.5; vec3 c;
     c.r = texture2D(tDiffuse, vUv + d * aber).r; c.g = texture2D(tDiffuse, vUv).g; c.b = texture2D(tDiffuse, vUv - d * aber).b;
     float l = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(vec3(l), c, sat); c = (c - 0.5) * con + 0.5;
+    c = mix(c, c * vec3(0.86, 0.97, 1.12), (1.0 - l) * 0.32); c = mix(c, c * vec3(1.08, 1.0, 0.9), l * 0.22); // Teal-Orange-Look: kühle Schatten, warme Lichter
     c = mix(c, c * vec3(1.06, 0.98, 0.9), warm);
     c *= 1.0 - vig * smoothstep(0.3, 1.15, length(d) * 1.55);
     c += (hash(vUv * res + fract(time)) - 0.5) * grain;
@@ -181,8 +182,8 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
     hemi.color.copy(U.zenith.value).lerp(U.horizon.value, .5).multiplyScalar(1.25).lerp(new THREE.Color(0x7386b8), night); hemi.groundColor.setHex(0x3b5a2a).lerp(new THREE.Color(0x1c2436), night).lerp(new THREE.Color(.3, .32, .35), grey * .5);
     hemi.intensity = (.45 + day * .2 + low * .25) * (1 - night * .25) * (1 - grey * .15) + night * .1;
     // Nebel in Horizontfarbe
-    scene.fog.color.copy(U.horizon.value).multiply(wx.fogTint); scene.fog.density = (.0042 + grey * .003) * wx.fogMul * (1 + night * .5); // nachts dichter
-    renderer.toneMappingExposure = (1.0 + night * .15 - grey * .05) * (wx.exposure || 1);
+    scene.fog.color.copy(U.horizon.value).multiply(wx.fogTint); scene.fog.density = (.0052 + grey * .003) * wx.fogMul * (1 + night * .5); // nachts dichter
+    renderer.toneMappingExposure = (.88 + night * .15 - grey * .05) * (wx.exposure || 1);
     // Sonne/Himmel folgen der Kamera
     skyMesh.position.copy(camera.position);
     glow.position.copy(camera.position).addScaledVector(e > -.03 ? U.sunDir.value : U.moonDir.value, 500); glow.material.opacity = e > -.03 ? (1 - grey * .85) : night * .5; glow.scale.setScalar(e > -.03 ? 70 + low * 40 : 40);

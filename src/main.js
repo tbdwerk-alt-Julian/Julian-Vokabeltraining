@@ -13,7 +13,7 @@ import * as A from './audio.js';
 
   // ---------- Spielzustand ----------
   const state = { level: 1, xp: 0, xpNeed: 100, hp: 100, maxHp: 100, hearts: 5, maxHearts: 5, coins: 0, gems: 0, stamina: 100, air: 100, mounted: true, charIdx: 0, name: 'Held', hot: 0, quests: { wolves: 0, chest: false, accepted: {} }, wolvesKilled: 0 };
-  const settings = { sens: 1, camDist: 8.5, joy: 120, invert: 0, quality: 2, fps: 0, showFps: 0 };
+  const settings = { sens: 1, camDist: 7, joy: 120, invert: 0, quality: 2, fps: 0, showFps: 0 };
   const DEF_STATS = () => ({ battles: 0, trolls: 0, chests: 0, stations: 0, words: 0, crits: 0, bestCombo: 0, playSecs: 0, coinsEarned: 0 });
   const ensureState = () => { if (!state.stats) state.stats = DEF_STATS(); for (const k in DEF_STATS()) if (state.stats[k] === undefined) state.stats[k] = 0; if (!state.buffs) state.buffs = { shield: 0, fire: 0, str: 0, luck: 0 }; if (!state.daily) state.daily = { day: -1, offers: [], chosen: null, base: 0, done: false }; if (!state.camp) state.camp = { forge: 0, stable: { stam: 0, speed: 0, swim: 0 } }; if (!state.camp.stable) state.camp.stable = { stam: 0, speed: 0, swim: 0 }; if (!state.camps) state.camps = { lager: true }; state.camps.lager = true; state.camps.dlager = true; state.camps.clager = true; state.camps.vlager = true; state.camps.slager = true; if (!state.zones) state.zones = { desert: false }; };
   ensureState();
@@ -242,7 +242,7 @@ import * as A from './audio.js';
     if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || nearBuilding(x, z, 8) || onRoad(x, z, 4) || (!FIERY && (Math.hypot(x - 36, z - 40) < 9 || Math.hypot(x - 40, z + 62) < 12)) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
     if (DESERT && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 18) continue;
     if (VOLCANO) continue; if (SHADOW && Math.random() < .55) continue;
-    const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; ((DESERT || CHERRY) ? broad : SHADOW ? con : (Math.random() < (gy > 6 ? .8 : .5) ? con : broad)).push(it); treeSpots.push([x, z]);
+    const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1) * (FIERY ? 1 : 1.35), rot: Math.random() * 6, hue: Math.random() }; ((DESERT || CHERRY) ? broad : SHADOW ? con : (Math.random() < (gy > 6 ? .8 : .5) ? con : broad)).push(it); treeSpots.push([x, z]);
   }
   for (let i = 0; i < (DESERT ? 350 : VOLCANO ? 120 : 600); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE || inArena(x, z) || onRoad(x, z, 3)) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
   for (let i = 0; i < (DESERT ? 90 : VOLCANO ? 520 : SHADOW ? 260 : CHERRY ? 60 : 260); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE + 4 || Math.hypot(x, z) < 26 || nearBuilding(x, z, 6)) continue; deadTrees.push({ x, z, s: rng(.8, 1.6), rot: Math.random() * 6 }); }
@@ -1781,7 +1781,7 @@ import * as A from './audio.js';
   function setHeroModel() {
     const key = heroModelKey(); if (!gl[key]) return;
     if (heroInst) { player.remove(heroInst.obj); }
-    heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.75); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero(); dressWeapons(heroInst);
+    heroInst = instance(gl[key]); heroInst.obj.scale.setScalar(.92); player.add(heroInst.obj); anims.add(heroInst); hero.visible = false; heroInst.play('Idle'); placeHero(); dressWeapons(heroInst);
   }
   function placeHero() { if (!heroInst) return; if (state.mounted) { heroInst.obj.position.set(0, mountMesh.userData.heroY !== undefined ? mountMesh.userData.heroY : mountMesh.userData.seatY - .5, .05); heroInst.obj.rotation.set(0, 0, 0); heroInst.play('Sit_Chair_Idle'); } else { heroInst.obj.position.set(0, 0, 0); heroInst.obj.rotation.set(0, 0, 0); } }
   const _rebuildHero = rebuildHero; rebuildHero = function () { _rebuildHero(); setHeroModel(); };
