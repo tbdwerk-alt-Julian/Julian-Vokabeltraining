@@ -35,12 +35,13 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 **Balance und Kamera (Freitag)**
 - HP wachsen mit dem Level (+3 pro Level, Level 100 = ca. 400 HP), Rüstung senkt Boss-Schaden, ein Fehler kostet nie mehr als 45 % der HP
 - Kamera stößt nicht mehr durch Baumstämme, Kakteen und große Felsen; Held wird ausgeblendet, wenn die Kamera ganz nah ist
-- Boss-Hallen: ebener Boden, keine Felsen, Sonne innen abgeblendet (Fackellicht), Lavadrache mit Stacheln, Beinen, Krallen und Glutbauch
+- Boss-Hallen: ebener Boden, keine Felsen und kein Gras, Sonne innen abgeblendet (Fackellicht), Lavadrache mit Stacheln, Beinen, Krallen und Glutbauch
+- Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel)
 
 ## Offen – Reihenfolge bis Sonntag
 
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
-2. **Boss-Kämpfe spielen.** Kirschgeist und Lavadrache einmal echt durchspielen. Waldtroll, Sandwurm und Ignatius (alle 4 Phasen bis zum Sieg, Schattenkrone, Schattenklinge) sind getestet.
+2. **Boss-Kämpfe:** alle fünf (Waldtroll, Sandwurm, Kirschgeist, Lavadrache, Ignatius mit 4 Phasen) bis zum Sieg getestet – Trophäen, Drops und Freischaltungen kommen an. Erledigt.
 3. **Charakter-Farben.** Mit den KayKit-Modellen nur über Texturen möglich; vorerst stattdessen vier Helden zur Wahl.
 4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen.
 5. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.

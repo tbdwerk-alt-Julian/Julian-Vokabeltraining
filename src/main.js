@@ -197,7 +197,7 @@ import * as A from './audio.js';
     for (let i = 0; i < GRASS; i++) {
       let x, z, tries = 0;
       do { x = cx + rng(-GR, GR); z = cz + rng(-GR, GR); tries++; } while ((inWater(x, z) || Math.hypot(x - 3, z + 3) < 2.5) && tries < 4);
-      const gyy = groundY(x, z); dummy.position.set(x, gyy, z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(gyy < WATER_Y - .45 || gyy > 18 || (DESERT && Math.random() < .72 && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 12) || (FIERY && Math.random() < .8) ? 0 : .5 + Math.random() * .6);
+      const gyy = groundY(x, z); dummy.position.set(x, gyy, z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(gyy < WATER_Y - .45 || gyy > 18 || (DESERT && Math.random() < .72 && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 12) || (FIERY && Math.random() < .8) || Math.hypot(x - 36, z + 6) < 19 ? 0 : .5 + Math.random() * .6);
       dummy.updateMatrix(); grass.setMatrixAt(i, dummy.matrix);
       if (DESERT) gcolor.setHSL(.12 + Math.random() * .05, .35 + Math.random() * .2, .42 + Math.random() * .16); else if (VOLCANO) gcolor.setHSL(.06, .2, .2 + Math.random() * .1); else if (SHADOW) gcolor.setHSL(.72, .25, .22 + Math.random() * .12); else if (CHERRY) gcolor.setHSL(.3 + Math.random() * .06, .5, .38 + Math.random() * .16); else gcolor.setHSL(.26 + Math.random() * .08, .45 + Math.random() * .2, .3 + Math.random() * .18); grass.setColorAt(i, gcolor);
     }
@@ -207,7 +207,7 @@ import * as A from './audio.js';
 
   // Bäume (realistischer: Stamm mit Ästen, viele Blätterballen, hellere Spitzen)
   // ===== Vegetation: instanziiert (ein Draw-Call pro Bauteil statt tausender Einzel-Meshes) =====
-  const CAVE = { x: 36, z: -6, r: 17 };
+  const CAVE = { x: 36, z: -6, r: 17 }; const inArena = (x, z) => Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 3;
   const HUTS = DESERT ? [[-62, -34], [160, 150], [-170, -70]] : FIERY ? [] : CHERRY ? [[-62, -34], [118, 42], [-112, 112], [160, 150], [-170, -70], [20, 120]] : [[-62, -34], [118, 42], [-112, 112], [84, -124], [160, 150], [-170, -70], [20, 120], [-95, -150], [190, -30], [-200, 40]];
   const RUINS = DESERT ? [[-30, 150], [140, -60], [-150, -150], [200, 10], [40, -200], [-80, 60], [110, 120], [-230, -20], [-120, 20], [90, -110], [-60, -110], [180, 90]] : FIERY ? [[-30, 150], [140, -60], [-150, -150], [200, 10], [-80, 60], [110, 120], [-230, -20], [-120, 20], [180, 90], [-60, -60]] : [[-30, 150], [140, -60], [-150, -150], [200, 10], [40, -200], [-80, 60], [110, 120], [-230, -20]];
   const nearBuilding = (x, z, r) => HUTS.some(([a, b]) => Math.hypot(a - x, b - z) < r) || RUINS.some(([a, b]) => Math.hypot(a - x, b - z) < r + 3);
@@ -219,15 +219,15 @@ import * as A from './audio.js';
     if (VOLCANO) continue; if (SHADOW && Math.random() < .55) continue;
     const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; ((DESERT || CHERRY) ? broad : SHADOW ? con : (Math.random() < (gy > 6 ? .8 : .5) ? con : broad)).push(it); treeSpots.push([x, z]);
   }
-  for (let i = 0; i < (DESERT ? 350 : VOLCANO ? 120 : 600); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
+  for (let i = 0; i < (DESERT ? 350 : VOLCANO ? 120 : 600); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE || inArena(x, z)) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
   for (let i = 0; i < (DESERT ? 90 : VOLCANO ? 520 : SHADOW ? 260 : CHERRY ? 60 : 260); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE + 4 || Math.hypot(x, z) < 26 || nearBuilding(x, z, 6)) continue; deadTrees.push({ x, z, s: rng(.8, 1.6), rot: Math.random() * 6 }); }
   const cacti = []; if (DESERT) for (let i = 0; i < 700; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y + .5 || gy > TREELINE + 6 || Math.hypot(x, z) < 20 || nearBuilding(x, z, 6)) continue; cacti.push({ x, z, s: rng(.6, 1.6), rot: Math.random() * 6, arms: Math.random() < .6 }); }
-  if (!DESERT && !FIERY) treeSpots.forEach(([tx, tz], i) => { if (i % 2) return; for (let k = 0; k < 2; k++) { const x = tx + rng(-4, 4), z = tz + rng(-4, 4); if (inWater(x, z) || Math.hypot(x, z) < 20) continue; ferns.push({ x, z, s: rng(.7, 1.4), rot: Math.random() * 6 }); } });
-  for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : 140); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE || Math.hypot(x, z) < 22 || nearBuilding(x, z, 7)) continue; logs.push({ x, z, s: rng(.8, 1.5), rot: Math.random() * 6 }); }
+  if (!DESERT && !FIERY) treeSpots.forEach(([tx, tz], i) => { if (i % 2) return; for (let k = 0; k < 2; k++) { const x = tx + rng(-4, 4), z = tz + rng(-4, 4); if (inWater(x, z) || Math.hypot(x, z) < 20 || inArena(x, z)) continue; ferns.push({ x, z, s: rng(.7, 1.4), rot: Math.random() * 6 }); } });
+  for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : 140); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE || Math.hypot(x, z) < 22 || nearBuilding(x, z, 7) || inArena(x, z)) continue; logs.push({ x, z, s: rng(.8, 1.5), rot: Math.random() * 6 }); }
   for (let i = 0; i < (DESERT ? 900 : FIERY ? 1100 : 520); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 4 || (Math.abs(z - CAVE.z) < 8 && x > -4 && x < CAVE.x)) continue; const gy = groundY(x, z); rocks.push({ x, z, s: rng(.3, 1.3) * (gy > 9 ? 2.2 : 1) * (DESERT ? 1.5 : 1), rx: Math.random(), ry: Math.random() }); }
   const flowerCols = CHERRY ? [0xffb3cf, 0xffffff, 0xff8ab8, 0xffd6e6, 0xffc0e0] : SHADOW ? [0x8a4ad0, 0x4a2a7a, 0xb48cff, 0x2a1a44, 0x6a2a9a] : [0xff6b9a, 0xffd166, 0xb48cff, 0xffffff, 0xff8c42];
-  for (let i = 0; i < (DESERT ? 200 : VOLCANO ? 0 : SHADOW ? 300 : CHERRY ? 3200 : 1800); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
-  for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : SHADOW ? 260 : 160); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE) continue; shrooms.push({ x, z }); }
+  for (let i = 0; i < (DESERT ? 200 : VOLCANO ? 0 : SHADOW ? 300 : CHERRY ? 3200 : 1800); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE || inArena(x, z)) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
+  for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : SHADOW ? 260 : 160); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE || inArena(x, z)) continue; shrooms.push({ x, z }); }
   for (let i = 0; i < 200; i++) { const a = Math.random() * Math.PI * 2, r = LAKE.r * (0.86 + Math.random() * .12); reeds.push({ x: LAKE.x + Math.cos(a) * r, z: LAKE.z + Math.sin(a) * r, h: rng(1.2, 2), rz: rng(-.15, .15) }); }
 
   const camBlk = new Map(); const blkKey = (x, z) => (((x + 400) / 16) | 0) + ',' + (((z + 400) / 16) | 0);
@@ -1370,7 +1370,7 @@ import * as A from './audio.js';
   function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
-  const _show = show; show = function (name) { _show(name); if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; setTimeout(openSeason, 600); } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
+  const _show = show; show = function (name) { _show(name); if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; checkSeason(); const today = new Date().toDateString(); if (state.season.shownDay !== today) { state.season.shownDay = today; setTimeout(openSeason, 600); } } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
   // Einführung beim ersten Spielstart
   const touch = matchMedia('(pointer: coarse)').matches;
   const TUT = [
