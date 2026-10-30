@@ -239,7 +239,7 @@ import * as A from './audio.js';
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [], deadTrees = [], ferns = [], logs = [];
   for (let i = 0; i < 2600; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
-    if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || nearBuilding(x, z, 8) || onRoad(x, z, 4) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
+    if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || nearBuilding(x, z, 8) || onRoad(x, z, 4) || (!FIERY && (Math.hypot(x - 36, z - 40) < 9 || Math.hypot(x - 40, z + 62) < 12)) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
     if (DESERT && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 18) continue;
     if (VOLCANO) continue; if (SHADOW && Math.random() < .55) continue;
     const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; ((DESERT || CHERRY) ? broad : SHADOW ? con : (Math.random() < (gy > 6 ? .8 : .5) ? con : broad)).push(it); treeSpots.push([x, z]);
@@ -577,7 +577,7 @@ import * as A from './audio.js';
   }
   // Erdwege als Bänder auf dem Gelände, Laternen am Hauptweg
   if (ROADS.length) {
-    const roadMat = weatherize(new THREE.MeshStandardMaterial({ color: DESERT ? 0xb89a62 : CHERRY ? 0x8a7a5a : 0x5e4a30, roughness: 1, normalMap: groundNrm, normalScale: new THREE.Vector2(.6, .6), vertexColors: true }));
+    const roadMat = weatherize(new THREE.MeshStandardMaterial({ color: DESERT ? 0x9a7e4e : CHERRY ? 0x6e604a : 0x3e2f1e, roughness: 1, normalMap: groundNrm, normalScale: new THREE.Vector2(.6, .6), vertexColors: true }));
     ROADS.forEach(r => {
       const pts = []; for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(2, Math.ceil(L / 2)); for (let k = 0; k <= n; k++) { const t = k / n; pts.push([ax + (bx - ax) * t + Math.sin((ax + t * 10) * 1.3) * .35, az + (bz - az) * t + Math.cos((az + t * 10) * 1.1) * .35]); } }
       const pos = [], col = [], idx = []; const W = 2.1;
@@ -591,6 +591,32 @@ import * as A from './audio.js';
     const placeLamp = (x, z) => { const y = groundY(x, z); const post = new THREE.Mesh(new THREE.CylinderGeometry(.07, .1, 3, 6), lampMat); post.position.set(x, y + 1.5, z); post.castShadow = true; scene.add(post); const arm = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .06), lampMat); arm.position.set(x + .2, y + 2.9, z); scene.add(arm); const box = new THREE.Mesh(new THREE.BoxGeometry(.26, .36, .26), new THREE.MeshStandardMaterial({ color: 0xffc070, emissive: 0xff9a30, emissiveIntensity: 1.1, transparent: true, opacity: .92 })); box.position.set(x + .42, y + 2.68, z); scene.add(box); const cap = new THREE.Mesh(new THREE.ConeGeometry(.22, .18, 4), lampMat); cap.position.set(x + .42, y + 2.95, z); cap.rotation.y = Math.PI / 4; scene.add(cap); const l = new THREE.PointLight(0xffa050, .8, 9, 2); l.position.set(x + .42, y + 2.6, z); scene.add(l); };
     const along = (r, step, side) => { let acc = 0; for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const dx = (bx - ax) / L, dz = (bz - az) / L; for (let d = 0; d < L; d += 1) { acc += 1; if (acc >= step) { acc = 0; const x = ax + dx * d - dz * side * 3.1, z = az + dz * d + dx * side * 3.1; if (Math.hypot(x, z) > 20 && !inWater(x, z)) placeLamp(x, z); } } } };
     along(ROADS[0], 6, 1); along(ROADS[2], 28, -1); along(ROADS[1], 22, 1);
+  }
+  const rotors = [];
+  if (!FIERY) {
+    // Windmühle am Seeweg
+    { const wx = 36, wz = 40, wy = groundY(wx, wz); const g = new THREE.Group(); g.position.set(wx, wy, wz); g.rotation.y = -.6; scene.add(g);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.9, 7, 12), new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 1 })); base.position.y = 3.5; base.castShadow = true; base.receiveShadow = true; g.add(base);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, .12, 6, 16), new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 })); ring.position.y = 6.9; ring.rotation.x = Math.PI / 2; g.add(ring);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.8, 2.6, 12), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 })); roof.position.y = 8.3; roof.castShadow = true; g.add(roof);
+      const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2, .2), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 })); door.position.set(0, 1, 2.85); g.add(door);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(.6, .7, .2), new THREE.MeshStandardMaterial({ color: 0xffb060, emissive: 0xff9a30, emissiveIntensity: .8 })); win.position.set(1.2, 4.2, 2.6); win.rotation.y = .4; g.add(win);
+      const wl = new THREE.PointLight(0xffa050, .9, 10, 2); wl.position.set(1.2, 4.2, 3.2); g.add(wl);
+      const axle = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 2.2, 8), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 })); axle.rotation.x = Math.PI / 2; axle.position.set(0, 7.4, 3.2); g.add(axle);
+      const rotor = new THREE.Group(); rotor.position.set(0, 7.4, 4.3); g.add(rotor); rotors.push(rotor);
+      const sailMat = new THREE.MeshStandardMaterial({ color: 0xd8cbb0, roughness: .95, side: THREE.DoubleSide }); const beamMat = new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 });
+      for (let k = 0; k < 4; k++) { const arm = new THREE.Group(); arm.rotation.z = k * Math.PI / 2; rotor.add(arm); const beam = new THREE.Mesh(new THREE.BoxGeometry(.18, 5.6, .18), beamMat); beam.position.y = 2.8; beam.castShadow = true; arm.add(beam); const sail = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 4.2), sailMat); sail.position.set(.8, 3.3, 0); arm.add(sail); for (let j = 0; j < 4; j++) { const lat = new THREE.Mesh(new THREE.BoxGeometry(1.5, .06, .06), beamMat); lat.position.set(.8, 1.5 + j * 1.2, .02); arm.add(lat); } }
+      const hub = new THREE.Mesh(new THREE.SphereGeometry(.35, 10, 8), beamMat); rotor.add(hub);
+      for (let k = 0; k < 5; k++) { const sack = new THREE.Mesh(new THREE.SphereGeometry(.42, 8, 6), new THREE.MeshStandardMaterial({ color: 0xc9b68a, roughness: 1 })); sack.scale.set(1, 1.2, 1); sack.position.set(-2.6 + k * .9 + (k % 2) * .3, .45, 3.4 + (k % 2) * .8); g.add(sack); }
+    }
+    // Steinkreis auf der Anhöhe nördlich der Halle
+    { const cx = 40, cz = -62; const cy = groundY(cx, cz); const stoneM = new THREE.MeshStandardMaterial({ color: 0x23262a, roughness: 1 });
+      for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; const sx = cx + Math.cos(a) * 7, sz = cz + Math.sin(a) * 7; const h = 3.2 + (k % 3) * .5; const st = new THREE.Mesh(new THREE.BoxGeometry(1.3, h, .8), stoneM); st.position.set(sx, groundY(sx, sz) + h / 2 - .2, sz); st.rotation.y = -a; st.rotation.z = rng(-.05, .05); st.castShadow = true; st.receiveShadow = true; scene.add(st); if (k % 2 === 0) { const a2 = (k + 1) / 8 * Math.PI * 2; const mx = cx + Math.cos((a + a2) / 2) * 7, mz = cz + Math.sin((a + a2) / 2) * 7; const lin = new THREE.Mesh(new THREE.BoxGeometry(5.6, .7, .9), stoneM); lin.position.set(mx, groundY(mx, mz) + h + .1, mz); lin.rotation.y = -(a + a2) / 2 + Math.PI / 2; lin.castShadow = true; scene.add(lin); } }
+      const altar = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.7, .9, 10), stoneM); altar.position.set(cx, cy + .45, cz); altar.receiveShadow = true; scene.add(altar);
+      const rune = new THREE.Mesh(new THREE.RingGeometry(.6, 1.1, 24), new THREE.MeshBasicMaterial({ color: 0x7cff9b, transparent: true, opacity: .7, side: THREE.DoubleSide })); rune.rotation.x = -Math.PI / 2; rune.position.set(cx, cy + .92, cz); rune.userData.spin = true; scene.add(rune);
+      const rl = new THREE.PointLight(0x7cff9b, 1.2, 12, 2); rl.position.set(cx, cy + 1.6, cz); scene.add(rl);
+      for (let k = 0; k < 10; k++) { const b = new THREE.Mesh(new THREE.DodecahedronGeometry(rng(.2, .5), 0), stoneM); const bx = cx + rng(-9, 9), bz = cz + rng(-9, 9); b.position.set(bx, groundY(bx, bz) + .15, bz); b.rotation.set(Math.random(), Math.random(), 0); scene.add(b); }
+    }
   }
   const spinners = []; scene.traverse(o => { if (o.userData.spin) spinners.push(o); });
   // ---------- Figuren ----------
@@ -1329,6 +1355,7 @@ import * as A from './audio.js';
     campFlames.forEach((f, i) => { if (f.userData.banner) { f.rotation.z = Math.sin(clock.t * 1.7 + i) * .06; } else { f.scale.y = 1 + Math.sin(clock.t * 11 + i * 1.7) * .22; f.rotation.y += dt * 2.5; } });
     howlT -= dt; if (inWorld && !battleOn && WORLD_U.night.value > .5 && howlT <= 0) { howlT = 35 + Math.random() * 45; A.sfx('howl'); }
     bloodTick(dt);
+    rotors.forEach(r => { r.rotation.z += dt * .9; });
     spinners.forEach(o => { o.rotation.y += dt * 1.2; o.position.y += Math.sin(clock.t * 2 + o.position.x) * dt * .15; });
     if (inWorld && !battleOn && state.hp > 0 && state.hp < state.maxHp) { const px = player.position.x, pz = player.position.z; const foeNear = wolves.some(w => w.userData.alive && Math.hypot(w.position.x - px, w.position.z - pz) < 10); if (!foeNear) { const atFire = Math.hypot(px, pz) < 7 || campFires.some(g => Math.hypot(g.position.x - px, g.position.z - pz) < 5); state.hp = Math.min(state.maxHp, state.hp + state.maxHp * (atFire ? .08 : .012) * dt); regenT = (regenT || 0) + dt; if (regenT > .5) { regenT = 0; hpUI(); } } }
     { // Regenbogen
@@ -1366,7 +1393,7 @@ import * as A from './audio.js';
   // Lade-Overlay bleibt, bis der Browser die Shader kompiliert hat (erst nach 6 flüssigen Bildern in Folge weg, spätestens nach 90 s)
   let prepT = 0, prepLast = 0, prepSmooth = 0;
   function showPrep(t) { if ($('loading')) { prepT = performance.now(); prepSmooth = 0; return; } let p = $('prep'); if (!p) { p = document.createElement('div'); p.id = 'prep'; p.innerHTML = '<div class="ldbox"><div class="ldbar"><i></i></div><div class="ldtext" id="prepText"></div></div>'; document.body.appendChild(p); } $('prepText').textContent = t; p.classList.remove('off'); prepT = performance.now(); prepSmooth = 0; }
-  function prepTick(now) { const gap = now - prepLast; prepLast = now; const ld = $('loading'); const p = $('prep'); const pOn = p && !p.classList.contains('off'); if (!ld && !pOn) return; prepSmooth = gap < 120 ? prepSmooth + 1 : 0; if (now - prepT < 400) return; if (prepSmooth >= 6 || now - prepT > 90000) { if (ld) hideLoading(); if (pOn) p.classList.add('off'); } }
+  function prepTick(now) { const gap = now - prepLast; prepLast = now; const ld = $('loading'); const p = $('prep'); const pOn = p && !p.classList.contains('off'); if (!ld && !pOn) return; prepSmooth = gap < 220 ? prepSmooth + 1 : 0; if (now - prepT < 400) return; if (prepSmooth >= 4 || now - prepT > 30000) { if (ld) hideLoading(); if (pOn) p.classList.add('off'); } }
   requestAnimationFrame(loop);
 
   // Weltkarte: Gelände wird einmal gerastert (Höhe → Farbe), Orte als Symbole

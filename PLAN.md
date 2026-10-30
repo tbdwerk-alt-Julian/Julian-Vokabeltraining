@@ -40,6 +40,8 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Windmühle am Seeweg (36/40) mit drehenden Flügeln, leuchtendem Fenster und Mehlsäcken; Steinkreis nördlich der Halle (40/−62) mit Decksteinen, Altar und grünem Runenring
+- Ladebildschirm verschwindet auf langsamen Rechnern zuverlässig (4 Bilder unter 220 ms oder spätestens 30 s)
 - Erdwege vom Lager zur Boss-Halle, zum See, zur Trollgrube und zur Westhütte (Bänder auf dem Gelände, Gras/Bäume/Felsen weichen aus), Laternenpfosten mit Licht am Hauptweg und sparsam an den anderen. Gesichtet: Wege und Laternen sichtbar; Westweg führt über die bestehende Flussbrücke
 - Startbildschirm in Abendstimmung (Sonnenuntergang, Fackeln und Feuerschalen brennen); die Spieluhr startet erst beim Betreten der Welt am Morgen
 - Lager befestigt (Wald, Wüste, Kirschen): Palisade aus Spitzpfählen mit vier Toren und Torfackeln, Wachturm mit Plattform, Geländer, Dach und Laterne, vier Feuerschalen, vier rote Banner mit Goldemblem; Flammen flackern, Banner wehen
