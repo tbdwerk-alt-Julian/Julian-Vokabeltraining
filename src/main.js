@@ -1077,7 +1077,7 @@ import * as A from './audio.js';
     if (settings.fps && now - lastFrame < 1000 / settings.fps - 1) return; lastFrame = now;
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now; clock.t += dt;
     anims.forEach(a => a.update(dt));
-    if (window.__adapt) window.__adapt(now);
+    prepTick(now); if (window.__adapt) window.__adapt(now);
     frames++; if (now - fpsT > 500) { window.__fpsNow = Math.round(frames * 1000 / (now - fpsT)); if (settings.showFps) $('fpsBox').textContent = window.__fpsNow + ' FPS'; frames = 0; fpsT = now; }
     if (grassMat.userData.u) grassMat.userData.u.value = clock.t;
     updateWeather(dt); if (grassMat.userData.w) grassMat.userData.w.value = grassMat.userData.wind || 0;
@@ -1207,6 +1207,10 @@ import * as A from './audio.js';
     for (let i = K; i < cand.length; i++) { cand[i].visible = false; cand[i].userData.culled = true; }
   }
   function hideLoading() { const ld = $('loading'); if (ld) { ld.classList.add('off'); setTimeout(() => ld.remove(), 600); } }
+  // Lade-Overlay bleibt, bis der Browser die Shader kompiliert hat (erst nach 6 flüssigen Bildern in Folge weg, spätestens nach 90 s)
+  let prepT = 0, prepLast = 0, prepSmooth = 0;
+  function showPrep(t) { let p = $('prep'); if (!p) { p = document.createElement('div'); p.id = 'prep'; p.innerHTML = '<div class="ldbox"><div class="ldbar"><i></i></div><div class="ldtext" id="prepText"></div></div>'; document.body.appendChild(p); } $('prepText').textContent = t; p.classList.remove('off'); prepT = performance.now(); prepSmooth = 0; }
+  function prepTick(now) { const gap = now - prepLast; prepLast = now; const ld = $('loading'); const p = $('prep'); const pOn = p && !p.classList.contains('off'); if (!ld && !pOn) return; prepSmooth = gap < 120 ? prepSmooth + 1 : 0; if (now - prepT < 400) return; if (prepSmooth >= 6 || now - prepT > 90000) { if (ld) hideLoading(); if (pOn) p.classList.add('off'); } }
   requestAnimationFrame(loop);
 
   // Weltkarte: Gelände wird einmal gerastert (Höhe → Farbe), Orte als Symbole
@@ -1334,7 +1338,7 @@ import * as A from './audio.js';
   function renderSlots(extra) {
     const list = listSaves(); const box = $('slots'); box.innerHTML = '';
     list.forEach((d, i) => { const s = i + 1; if (!d) return; const row = document.createElement('div'); row.className = 'slotrow'; row.innerHTML = `<div class="slotinfo"><b>${d.name}</b><span>Level ${d.state ? d.state.level : 1} · ${d.state && d.state.coins !== undefined ? d.state.coins + ' 🪙' : ''} · ${fmtTime(d.savedAt)}</span></div><button class="btn primary small" data-play="${s}">Spielen</button><button class="btn small" data-del="${s}" title="Löschen">✕</button>`; box.appendChild(row); });
-    box.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const d = loadSave(+b.dataset.play); if (d) { if ((d.zone || 'forest') !== ZONE) { location.href = location.pathname + '?zone=' + (d.zone || 'forest') + '&slot=' + b.dataset.play; return; } curSlot = +b.dataset.play; applySave(d); gameStarted = true; show('world'); toast('Weiter geht\'s, ' + state.name + '!'); } });
+    box.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const d = loadSave(+b.dataset.play); if (d) { if ((d.zone || 'forest') !== ZONE) { location.href = location.pathname + '?zone=' + (d.zone || 'forest') + '&slot=' + b.dataset.play; return; } showPrep('Welt wird vorbereitet …'); requestAnimationFrame(() => requestAnimationFrame(() => { curSlot = +b.dataset.play; applySave(d); gameStarted = true; show('world'); toast('Weiter geht\'s, ' + state.name + '!'); })); } });
     const autoSlot = new URLSearchParams(location.search).get('slot'); if (autoSlot && !renderSlots.auto) { renderSlots.auto = true; const b = box.querySelector('[data-play="' + autoSlot + '"]'); if (b) setTimeout(() => b.click(), 50); }
     box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const s = +b.dataset.del; if (b.dataset.sure) { clearSave(s); if (import.meta.env && import.meta.env.DEV) fetch('/__save?del=' + s, { method: 'POST', body: '{}' }).catch(() => { }); renderSlots(); } else { b.dataset.sure = '1'; b.textContent = 'Wirklich löschen?'; setTimeout(() => { b.dataset.sure = ''; b.textContent = '✕'; }, 3000); } });
     const free = list.findIndex(d => !d); $('newGame').disabled = free < 0; $('startHint').textContent = free < 0 ? 'Alle 3 Spielstände belegt – einen löschen für ein neues Abenteuer' : (list.some(Boolean) ? 'Spielstand wählen oder neues Abenteuer starten' : 'Vokabeln eingeben, dann loslegen – dein Fortschritt wird gespeichert.');
@@ -1573,7 +1577,7 @@ import * as A from './audio.js';
 
   renderAll(); updateTracker(); show('start');
   window.__vq = { renderer, scene, state, settings, player, gainXp, gfx, slot: () => curSlot, gy: groundY, time: h => { gfx.tod.t = (h / 24) % 1; }, setHeading: v => { heading = v; camYaw = 0; } }; // Diagnose in der Browser-Konsole
-  hideLoading(); // Welt steht – Ladebildschirm weg, unabhängig davon, ob der Browser schon Bilder zeichnet
+  prepT = performance.now(); // Welt steht – Ladebildschirm geht weg, sobald der Browser flüssig zeichnet (prepTick)
   // Dev: Bildrate an den Dev-Server melden (perf.log), damit Ruckler auf fremden Geräten sichtbar werden
   if (import.meta.env && import.meta.env.DEV) setInterval(() => { if (!hud.classList.contains('on') || !window.__fpsNow) return; const i = renderer.info.render; fetch('/__fps', { method: 'POST', body: JSON.stringify({ fps: window.__fpsNow, q: settings.quality, pr: renderer.getPixelRatio(), calls: i.calls, tris: i.triangles, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: (window.__gpu || '').slice(0, 60), ua: navigator.userAgent.slice(-40) }) }).catch(() => { }); }, 5000);
 

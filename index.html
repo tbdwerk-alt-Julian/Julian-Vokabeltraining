@@ -172,6 +172,8 @@ select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px soli
 #rotate { display: none; position: fixed; inset: 0; background: #0b1210; z-index: 70; align-items: center; justify-content: center; }
 @media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) { #rotate { display: flex; } }
 #loading.off { opacity: 0; pointer-events: none; }
+#prep { position: fixed; inset: 0; background: rgba(11,18,16,.86); display: flex; align-items: center; justify-content: center; z-index: 60; transition: opacity .4s; }
+#prep.off { opacity: 0; pointer-events: none; }
 .ldbox { text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .ldtitle { font-family: var(--display); font-size: 40px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .ldtitle span { color: var(--accent); }

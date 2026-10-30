@@ -41,7 +41,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Anfang durchgespielt: Tutorial (7 Schritte), erster Kampf auf Level 1 gegen einen Troll-Krieger. Gegner in der Welt schlagen jetzt nur alle 1,6 s zu (vorher jede Sekunde – Level-1-Held war in 10 s tot)
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
-- Bekannt: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme, auf dem Intel-Laptop dauert das 20–40 s mit eingefrorenem Bild. Senken wäre ein größerer Umbau (weniger Material-Varianten).
+- Ladehänger: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme (Intel-Laptop 20–40 s). Dafür bleibt jetzt der Ladebildschirm stehen, bis das Bild flüssig läuft, und nach „Spielen“ erscheint „Welt wird vorbereitet …“ statt eines eingefrorenen Bilds.
 
 ## Offen – Reihenfolge bis Sonntag
 
