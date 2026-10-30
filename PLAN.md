@@ -78,6 +78,14 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
 - Ladehänger: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme (Intel-Laptop 20–40 s). Dafür bleibt jetzt der Ladebildschirm stehen, bis das Bild flüssig läuft, und nach „Spielen“ erscheint „Welt wird vorbereitet …“ statt eines eingefrorenen Bilds.
 
+## Freitag, 31. 10. – Tagesplan (große, sofort sichtbare Blöcke)
+
+1. **Story-Intro** beim Start eines neuen Abenteuers: düstere Textsequenz mit Kamerafahrt („Die Schatten kommen …“), überspringbar.
+2. **Dungeon „Trollgewölbe“** unter der Boss-Halle als eigenes Gebiet: Gänge mit Fackeln, Fallen (Bodenstacheln, einstürzende Decke), verschlossene Türen mit Vokabel-Schlössern, Truhen, Miniboss „Kerkermeister“, Ausgang zurück in den Wald. Zugang über eine Falltür in der Halle nach dem Waldtroll-Sieg.
+3. **Echte Vokabeln**: Julians aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen, Format „der Wald – forest“ pro Zeile).
+4. **Smoke-Test**: alle fünf Gebiete, Handy quer, ein kompletter Boss-Kampf online.
+5. **Kurzanleitung** für Julian (Tasten, Fähigkeiten, Gebiete, wo was ist) als README-Abschnitt.
+
 ## Offen – Reihenfolge bis Sonntag
 
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
