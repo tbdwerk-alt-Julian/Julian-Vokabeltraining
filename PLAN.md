@@ -40,6 +40,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Fähigkeitsbaum (Taste K, auch im Pausemenü): ein Punkt pro Level ab Level 2, rückwirkend für alte Spielstände. Klinge +8 % Schaden je Stufe, Panzer −6 % Kampfschaden und +10 HP je Stufe, Verstand +1 s pro Wort je Stufe und ab Stufe 3 Revanche-Wörter +50 % Schaden; je 5 Stufen, wird gespeichert
 - Titelsequenz: Auf dem Startbildschirm fliegt die Kamera 75 s lang über Lager, Hauptweg, Windmühle, See und Steinkreis (über den Baumkronen), mit Kinobalken
 - Neuer Look: Held 23 % größer (Modell 0,92 statt 0,75), Kamera näher (7 statt 8,5 m), Bäume 35 % größer, filmische Farbkorrektur (mehr Kontrast, kühle Schatten, warme Lichter), dichterer Tiefennebel, Belichtung leicht gesenkt
 - Windmühle am Seeweg (36/40) mit drehenden Flügeln, leuchtendem Fenster und Mehlsäcken; Steinkreis nördlich der Halle (40/−62) mit Decksteinen, Altar und grünem Runenring

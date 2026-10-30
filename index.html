@@ -454,6 +454,15 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #pause .btn.primary kbd { color: #06130b; border-color: rgba(6,19,11,.35); background: rgba(6,19,11,.12); }
 #updateBar { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 70; display: flex; gap: 10px; align-items: center; padding: 8px 10px 8px 14px; border-radius: 99px; background: linear-gradient(180deg, rgba(22,30,38,.95), rgba(8,12,18,.96)); border: 1px solid rgba(124,255,155,.5); box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 24px rgba(124,255,155,.25); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .04em; }
 #updateBar[hidden] { display: none; }
+/* Fähigkeitsbaum */
+.skill-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; }
+.skill { border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.2)); display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.skill.maxed { border-color: rgba(255,209,102,.5); box-shadow: 0 0 20px rgba(255,209,102,.15); }
+.skill .sk-icon { font-size: 34px; }
+.skill h3 { margin: 0; font-family: var(--display); font-size: 16px; letter-spacing: .04em; } .skill h3 span { display: block; font-size: 11px; color: var(--muted); letter-spacing: .1em; margin-top: 2px; }
+.skill p { margin: 0; font-size: 12px; color: var(--muted); min-height: 48px; }
+.skill .dots { display: flex; justify-content: center; gap: 6px; } .skill .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.06); } .skill .dots i.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(124,255,155,.6); }
+@media (max-width: 700px) { .skill-grid { grid-template-columns: 1fr; } .skill p { min-height: 0; } }
 </style>
 </head>
 <body>
@@ -504,7 +513,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
           <div class="vit"><b id="stamLabel">Ausdauer</b><div class="vbar stam" id="stamBar"><i id="stam" style="width:100%"></i><span id="stamNum">100%</span></div></div>
         </div>
         <div class="hotbar" id="hotbar"></div>
-        <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Shift Sprint · Leertaste Rolle · E benutzen · F Reittier · I Inventar · M Karte · B Emote · V Vokabeln · L Saison · Q Aufgabe · Esc Pause</div>
+        <div class="hint" id="ctrlHint">W/S laufen · A/D drehen · Shift Sprint · Leertaste Rolle · E benutzen · F Reittier · I Inventar · M Karte · B Emote · V Vokabeln · L Saison · Q Aufgabe · K Fähigkeiten · Esc Pause</div>
       </div>
       <div class="actions">
         <button class="btn small" id="mountBtn">🐾 Absteigen <kbd>F</kbd></button>
@@ -676,6 +685,17 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <p class="hint" style="padding:0 20px 16px;margin:0;">Kristalle 💎 gibt es im Saison-Pass und für Tagesaufgaben. Das Angebot wechselt jede Stunde.</p>
     </div>
   </div>
+  <div class="overlay" id="skills" hidden>
+    <div class="card wide sp">
+      <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#1a0d2a 0%,#5a2a8a 55%,#0f0620 100%);">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div><div class="eyebrow">Fähigkeitsbaum · ein Punkt pro Level</div><h2>🌿 Fähigkeiten</h2><p class="muted" style="margin:6px 0 0">Freie Punkte: <b id="spLeft">0</b></p></div>
+          <button class="btn small" id="closeSkills">Schließen</button>
+        </div>
+      </div>
+      <div class="skill-grid" id="skillGrid"></div>
+    </div>
+  </div>
   <div class="overlay" id="daily" hidden>
     <div class="card wide sp">
       <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#0d2a1a 0%,#1f8a4a 55%,#06200f 100%);">
@@ -736,6 +756,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
         <button class="btn" id="pVocab">📚 Vokabeln <kbd>V</kbd></button>
         <button class="btn" id="pSeason">🎫 Saison <kbd>L</kbd></button>
         <button class="btn" id="pDaily">📋 Aufgabe <kbd>Q</kbd></button>
+        <button class="btn" id="pSkills">🌿 Fähigkeiten <kbd>K</kbd></button>
         <button class="btn" id="pStats">📊 Statistik</button>
         <button class="btn" id="pSettings">⚙ Einstellungen</button>
         <button class="btn" id="pSave">💾 Speichern</button>
