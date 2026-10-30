@@ -434,6 +434,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #battle.finisher .card { border-color: rgba(255,77,109,.7); box-shadow: 0 0 0 1px rgba(255,77,109,.35), 0 0 40px rgba(255,77,109,.35), 0 30px 80px rgba(0,0,0,.55); animation: fincard 1s ease-in-out infinite; }
 @keyframes fincard { 0%, 100% { box-shadow: 0 0 0 1px rgba(255,77,109,.3), 0 0 30px rgba(255,77,109,.25), 0 30px 80px rgba(0,0,0,.55); } 50% { box-shadow: 0 0 0 2px rgba(255,77,109,.6), 0 0 60px rgba(255,77,109,.5), 0 30px 80px rgba(0,0,0,.55); } }
 #battle.finisher .word { color: #ff8da1; text-shadow: 0 0 18px rgba(255,77,109,.6); }
+/* Handy quer: kompakte Kampfkarte, Hotbar und Knoepfe im Kampf ausblenden */
+@media (max-height: 520px) { #hud.battle .hotbar, #hud.battle .actions, #hud.battle #ctrlHint, #hud.battle .combo, #hud.battle .mmwrap { display: none !important; } #battle { align-items: flex-start; padding: 8px; } #battle .card { padding: 8px 12px !important; gap: 5px !important; max-height: calc(100vh - 16px); } #battle .word { font-size: 22px !important; padding: 2px 0 !important; } #battle .bosshead h2 { font-size: 15px; margin: 0; } #battle .eyebrow { font-size: 9px; } #battle .finisher-tag { font-size: 10px; } #battle input[type="text"] { padding: 6px 10px !important; font-size: 14px !important; } #battle .btn.small { padding: 6px 8px !important; font-size: 11px !important; } #battle .feedback { min-height: 14px; font-size: 12px; } #battle .timer { height: 4px; } }
 </style>
 </head>
 <body>
