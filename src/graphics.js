@@ -181,7 +181,7 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
     hemi.color.copy(U.zenith.value).lerp(U.horizon.value, .5).multiplyScalar(1.25).lerp(new THREE.Color(0x7386b8), night); hemi.groundColor.setHex(0x3b5a2a).lerp(new THREE.Color(0x1c2436), night).lerp(new THREE.Color(.3, .32, .35), grey * .5);
     hemi.intensity = (.45 + day * .2 + low * .25) * (1 - night * .25) * (1 - grey * .15) + night * .1;
     // Nebel in Horizontfarbe
-    scene.fog.color.copy(U.horizon.value).multiply(wx.fogTint); scene.fog.density = (.0042 + grey * .003) * wx.fogMul;
+    scene.fog.color.copy(U.horizon.value).multiply(wx.fogTint); scene.fog.density = (.0042 + grey * .003) * wx.fogMul * (1 + night * .5); // nachts dichter
     renderer.toneMappingExposure = (1.0 + night * .15 - grey * .05) * (wx.exposure || 1);
     // Sonne/Himmel folgen der Kamera
     skyMesh.position.copy(camera.position);

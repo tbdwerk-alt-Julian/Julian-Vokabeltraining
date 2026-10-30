@@ -40,6 +40,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Nacht: Nebel 50 % dichter, alle 35–80 s ein fernes Wolfsgeheul (nicht im Kampf)
 - Tod kostet 10 % der Münzen: Sie liegen als leuchtender Beutel am Sterbeort und lassen sich zurückholen (wird mitgespeichert, nur im selben Gebiet sichtbar)
 - Elite-Gegner (jeder fünfte): 1,8× HP, 20 % größer, roter Ring, härtere Schläge, Beute (Großer Heiltrank, Schutzschild oder Stärketrank); Lebensbalken nutzt die echten Max-HP
 - Combo-Banner bei 5, 10 und 15 Treffern in Folge („Im Fluss“, „Blutrausch“, „Raserei“)
