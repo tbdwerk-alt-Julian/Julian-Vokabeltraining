@@ -40,6 +40,8 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Pausemenü im Glas-Look mit Tastenchips (zweispaltig), Siegfenster mit Goldrahmen
+- Nach dem Laden eines Spielstands und nach dem Wiederbeleben 5 s Schutz vor Angriffen in der Welt
 - Trollgrube im Dunkelwald (Wald, Süden bei −60/−180): Felsmaul mit Fackeln und Knochen, davor eine goldene Truhe, bewacht von den Elite-Trollen; Quest „Die Trollgrube“ bei Bram, Totenkopf-Pin auf der Karte
 - Boss-Waffen am Heldenmodell in Set-Farbe (Mondklinge hellblau, Sandklinge gold, Blütenklinge rosa, Flammenschwert orange, Schattenklinge lila)
 - Lernen: Falsch beantwortete Wörter kommen im Kampf bald noch einmal („Revanche“, bis zu 3 gemerkt, 60 % Chance pro Zug); das Vokabelfenster zeigt die „Sorgenkinder“ (am häufigsten falsch)
