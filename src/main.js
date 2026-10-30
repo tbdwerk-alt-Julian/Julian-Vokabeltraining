@@ -81,6 +81,7 @@ import * as A from './audio.js';
   scene.add(sun); scene.add(sun.target);
   // Himmel, Tageszeit, Nachbearbeitung, ferne Berge
   const gfx = setupGraphics({ renderer, scene, camera, sun, hemi, stage }); const skyMesh = gfx.skyMesh;
+  gfx.tod.t = .745; gfx.tod.paused = true; let worldEntered = false; // Startbildschirm in Abendstimmung; die Uhr läuft erst im Spiel
 
   // ---------- Gelände ----------
   const LAKE = DESERT ? { x: 60, z: 70, r: 26 } : CHERRY ? { x: 70, z: 80, r: 40 } : FIERY ? { x: 70, z: 80, r: 34 } : { x: 70, z: 80, r: 48 }, RIVER_X = (DESERT || FIERY) ? -9999 : -40, WATER_Y = 0.3;
@@ -1507,7 +1508,7 @@ import * as A from './audio.js';
   function openSeason() { checkSeason(); if (!state.season.welcome) { state.season.welcome = true; state.season.xp += TIER_XP; toast('🎁 Willkommensgeschenk: Saison-Stufe 1 freigeschaltet – jetzt einsammeln!'); } $('season').hidden = false; renderSeason(); }
   // Beim Reinladen ins Spiel einmal den Saison-Pass zeigen
   let seasonShown = false;
-  const _show = show; show = function (name) { _show(name); if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; checkSeason(); const today = new Date().toDateString(); if (state.tutDone && state.season.shownDay !== today) { state.season.shownDay = today; setTimeout(openSeason, 600); } } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
+  const _show = show; show = function (name) { _show(name); if (name === 'world' && !worldEntered) { worldEntered = true; if ($('tod').value === 'auto') { gfx.tod.t = .36; gfx.tod.paused = false; } } if (name === 'map') document.querySelectorAll('#map .zone').forEach(z => { const zk = z.dataset.zone; if (zk !== 'forest') z.classList.toggle('lock', !(state.zones && state.zones[zk])); }); if (name === 'world' && !seasonShown) { seasonShown = true; checkSeason(); const today = new Date().toDateString(); if (state.tutDone && state.season.shownDay !== today) { state.season.shownDay = today; setTimeout(openSeason, 600); } } if (name === 'world' && !state.tutDone && !tutStep && ZONE === 'forest') setTimeout(startTut, 1200); };
   // Einführung beim ersten Spielstart
   const touch = matchMedia('(pointer: coarse)').matches;
   const TUT = [
