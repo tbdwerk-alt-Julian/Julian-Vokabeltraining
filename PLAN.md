@@ -40,6 +40,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Quests, Tutorial, Startbildschirm und Brams Begrüßung im Wald sind düsterer formuliert (Kopfgelder, „Blut und Eisen“, „Grabräuber“; keine Emojis in Titeln)
 - Kampfkamera weicht Baumkronen aus (Seitenwechsel oder höher) und bleibt über dem Boden
 - Rüstungssets je Gebiet: Sand (Wüste), Blüten (Kirschen), Glut (Vulkan), Schatten (Festung, Gold-Seltenheit, +39 Verteidigung komplett). Der Häuptling des Gebiets lässt mit 50 % ein Teil fallen, der Händler hat stündlich ein Set-Teil im Sortiment (Schatten-Teile gegen Kristalle). Am Heldenmodell färben Set-Helm und Set-Brust Hut/Helm und Schild in der Set-Farbe (leicht glühend)
 - Boss-Intro: 3,6 s Kamerafahrt um den Boss mit Kinobalken und Namensbanner (Level, Phasen), HUD ausgeblendet; kritische Treffer mit Zeitlupe, Blitz und stärkerem Wackeln

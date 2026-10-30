@@ -36,7 +36,7 @@ import * as A from './audio.js';
   const ZN = ZONES[ZONE];
   // Bram spricht je Gebiet anders
   { const BRAM = {
-      forest: ['Bram, der Waldhüter', '„Willkommen im Lager! Troll-Krieger treiben sich im Wald herum, ihr Häuptling mit der goldenen Krone ist auch dabei, und ich hab meine Truhe aus den Augen verloren. Hilfst du mir?“'],
+      forest: ['Bram, der Waldhüter', '„Du lebst noch? Gut. Troll-Krieger streifen durch den Wald, ihr Häuptling mit der goldenen Krone führt sie, und meine Truhe haben sie auch geplündert. Ich zahle für jeden Kopf. Bist du dabei?“'],
       desert: ['Bram, der Karawanenführer', '„Gut, dass du da bist! Sandräuber überfallen die Karawanen, ihr Sandkönig sitzt irgendwo in den Dünen, und unter dem Sand soll der Sandwurm schlafen. Hilfst du mir?“'],
       cherry: ['Bram, der Tempelwächter', '„Willkommen unter den Kirschblüten! Maskenfüchse stehlen aus den Tempeln, ihr Kitsune-Fürst lacht uns aus, und der Kirschgeist lässt die Blüten nicht mehr fallen. Hilfst du mir?“'],
       volcano: ['Bram, der Aschewanderer', '„Pass auf, wo du hintrittst! Lavagolems wandern durch die Asche, der Magmakönig brodelt im Krater, und der Lavadrache hat sich in der Halle eingenistet. Hilfst du mir?“'],
@@ -908,17 +908,17 @@ import * as A from './audio.js';
 
   // ---------- Quests ----------
   const QUESTS = [
-    { id: 'wolves', t: 'Trolljagd', d: 'Besiege 3 Troll-Krieger im Wald', need: 3, xp: 60, coins: 30, item: 'helmL' },
-    { id: 'chest', t: 'Die verlorene Truhe', d: 'Finde Brams Truhe (nördlich des Lagers) und öffne sie', need: 1, xp: 40, coins: 20, item: 'key' },
-    { id: 'alpha', t: 'Der Troll-Häuptling', d: 'Besiege den Troll-Häuptling (groß, goldene Krone)', need: 1, xp: 120, coins: 60, item: 'chestL' },
-    { id: 'troll', t: 'Boss: Waldtroll', d: 'Öffne das Tor der Troll-Höhle (ab Level 10) und besiege den Waldtroll', need: 1, xp: 200, coins: 100, item: 'tooth' },
-    { id: 'imps', t: 'Schattenjagd', d: 'Besiege 3 Schattenwichte (blau, flink)', need: 3, xp: 80, coins: 40, item: 'bootsL' },
-    { id: 'pelts', t: 'Fellhändler', d: 'Sammle 5 Trollfelle aus Kämpfen', need: 5, xp: 70, coins: 50, item: 'bigheal' },
-    { id: 'stations2', t: 'Fleißig gelernt', d: 'Schaffe 2 Vokabel-Stationen', need: 2, xp: 90, coins: 30, item: 'heal' },
-    { id: 'chests3', t: 'Schatzsucher', d: 'Öffne 3 Truhen', need: 3, xp: 70, coins: 35, item: 'strength' },
-    { id: 'level5', t: 'Aufstieg', d: 'Erreiche Level 5', need: 1, xp: 100, coins: 60, item: 'shield' },
-    { id: 'ruin', t: 'Die vergessene Ruine', d: 'Besuche die Ruine im Westen (bei den Bergen, westlich vom Fluss)', need: 1, xp: 80, coins: 40, item: 'luck' },
-    { id: 'moon', t: '🌙 Das Lied des Sees', d: 'Geheime Quest: Du hast nachts am Steg ein Lied gehört und die Mondklinge gefunden', need: 1, xp: 150, coins: 80, item: 'moon', secret: true }
+    { id: 'wolves', t: 'Blut und Eisen', d: 'Schlag 3 Troll-Krieger im Wald nieder', need: 3, xp: 60, coins: 30, item: 'helmL' },
+    { id: 'chest', t: 'Die geplünderte Truhe', d: 'Brams Truhe liegt nördlich des Lagers – hol zurück, was drin ist', need: 1, xp: 40, coins: 20, item: 'key' },
+    { id: 'alpha', t: 'Kopfgeld: Häuptling', d: 'Der Troll-Häuptling mit der goldenen Krone terrorisiert den Wald. Bring ihn zu Fall', need: 1, xp: 120, coins: 60, item: 'chestL' },
+    { id: 'troll', t: 'Boss: Waldtroll', d: 'Brich das Tor der Troll-Höhle auf (ab Level 10) und stell dich dem Waldtroll', need: 1, xp: 200, coins: 100, item: 'tooth' },
+    { id: 'imps', t: 'Was im Dunkeln lauert', d: 'Erledige 3 Schattenwichte – blau, flink, hinterhältig', need: 3, xp: 80, coins: 40, item: 'bootsL' },
+    { id: 'pelts', t: 'Trophäen des Waldes', d: 'Zieh 5 Trollfelle aus Kämpfen ab', need: 5, xp: 70, coins: 50, item: 'bigheal' },
+    { id: 'stations2', t: 'Schärfe den Verstand', d: 'Bestehe 2 Vokabel-Stationen', need: 2, xp: 90, coins: 30, item: 'heal' },
+    { id: 'chests3', t: 'Grabräuber', d: 'Brich 3 Truhen auf', need: 3, xp: 70, coins: 35, item: 'strength' },
+    { id: 'level5', t: 'Erste Narben', d: 'Erreiche Level 5', need: 1, xp: 100, coins: 60, item: 'shield' },
+    { id: 'ruin', t: 'Die vergessene Ruine', d: 'Such die Ruine im Westen auf – jenseits des Flusses, am Fuß der Berge. Niemand kehrt gern von dort zurück', need: 1, xp: 80, coins: 40, item: 'luck' },
+    { id: 'moon', t: 'Das Lied des Sees', d: 'Geheime Quest: Du hast nachts am Steg ein Lied gehört und die Mondklinge gefunden', need: 1, xp: 150, coins: 80, item: 'moon', secret: true }
   ];
   const DESERT_QUESTS = [
     { id: 'dgrunts', t: 'Räuberjagd', d: 'Besiege 3 Sandräuber', need: 3, xp: 150, coins: 80, item: 'bigheal' },
@@ -937,19 +937,19 @@ import * as A from './audio.js';
     { id: 'cboss', t: 'Boss: Kirschgeist', d: 'Öffne das Tempeltor (ab Level 50) und besiege den Kirschgeist', need: 1, xp: 800, coins: 500, item: 'petal' }
   ];
   const VOLCANO_QUESTS = [
-    { id: 'vgrunts', t: 'Golemjagd', d: 'Besiege 3 Lavagolems', need: 3, xp: 380, coins: 220, item: 'bigheal' },
-    { id: 'vimps', t: 'Feuerteufel', d: 'Besiege 3 Feuerteufel', need: 3, xp: 400, coins: 240, item: 'shield' },
+    { id: 'vgrunts', t: 'Steinbrecher', d: 'Zerschlag 3 Lavagolems', need: 3, xp: 380, coins: 220, item: 'bigheal' },
+    { id: 'vimps', t: 'Feuerteufel', d: 'Ersticke 3 Feuerteufel', need: 3, xp: 400, coins: 240, item: 'shield' },
     { id: 'vvisit', t: 'Der Krater', d: 'Steig zum Krater des Vulkans hinauf', need: 1, xp: 320, coins: 160, item: 'phoenix' },
-    { id: 'vchests', t: 'Glut und Gold', d: 'Öffne 4 Truhen', need: 4, xp: 380, coins: 260, item: 'luck' },
-    { id: 'valpha', t: 'Der Magmakönig', d: 'Besiege den Magmakönig', need: 1, xp: 600, coins: 380, item: 'chestI' },
+    { id: 'vchests', t: 'Glut und Gold', d: 'Brich 4 Truhen auf', need: 4, xp: 380, coins: 260, item: 'luck' },
+    { id: 'valpha', t: 'Kopfgeld: Magmakönig', d: 'Der Magmakönig brodelt im Krater. Bring ihn zu Fall', need: 1, xp: 600, coins: 380, item: 'chestI' },
     { id: 'vboss', t: 'Boss: Lavadrache', d: 'Öffne das Tor (ab Level 75) und besiege den Lavadrachen – in Phase 2 fliegt er!', need: 1, xp: 1200, coins: 700, item: 'claw' }
   ];
   const SHADOW_QUESTS = [
-    { id: 'sgrunts', t: 'Schattenritter', d: 'Besiege 3 Schattenritter', need: 3, xp: 500, coins: 300, item: 'bigheal' },
-    { id: 'simps', t: 'Wichte der Finsternis', d: 'Besiege 3 Schattenwichte', need: 3, xp: 520, coins: 320, item: 'shield' },
+    { id: 'sgrunts', t: 'Die Wache fällt', d: 'Schlag 3 Schattenritter nieder', need: 3, xp: 500, coins: 300, item: 'bigheal' },
+    { id: 'simps', t: 'Wichte der Finsternis', d: 'Lösche 3 Schattenwichte aus', need: 3, xp: 520, coins: 320, item: 'shield' },
     { id: 'svisit', t: 'Der Thronhügel', d: 'Finde den Thronhügel im Südwesten', need: 1, xp: 400, coins: 200, item: 'phoenix' },
-    { id: 'schests', t: 'Schätze der Festung', d: 'Öffne 4 Truhen', need: 4, xp: 500, coins: 350, item: 'luck' },
-    { id: 'salpha', t: 'Der Schattengeneral', d: 'Besiege den Schattengeneral', need: 1, xp: 800, coins: 500, item: 'bootsI' },
+    { id: 'schests', t: 'Beute der Festung', d: 'Brich 4 Truhen auf', need: 4, xp: 500, coins: 350, item: 'luck' },
+    { id: 'salpha', t: 'Kopfgeld: Schattengeneral', d: 'Der General hält den Thronhügel. Bring ihn zu Fall', need: 1, xp: 800, coins: 500, item: 'bootsI' },
     { id: 'sboss', t: 'Boss: Ignatius', d: 'Öffne das Festungstor (ab Level 100) und besiege Ignatius, den Schattenkönig – 4 Phasen, 4 Schwerter', need: 1, xp: 2500, coins: 1000, item: 'crown' }
   ];
   if (DESERT) { QUESTS.length = 0; DESERT_QUESTS.forEach(q => QUESTS.push(q)); } if (CHERRY) { QUESTS.length = 0; CHERRY_QUESTS.forEach(q => QUESTS.push(q)); } if (VOLCANO) { QUESTS.length = 0; VOLCANO_QUESTS.forEach(q => QUESTS.push(q)); } if (SHADOW) { QUESTS.length = 0; SHADOW_QUESTS.forEach(q => QUESTS.push(q)); }
@@ -1238,7 +1238,7 @@ import * as A from './audio.js';
     gfx.updateSky(dt, player.position); { const ad = Math.hypot(player.position.x - CAVE.x, player.position.z - CAVE.z); const inHall = clamp((CAVE.r + 1 - ad) / 5, 0, 1); if (inHall > 0) { sun.intensity *= 1 - inHall * .82; hemi.intensity *= 1 - inHall * .4; } }
     if (weather.lightning > 0) { sun.intensity += 3.5; hemi.intensity += 1.2; }
     setTorch(hud.classList.contains('on') && gfx.sunElevation() < .04 && !swimming && !!heroInst);
-    campFires.forEach((g, i) => { g.userData.flames.forEach((f, k) => { f.scale.y = 1 + Math.sin(clock.t * 13 + i + k) * .2; f.rotation.y += dt * 2; }); g.userData.light.intensity = 1.5 + Math.sin(clock.t * 9 + i) * .4; if (inWorld && !state.camps[g.userData.camp.id] && Math.hypot(player.position.x - g.position.x, player.position.z - g.position.z) < 5) { state.camps[g.userData.camp.id] = true; banner('LAGERFEUER ENTDECKT', g.userData.camp.name + ' · Schnellreise über die Karte', ''); A.sfx('quest'); saveGame(); } });
+    campFires.forEach((g, i) => { g.userData.flames.forEach((f, k) => { f.scale.y = 1 + Math.sin(clock.t * 13 + i + k) * .2; f.rotation.y += dt * 2; }); g.userData.light.intensity = 1.5 + Math.sin(clock.t * 9 + i) * .4; if (inWorld && !state.camps[g.userData.camp.id] && Math.hypot(player.position.x - g.position.x, player.position.z - g.position.z) < 5) { state.camps[g.userData.camp.id] = true; banner('LAGERFEUER ENTDECKT', g.userData.camp.name + ' · Zuflucht und Schnellreise', ''); A.sfx('quest'); saveGame(); } });
     if (battleOn) dodgeUI();
     bloodTick(dt);
     spinners.forEach(o => { o.rotation.y += dt * 1.2; o.position.y += Math.sin(clock.t * 2 + o.position.x) * dt * .15; });
@@ -1446,13 +1446,13 @@ import * as A from './audio.js';
   // Einführung beim ersten Spielstart
   const touch = matchMedia('(pointer: coarse)').matches;
   const TUT = [
-    ['👋 Willkommen in VocabQuest!', touch ? 'Joystick unten links = laufen · Finger ziehen = Kamera' : 'W/S laufen · A/D drehen · Maus ziehen = Kamera drehen'],
-    ['🐎 Dein Reittier', (touch ? 'Absteigen-Knopf' : 'F') + ' = auf- und absteigen · Reiten verbraucht Ausdauer · ' + (touch ? '' : 'Shift = Sprint · ') + 'Leertaste = Ausweichrolle'],
-    ['🧑‍🌾 Bram im Lager', 'Geh zu Bram und drück ' + (touch ? 'den E-Knopf' : 'E') + ' – er gibt dir Quests mit XP, Münzen und Ausrüstung'],
-    ['✨ Lumi', 'Dein Lichtwesen folgt dir. Leuchtet es gelb, ist eine Truhe in der Nähe'],
-    ['⚔️ Kämpfe', 'Trolle greifen an: E = kämpfen · Englische Vokabel tippen = Schlag · perfekt geschrieben = kritischer Treffer'],
-    ['📚 Deine Vokabeln', 'Unter „Vokabeln“ trägst du die Wörter aus deinem Englischbuch ein – die Welt fragt dich genau diese ab'],
-    ['🏰 Dein Ziel', 'Level 10 erreichen, das Festungstor öffnen und den Waldtroll besiegen. Viel Erfolg!']
+    ['Du bist erwacht', (touch ? 'Joystick unten links = laufen · Finger ziehen = Kamera' : 'W/S laufen · A/D drehen · Maus ziehen = Kamera') + ' · Der Wald ist nicht sicher'],
+    ['Dein Reittier', (touch ? 'Absteigen-Knopf' : 'F') + ' = auf- und absteigen · Reiten verbraucht Ausdauer · ' + (touch ? '' : 'Shift = Sprint · ') + 'Leertaste = Ausweichrolle'],
+    ['Bram, der Waldhüter', 'Geh zu Bram und drück ' + (touch ? 'den E-Knopf' : 'E') + ' – er hat Aufträge: Kopfgelder, Beute, Ausrüstung'],
+    ['Lumi', 'Das Lichtwesen folgt dir. Leuchtet es gelb, liegt Beute in der Nähe'],
+    ['Kampf', 'Trolle greifen an: E = kämpfen · Englische Vokabel tippen = Schlag · perfekt geschrieben = kritischer Treffer · Fehler = du kassierst'],
+    ['Deine Waffe: Wörter', 'Unter „Vokabeln“ trägst du die Wörter aus deinem Englischbuch ein – genau die wirst du im Kampf brauchen'],
+    ['Dein Ziel', 'Level 10 erreichen, das Tor der Troll-Höhle aufbrechen und den Waldtroll zu Fall bringen. Danach wartet die Wüste']
   ];
   let tutStep = 0;
   function startTut() { if (state.tutDone) return; tutStep = 1; showTut(); }
