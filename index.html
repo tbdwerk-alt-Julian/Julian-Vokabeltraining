@@ -419,6 +419,15 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .card { border-radius: 20px; background: linear-gradient(180deg, rgba(18,26,32,.86), rgba(8,12,18,.9)); border: 1px solid rgba(255,255,255,.12); }
 .btn.primary { box-shadow: 0 0 0 1px rgba(124,255,155,.35), 0 10px 30px rgba(124,255,155,.28), inset 0 1px 0 rgba(255,255,255,.35); background: linear-gradient(180deg, #96ffb0, #6df08f); }
 .btn.primary:hover { background: linear-gradient(180deg, #a8ffbe, #7cff9b); }
+/* Boss-Intro: Kinobalken, Kampfkarte ausgeblendet */
+#cinebars { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+#cinebars i { position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height .6s cubic-bezier(.2,.8,.2,1); }
+#cinebars i:first-child { top: 0; } #cinebars i:last-child { bottom: 0; }
+#cinebars.on i { height: 11vh; }
+#battle.cine .card { opacity: 0; transform: translateY(30px); transition: opacity .3s, transform .3s; }
+#battle .card { transition: opacity .35s, transform .35s; }
+#hud.cine .hud-top, #hud.cine .hud-bottom, #hud.cine .mmwrap, #hud.cine .interact { opacity: 0; transition: opacity .3s; }
+#hud .hud-top, #hud .hud-bottom, #hud .mmwrap { transition: opacity .4s; }
 </style>
 </head>
 <body>
@@ -429,6 +438,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 <div id="vignette"></div>
 <div id="labels"></div>
 <div id="banner" class="banner"></div>
+<div id="cinebars"><i></i><i></i></div>
 <div id="hurt"></div>
 <div id="dead"><div class="deadbox"><div class="deadtitle">Du bist gestorben</div><div class="deadwhy" id="deadWhy"></div><button class="btn primary" id="respawnBtn">Am Lagerfeuer wiederbeleben</button></div></div>
 
