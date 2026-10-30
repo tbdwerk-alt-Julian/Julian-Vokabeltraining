@@ -39,6 +39,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel) und erst nach dem Tutorial
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
+- Anfang durchgespielt: Tutorial (7 Schritte), erster Kampf auf Level 1 gegen einen Troll-Krieger. Gegner in der Welt schlagen jetzt nur alle 1,6 s zu (vorher jede Sekunde – Level-1-Held war in 10 s tot)
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
 - Bekannt: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme, auf dem Intel-Laptop dauert das 20–40 s mit eingefrorenem Bild. Senken wäre ein größerer Umbau (weniger Material-Varianten).
 
