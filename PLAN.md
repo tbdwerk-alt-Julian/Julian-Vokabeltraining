@@ -39,6 +39,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel) und erst nach dem Tutorial
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
+- Bram hat in jedem Gebiet einen eigenen Titel und Begrüßungstext (Karawanenführer, Tempelwächter, Aschewanderer, letzter Wächter)
 - Heilung: außerhalb des Kampfes langsam (1,2 %/s), am Lagerfeuer schnell (8 %/s), sobald kein Gegner in 10 m ist; Spielstand lädt mit mindestens halben HP
 - Alle fünf Gebiete nacheinander geladen und gesichtet: keine Fehler in der Konsole
 - Anfang durchgespielt: Tutorial (7 Schritte), erster Kampf auf Level 1 gegen einen Troll-Krieger. Gegner in der Welt schlagen jetzt nur alle 1,6 s zu (vorher jede Sekunde – Level-1-Held war in 10 s tot)

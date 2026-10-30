@@ -34,6 +34,14 @@ import * as A from './audio.js';
     shadow: { name: 'Schattenfestung', boss: 'Ignatius, der Schattenkönig', bossLvl: 100, grunt: 'Schattenritter', imp: 'Schattenwicht', alpha: 'Schattengeneral', area: 'Schattenfestung', trophy: 'Schattenkrone', regions: [[130, -95, 'Spiegelhalle'], [70, 175, 'Kerkerweg'], [-150, 70, 'Dornengarten'], [70, 80, 'Schwarzer See'], [-60, -180, 'Thronhügel']] }
   };
   const ZN = ZONES[ZONE];
+  // Bram spricht je Gebiet anders
+  { const BRAM = {
+      forest: ['Bram, der Waldhüter', '„Willkommen im Lager! Troll-Krieger treiben sich im Wald herum, ihr Häuptling mit der goldenen Krone ist auch dabei, und ich hab meine Truhe aus den Augen verloren. Hilfst du mir?“'],
+      desert: ['Bram, der Karawanenführer', '„Gut, dass du da bist! Sandräuber überfallen die Karawanen, ihr Sandkönig sitzt irgendwo in den Dünen, und unter dem Sand soll der Sandwurm schlafen. Hilfst du mir?“'],
+      cherry: ['Bram, der Tempelwächter', '„Willkommen unter den Kirschblüten! Maskenfüchse stehlen aus den Tempeln, ihr Kitsune-Fürst lacht uns aus, und der Kirschgeist lässt die Blüten nicht mehr fallen. Hilfst du mir?“'],
+      volcano: ['Bram, der Aschewanderer', '„Pass auf, wo du hintrittst! Lavagolems wandern durch die Asche, der Magmakönig brodelt im Krater, und der Lavadrache hat sich in der Halle eingenistet. Hilfst du mir?“'],
+      shadow: ['Bram, der letzte Wächter', '„Du bist bis hierher gekommen … Schattenritter patrouillieren überall, der Schattengeneral hält den Thronhügel, und Ignatius wartet in seiner Halle. Hilfst du mir, die Festung zu befreien?“']
+    }[ZONE]; const h = document.querySelector('#npc h2'), t = document.getElementById('npcText'); if (h && BRAM) h.textContent = BRAM[0]; if (t && BRAM) t.textContent = BRAM[1]; }
   document.title = 'VocabQuest · ' + ZN.name;
   const CHARS = [
     { name: 'Kai', hair: 0x2a1a12, cloth: 0x2d6fd6, cloth2: 0x1f2a44, cape: 0x8b1f3a, style: 'spiky' },
