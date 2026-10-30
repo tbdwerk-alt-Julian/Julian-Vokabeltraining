@@ -102,6 +102,15 @@ import * as A from './audio.js';
   }
   let arenaY = null, arenaBusy = false;
   const TREELINE = 13;
+  const ROADS = FIERY ? [] : [
+    [[0, 0], [8, -3], [16, -6], [24, -6]],                                   // Lager → Boss-Halle
+    [[0, 0], [14, 14], [30, 32], [LAKE.x - LAKE.r * .62 - 6, LAKE.z - LAKE.r * .62 - 6]], // Lager → See
+    [[0, 0], [-12, -30], [-24, -70], [-38, -110], [-50, -150], [-60, -172]],  // Lager → Süden (Trollgrube / Dunkelwald)
+    [[0, 0], [-20, -8], [-42, -22], [-62, -30]]                               // Lager → Westhütte
+  ];
+  const roadPts = []; ROADS.forEach(r => { for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(2, Math.ceil(L / 1.5)); for (let k = 0; k < n; k++) { const t = k / n; roadPts.push([ax + (bx - ax) * t, az + (bz - az) * t]); } } });
+  const roadCell = new Map(); roadPts.forEach(([x, z]) => { const k = ((x / 12) | 0) + ',' + ((z / 12) | 0); let a = roadCell.get(k); if (!a) roadCell.set(k, a = []); a.push([x, z]); });
+  const onRoad = (x, z, w = 2.2) => { const gx = (x / 12) | 0, gz = (z / 12) | 0; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const a = roadCell.get((gx + i) + ',' + (gz + j)); if (!a) continue; for (const [px, pz] of a) if (Math.hypot(px - x, pz - z) < w) return true; } return false; };
   const inWater = (x, z) => groundY(x, z) < WATER_Y - .45;
   const groundGeo = new THREE.PlaneGeometry(WORLD, WORLD, 300, 300); groundGeo.rotateX(-Math.PI / 2);
   const gp = groundGeo.attributes.position, gcol = [];
@@ -213,7 +222,7 @@ import * as A from './audio.js';
     for (let i = 0; i < GRASS; i++) {
       let x, z, tries = 0;
       do { x = cx + rng(-GR, GR); z = cz + rng(-GR, GR); tries++; } while ((inWater(x, z) || Math.hypot(x - 3, z + 3) < 2.5) && tries < 4);
-      const gyy = groundY(x, z); dummy.position.set(x, gyy, z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(gyy < WATER_Y - .45 || gyy > 18 || (DESERT && Math.random() < .72 && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 12) || (FIERY && Math.random() < .8) || Math.hypot(x - 36, z + 6) < 19 ? 0 : .5 + Math.random() * .6);
+      const gyy = groundY(x, z); dummy.position.set(x, gyy, z); dummy.rotation.set(0, Math.random() * Math.PI, 0); dummy.scale.setScalar(gyy < WATER_Y - .45 || gyy > 18 || (DESERT && Math.random() < .72 && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 12) || (FIERY && Math.random() < .8) || Math.hypot(x - 36, z + 6) < 19 || onRoad(x, z, 2.2) ? 0 : .5 + Math.random() * .6);
       dummy.updateMatrix(); grass.setMatrixAt(i, dummy.matrix);
       if (DESERT) gcolor.setHSL(.12 + Math.random() * .05, .35 + Math.random() * .2, .42 + Math.random() * .16); else if (VOLCANO) gcolor.setHSL(.06, .2, .2 + Math.random() * .1); else if (SHADOW) gcolor.setHSL(.72, .25, .22 + Math.random() * .12); else if (CHERRY) gcolor.setHSL(.3 + Math.random() * .06, .5, .38 + Math.random() * .16); else gcolor.setHSL(.26 + Math.random() * .08, .45 + Math.random() * .2, .3 + Math.random() * .18); grass.setColorAt(i, gcolor);
     }
@@ -230,17 +239,17 @@ import * as A from './audio.js';
   const treeSpots = [], con = [], broad = [], bushes = [], rocks = [], flowers = [], shrooms = [], reeds = [], deadTrees = [], ferns = [], logs = [];
   for (let i = 0; i < 2600; i++) {
     const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z);
-    if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || nearBuilding(x, z, 8) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
+    if (Math.hypot(x, z) < 24 || gy < WATER_Y - .45 || gy > TREELINE || Math.abs(x - RIVER_X) < 9 || nearBuilding(x, z, 8) || onRoad(x, z, 4) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 5 || (Math.abs(z - CAVE.z) < 10 && x > -4 && x < CAVE.x) || Math.hypot(x - 60, z - 30) < 6) continue;
     if (DESERT && Math.hypot(x - LAKE.x, z - LAKE.z) > LAKE.r + 18) continue;
     if (VOLCANO) continue; if (SHADOW && Math.random() < .55) continue;
     const it = { x, z, s: rng(.9, 1.9) * (gy > 8 ? .7 : 1), rot: Math.random() * 6, hue: Math.random() }; ((DESERT || CHERRY) ? broad : SHADOW ? con : (Math.random() < (gy > 6 ? .8 : .5) ? con : broad)).push(it); treeSpots.push([x, z]);
   }
-  for (let i = 0; i < (DESERT ? 350 : VOLCANO ? 120 : 600); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE || inArena(x, z)) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
+  for (let i = 0; i < (DESERT ? 350 : VOLCANO ? 120 : 600); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x, z) < 6 || groundY(x, z) > TREELINE || inArena(x, z) || onRoad(x, z, 3)) continue; bushes.push({ x, z, s: rng(.7, 1.5) }); }
   for (let i = 0; i < (DESERT ? 90 : VOLCANO ? 520 : SHADOW ? 260 : CHERRY ? 60 : 260); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE + 4 || Math.hypot(x, z) < 26 || nearBuilding(x, z, 6)) continue; deadTrees.push({ x, z, s: rng(.8, 1.6), rot: Math.random() * 6 }); }
   const cacti = []; if (DESERT) for (let i = 0; i < 700; i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y + .5 || gy > TREELINE + 6 || Math.hypot(x, z) < 20 || nearBuilding(x, z, 6)) continue; cacti.push({ x, z, s: rng(.6, 1.6), rot: Math.random() * 6, arms: Math.random() < .6 }); }
   if (!DESERT && !FIERY) treeSpots.forEach(([tx, tz], i) => { if (i % 2) return; for (let k = 0; k < 2; k++) { const x = tx + rng(-4, 4), z = tz + rng(-4, 4); if (inWater(x, z) || Math.hypot(x, z) < 20 || inArena(x, z)) continue; ferns.push({ x, z, s: rng(.7, 1.4), rot: Math.random() * 6 }); } });
   for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : 140); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); const gy = groundY(x, z); if (gy < WATER_Y || gy > TREELINE || Math.hypot(x, z) < 22 || nearBuilding(x, z, 7) || inArena(x, z)) continue; logs.push({ x, z, s: rng(.8, 1.5), rot: Math.random() * 6 }); }
-  for (let i = 0; i < (DESERT ? 900 : FIERY ? 1100 : 520); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 4 || (Math.abs(z - CAVE.z) < 8 && x > -4 && x < CAVE.x)) continue; const gy = groundY(x, z); rocks.push({ x, z, s: rng(.3, 1.3) * (gy > 9 ? 2.2 : 1) * (DESERT ? 1.5 : 1), rx: Math.random(), ry: Math.random() }); }
+  for (let i = 0; i < (DESERT ? 900 : FIERY ? 1100 : 520); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || Math.hypot(x - CAVE.x, z - CAVE.z) < CAVE.r + 4 || (Math.abs(z - CAVE.z) < 8 && x > -4 && x < CAVE.x) || onRoad(x, z, 3)) continue; const gy = groundY(x, z); rocks.push({ x, z, s: rng(.3, 1.3) * (gy > 9 ? 2.2 : 1) * (DESERT ? 1.5 : 1), rx: Math.random(), ry: Math.random() }); }
   const flowerCols = CHERRY ? [0xffb3cf, 0xffffff, 0xff8ab8, 0xffd6e6, 0xffc0e0] : SHADOW ? [0x8a4ad0, 0x4a2a7a, 0xb48cff, 0x2a1a44, 0x6a2a9a] : [0xff6b9a, 0xffd166, 0xb48cff, 0xffffff, 0xff8c42];
   for (let i = 0; i < (DESERT ? 200 : VOLCANO ? 0 : SHADOW ? 300 : CHERRY ? 3200 : 1800); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE || inArena(x, z)) continue; flowers.push({ x, z, c: flowerCols[i % 5] }); }
   for (let i = 0; i < ((DESERT || VOLCANO) ? 0 : SHADOW ? 260 : 160); i++) { const x = rng(-HALF, HALF), z = rng(-HALF, HALF); if (inWater(x, z) || groundY(x, z) > TREELINE || inArena(x, z)) continue; shrooms.push({ x, z }); }
@@ -565,6 +574,23 @@ import * as A from './audio.js';
     for (let k = 0; k < 7; k++) { const bone = new THREE.Mesh(new THREE.CylinderGeometry(.06, .07, rng(.5, 1.1), 5), new THREE.MeshStandardMaterial({ color: 0xe8e0cc, roughness: .9 })); bone.position.set(PIT.x + rng(-4, 4), gy + .08, PIT.z + rng(0, 5)); bone.rotation.set(Math.PI / 2, 0, Math.random() * 6); scene.add(bone); }
     const skull = new THREE.Mesh(new THREE.SphereGeometry(.32, 10, 8), new THREE.MeshStandardMaterial({ color: 0xe8e0cc, roughness: .9 })); skull.position.set(PIT.x + 1.2, gy + .3, PIT.z + 1.5); scene.add(skull);
     const c = buildChest(PIT.x, PIT.z - 2.2); c.traverse(o => { if (o.isMesh && o.material.color && o.material.color.getHex() === 0x9a6a33) o.material = new THREE.MeshStandardMaterial({ color: 0xe6c25a, metalness: .85, roughness: .28 }); }); c.userData.gold = true; const cl = new THREE.PointLight(0xffd166, 1.2, 6, 2); cl.position.y = 1; c.add(cl); chests.push(c);
+  }
+  // Erdwege als Bänder auf dem Gelände, Laternen am Hauptweg
+  if (ROADS.length) {
+    const roadMat = weatherize(new THREE.MeshStandardMaterial({ color: DESERT ? 0xb89a62 : CHERRY ? 0x8a7a5a : 0x5e4a30, roughness: 1, normalMap: groundNrm, normalScale: new THREE.Vector2(.6, .6), vertexColors: true }));
+    ROADS.forEach(r => {
+      const pts = []; for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(2, Math.ceil(L / 2)); for (let k = 0; k <= n; k++) { const t = k / n; pts.push([ax + (bx - ax) * t + Math.sin((ax + t * 10) * 1.3) * .35, az + (bz - az) * t + Math.cos((az + t * 10) * 1.1) * .35]); } }
+      const pos = [], col = [], idx = []; const W = 2.1;
+      for (let i = 0; i < pts.length; i++) { const [x, z] = pts[i]; const [nx, nz] = pts[Math.min(i + 1, pts.length - 1)]; const [px0, pz0] = pts[Math.max(i - 1, 0)]; const dx = nx - px0, dz = nz - pz0; const L = Math.hypot(dx, dz) || 1; const ox = -dz / L * W, oz = dx / L * W; const w = 1 + Math.sin(i * .7) * .18; for (const s of [-1, 1]) { const vx = x + ox * s * w, vz = z + oz * s * w; pos.push(vx, groundY(vx, vz) + .07, vz); const c = .85 + Math.sin(i * 1.7 + s) * .08; col.push(c, c, c); } if (i < pts.length - 1) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+      const uv = []; for (let i = 0; i < pts.length; i++) { uv.push(0, i * .5, 1, i * .5); } g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      const mesh = new THREE.Mesh(g, roadMat); mesh.receiveShadow = true; mesh.renderOrder = 1; scene.add(mesh);
+    });
+    // Laternen: Hauptweg zur Halle alle 6 m, Südweg alle 28 m
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0x2a2520, roughness: .9 });
+    const placeLamp = (x, z) => { const y = groundY(x, z); const post = new THREE.Mesh(new THREE.CylinderGeometry(.07, .1, 3, 6), lampMat); post.position.set(x, y + 1.5, z); post.castShadow = true; scene.add(post); const arm = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .06), lampMat); arm.position.set(x + .2, y + 2.9, z); scene.add(arm); const box = new THREE.Mesh(new THREE.BoxGeometry(.26, .36, .26), new THREE.MeshStandardMaterial({ color: 0xffc070, emissive: 0xff9a30, emissiveIntensity: 1.1, transparent: true, opacity: .92 })); box.position.set(x + .42, y + 2.68, z); scene.add(box); const cap = new THREE.Mesh(new THREE.ConeGeometry(.22, .18, 4), lampMat); cap.position.set(x + .42, y + 2.95, z); cap.rotation.y = Math.PI / 4; scene.add(cap); const l = new THREE.PointLight(0xffa050, .8, 9, 2); l.position.set(x + .42, y + 2.6, z); scene.add(l); };
+    const along = (r, step, side) => { let acc = 0; for (let i = 0; i < r.length - 1; i++) { const [ax, az] = r[i], [bx, bz] = r[i + 1]; const L = Math.hypot(bx - ax, bz - az); const dx = (bx - ax) / L, dz = (bz - az) / L; for (let d = 0; d < L; d += 1) { acc += 1; if (acc >= step) { acc = 0; const x = ax + dx * d - dz * side * 3.1, z = az + dz * d + dx * side * 3.1; if (Math.hypot(x, z) > 20 && !inWater(x, z)) placeLamp(x, z); } } } };
+    along(ROADS[0], 6, 1); along(ROADS[2], 28, -1); along(ROADS[1], 22, 1);
   }
   const spinners = []; scene.traverse(o => { if (o.userData.spin) spinners.push(o); });
   // ---------- Figuren ----------
