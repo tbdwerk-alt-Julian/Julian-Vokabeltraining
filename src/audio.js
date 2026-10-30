@@ -46,6 +46,9 @@ export function sfx(name, opt = {}) {
     case 'hit': noise(.12, .5, null, { freq: 900, to: 200 }); tone(160, 'sine', .18, .45, null, { to: 55 }); break;
     case 'crit': noise(.14, .55, null, { freq: 1200, to: 220 }); tone(170, 'sine', .22, .5, null, { to: 50 }); tone(880, 'sine', .25, .18, null, { delay: .04 }); tone(1320, 'sine', .3, .14, null, { delay: .08 }); break;
     case 'hurt': tone(190, 'sawtooth', .22, .25, null, { to: 80, lp: 900 }); noise(.15, .3, null, { freq: 400, to: 120 }); break;
+    case 'growl': tone(95, 'sawtooth', .38, .3, null, { to: 60, lp: 520 }); noise(.28, .22, null, { freq: 320, to: 110 }); break;
+    case 'roar': tone(72, 'sawtooth', .7, .42, null, { to: 44, lp: 650 }); tone(150, 'square', .35, .14, null, { delay: .05, to: 85, lp: 900 }); noise(.55, .4, null, { freq: 420, to: 140 }); break;
+    case 'scream': tone(640, 'sawtooth', .38, .26, null, { to: 170, lp: 1900 }); noise(.32, .18, null, { freq: 1300, to: 320 }); break;
     case 'wrong': tone(440, 'triangle', .16, .22); tone(330, 'triangle', .22, .22, null, { delay: .15 }); break;
     case 'coin': tone(1200, 'sine', .09, .22); tone(1600, 'sine', .14, .22, null, { delay: .08 }); break;
     case 'gem': tone(1760, 'sine', .12, .18); tone(2217, 'sine', .18, .16, null, { delay: .09 }); tone(2637, 'sine', .25, .14, null, { delay: .18 }); break;
