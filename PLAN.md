@@ -39,6 +39,9 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Saison-Pass öffnet sich nur noch einmal pro Tag von selbst (vorher bei jedem Gebietswechsel) und erst nach dem Tutorial
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
+- Tasten für alles: E benutzen, F Reittier, I Inventar, M Karte, B Emote, V Vokabeln, L Saison, Q Aufgabe, Esc schließt/Pause; Tastenchips auf den Knöpfen, Knöpfe und HUD-Panels im Glas-Look
+- Gegner höherer Gebiete: größer (bis +36 %), Gefahrenring und Glühen in Gebietsfarbe, Angriffe in der Welt skalieren mit dem Gebiet (Schattenfestung ×2,4)
+- Gebäude: Hütten mit Vordach, Laterne (Licht), Zaun, Fässern, Kiste, leuchtenden Fenstern; Ruinen mit Altar und drehendem Kristall, kopfloser Statue, umgestürzten Säulen, Bodenring
 - Bram hat in jedem Gebiet einen eigenen Titel und Begrüßungstext (Karawanenführer, Tempelwächter, Aschewanderer, letzter Wächter)
 - Heilung: außerhalb des Kampfes langsam (1,2 %/s), am Lagerfeuer schnell (8 %/s), sobald kein Gegner in 10 m ist; Spielstand lädt mit mindestens halben HP
 - Alle fünf Gebiete nacheinander geladen und gesichtet: keine Fehler in der Konsole
