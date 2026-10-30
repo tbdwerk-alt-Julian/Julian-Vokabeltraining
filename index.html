@@ -387,6 +387,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-height: 520px) { .tut { bottom: 120px; } }
 
 .hintline { min-height: 18px; text-align: center; font-family: var(--display); font-size: 15px; letter-spacing: .12em; color: var(--accent-2); }
+/* Handy quer (wenig Höhe): kompakte Hotbar, Aktionsknöpfe zweispaltig, damit sie nicht unter die Minimap rutschen */
+@media (max-height: 520px) { .slot { width: 36px !important; height: 36px !important; font-size: 16px !important; } .hotbar { gap: 4px !important; padding: 5px !important; } .vitals { width: min(360px, 56vw) !important; } .center { min-width: 0; } .actions { max-width: 240px !important; flex: none !important; } .combo { font-size: 11px; } }
 </style>
 </head>
 <body>
