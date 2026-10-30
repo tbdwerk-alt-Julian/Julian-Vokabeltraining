@@ -1680,6 +1680,10 @@ import * as A from './audio.js';
     show(WEAPON_SETS[equip.weapon] || WEAPON_SETS.sword);
     if (equip.chest) show(['Round_Shield', 'Barbarian_Round_Shield', 'Spellbook']);
     if (equip.helm) show(['Knight_Helmet', 'Mage_Hat', 'Barbarian_Hat']);
+    // Set-Teile färben Helm und Schild des Modells in der Gebietsfarbe (leicht glühend)
+    const tintMesh = (list, t) => { inst.obj.traverse(o => { if ((o.isMesh || o.isSkinnedMesh) && list.includes(o.name)) { if (!o.userData.origMat) o.userData.origMat = o.material; if (t) { const mm = o.userData.origMat.clone(); mm.color.set(t); mm.emissive = new THREE.Color(t); mm.emissiveIntensity = .3; mm.metalness = .55; mm.roughness = .4; o.material = mm; } else o.material = o.userData.origMat; } }); };
+    tintMesh(['Knight_Helmet', 'Mage_Hat', 'Barbarian_Hat'], equip.helm && ITEMS[equip.helm].tint);
+    tintMesh(['Round_Shield', 'Barbarian_Round_Shield', 'Spellbook'], equip.chest && ITEMS[equip.chest].tint);
   }
   const _applyGear = applyGear; applyGear = function (h) { _applyGear(h); dressWeapons(heroInst); dressWeapons(invInst); };
   Promise.all(Object.entries(MODELS).map(([k, url]) => loadModel(url).then(g => { gl[k] = g; }).catch(e => console.warn('Modell fehlt:', k, e.message)))).then(() => { setHeroModel(); dressEnemies(); if (prefs.tier === 'horse') setMount('horse'); toast('3D-Modelle geladen'); });
