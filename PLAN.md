@@ -54,8 +54,9 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 1. **Freitag: Vokabeln.** Julians Englischbuch und aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen). Ohne echte Wörter bleibt es ein Demo.
 2. **Boss-Kämpfe:** alle fünf (Waldtroll, Sandwurm, Kirschgeist, Lavadrache, Ignatius mit 4 Phasen) bis zum Sieg getestet – Trophäen, Drops und Freischaltungen kommen an. Erledigt.
 3. **Charakter-Farben.** Mit den KayKit-Modellen nur über Texturen möglich; vorerst stattdessen vier Helden zur Wahl.
-4. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen. Vorbereitet: `npm run build` erzeugt den Ordner `dist/` (geprüft, Modelle laden), alle Pfade sind relativ, läuft also auch unter einem Unterordner wie GitHub Pages. Es fehlt nur noch ein Konto.
-5. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
+4. **Online-Sicherung: erledigt.** Der Code liegt privat auf GitHub unter https://github.com/tbdwerk-alt-Julian/Julian-Vokabeltraining und wird nach jedem Commit hochgeladen.
+5. **Handy außerhalb des WLANs.** Spiel auf GitHub Pages oder Netlify veröffentlichen. Vorbereitet: `npm run build` erzeugt den Ordner `dist/` (geprüft, Modelle laden), alle Pfade sind relativ, läuft also auch unter einem Unterordner wie GitHub Pages. Es fehlt nur noch ein Konto.
+6. **Später:** Multiplayer per Link (Server nötig), Emotes, Freunde-Rangliste.
 
 ## Bekannte Grenzen
 - Browser begrenzt die Bildrate auf die Monitor-Hertz (60/144/240).
