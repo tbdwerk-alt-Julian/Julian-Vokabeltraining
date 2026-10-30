@@ -452,6 +452,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #winSub { font-family: var(--display); font-weight: 700; color: #ffd166; letter-spacing: .08em; }
 #pause .btn.primary { background: linear-gradient(180deg, #96ffb0, #6df08f) !important; color: #06130b !important; border-color: transparent !important; }
 #pause .btn.primary kbd { color: #06130b; border-color: rgba(6,19,11,.35); background: rgba(6,19,11,.12); }
+#updateBar { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 70; display: flex; gap: 10px; align-items: center; padding: 8px 10px 8px 14px; border-radius: 99px; background: linear-gradient(180deg, rgba(22,30,38,.95), rgba(8,12,18,.96)); border: 1px solid rgba(124,255,155,.5); box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 24px rgba(124,255,155,.25); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .04em; }
+#updateBar[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -462,6 +464,7 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 <div id="vignette"></div>
 <div id="labels"></div>
 <div id="banner" class="banner"></div>
+<div id="updateBar" hidden><span>Neue Version online · Stand <b></b></span><button class="btn small primary" id="updateNow">Jetzt laden</button></div>
 <div id="cinebars"><i></i><i></i></div>
 <div id="hurt"></div>
 <div id="dead"><div class="deadbox"><div class="deadtitle">Du bist gestorben</div><div class="deadwhy" id="deadWhy"></div><button class="btn primary" id="respawnBtn">Am Lagerfeuer wiederbeleben</button></div></div>

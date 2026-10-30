@@ -53,6 +53,12 @@ import * as A from './audio.js';
   // ---------- Renderer & Szene ----------
   const stage = $('stage');
   try { const bt = document.getElementById('buildTag'); if (bt) bt.textContent = 'Stand ' + (typeof __BUILD__ !== 'undefined' ? __BUILD__ : 'dev'); } catch (e) { }
+  // Update-Prüfung: alle 60 s und beim Zurückkehren in den Tab version.json holen; bei neuer Version Leiste mit „Jetzt laden“
+  (function () { const mine = typeof __BUILD__ !== 'undefined' ? __BUILD__ : null; if (!mine) return; let shown = false;
+    async function check() { if (shown) return; try { const r = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; const j = await r.json(); if (j && j.build && j.build !== mine) { shown = true; const bar = document.getElementById('updateBar'); if (bar) { bar.hidden = false; bar.querySelector('b').textContent = j.build; } } } catch (e) { } }
+    setTimeout(check, 4000); setInterval(check, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+    const btn = document.getElementById('updateNow'); if (btn) btn.onclick = async () => { btn.textContent = 'Lade …'; try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } if (navigator.serviceWorker) { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.update())); } } catch (e) { } location.reload(); };
+  })();
   const setLoad = (t) => { const el = $('loadText'); if (el) el.textContent = t; };
   setLoad('Grafik wird gestartet …');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });

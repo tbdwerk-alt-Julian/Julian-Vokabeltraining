@@ -36,4 +36,5 @@ function devEndpoints() {
 }
 
 const BUILD = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-export default defineConfig({ base: './', define: { __BUILD__: JSON.stringify(BUILD) }, plugins: [devEndpoints()], server: { host: true, port: 5173 } });
+function versionFile() { return { name: 'vocabquest-version-file', closeBundle() { try { fs.mkdirSync('dist', { recursive: true }); fs.writeFileSync('dist/version.json', JSON.stringify({ build: BUILD })); } catch (e) { } } }; }
+export default defineConfig({ base: './', define: { __BUILD__: JSON.stringify(BUILD) }, plugins: [devEndpoints(), versionFile()], server: { host: true, port: 5173 } });
