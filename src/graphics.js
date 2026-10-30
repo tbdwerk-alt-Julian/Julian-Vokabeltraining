@@ -130,7 +130,7 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
   // Umgebungslicht/Reflexionen aus dem Himmel (wird bei Wetter- und Tageszeitwechsel erneuert)
   const pmrem = new THREE.PMREMGenerator(renderer); const envScene = new THREE.Scene(); const envSky = new THREE.Mesh(new THREE.SphereGeometry(50, 24, 12), skyMat); envScene.add(envSky);
   let envTex = null, envAge = 99;
-  function refreshEnv() { try { U.envDim.value = 1; U.envPass.value = 1; const t = pmrem.fromScene(envScene, .03).texture; U.envPass.value = 0; U.envDim.value = 1; if (envTex) envTex.dispose(); envTex = t; scene.environment = t; envAge = 0; } catch (e) { } }
+  function refreshEnv() { try { U.envDim.value = .45; U.envPass.value = 1; const t = pmrem.fromScene(envScene, .03).texture; U.envPass.value = 0; U.envDim.value = 1; if (envTex) envTex.dispose(); envTex = t; scene.environment = t; envAge = 0; } catch (e) { } }
   refreshEnv();
 
   // Sonnenglühen + Linsenreflexe
