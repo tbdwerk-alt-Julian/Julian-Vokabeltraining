@@ -35,4 +35,5 @@ function devEndpoints() {
   };
 }
 
-export default defineConfig({ base: './', plugins: [devEndpoints()], server: { host: true, port: 5173 } });
+const BUILD = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+export default defineConfig({ base: './', define: { __BUILD__: JSON.stringify(BUILD) }, plugins: [devEndpoints()], server: { host: true, port: 5173 } });

@@ -52,6 +52,7 @@ import * as A from './audio.js';
 
   // ---------- Renderer & Szene ----------
   const stage = $('stage');
+  try { const bt = document.getElementById('buildTag'); if (bt) bt.textContent = 'Stand ' + (typeof __BUILD__ !== 'undefined' ? __BUILD__ : 'dev'); } catch (e) { }
   const setLoad = (t) => { const el = $('loadText'); if (el) el.textContent = t; };
   setLoad('Grafik wird gestartet …');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
