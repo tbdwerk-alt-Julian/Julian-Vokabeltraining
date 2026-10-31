@@ -25,7 +25,7 @@ Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur d
 |---|---|
 | W / S, A / D | laufen, drehen · Shift = rennen |
 | Maus ziehen | Kamera drehen |
-| E | benutzen: Gegner angreifen, mit Bram reden, Truhen, Händler, Falltür, Vokabel-Schlösser |
+| E | benutzen: Gegner angreifen, mit Bram reden, Truhen, Händler, Krypta-Portal, Vokabel-Schlösser |
 | Leertaste | Ausweichrolle |
 | 1–9 | Schnellleiste: Tränke, Waffen |
 | I / V / K / M / Q / L | Inventar · Vokabeln · Fähigkeiten · Karte · Aufgabe · Saison |
@@ -38,7 +38,7 @@ Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur d
 **Was lohnt sich?**
 - **Bram im Lager (E):** gibt Quests und zahlt für Köpfe. **Kopfgeldtafel** daneben: eine Tagesaufgabe pro Tag.
 - **Elite-Gegner** (roter Ring) haben mehr Leben, lassen aber bessere Sachen fallen. Höhere Level = mehr Schaden.
-- **Trollgewölbe:** Falltür neben der Boss-Halle im Wald (E). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
+- **Trollgewölbe:** Krypta-Eingang östlich vom Lager, dem Wegweiser folgen (E am Portal). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
 - **Fähigkeiten (K):** jedes Level ein Punkt – Klinge (Schaden), Panzer (weniger Schaden, mehr HP), Verstand (mehr Zeit pro Wort).
 - **Händler** im Lager (kommt zu festen Zeiten), **Truhen** in der Welt, **Lagerfeuer** heilt schnell.
 - Der **Boss** jedes Gebiets wartet in der Halle; erst mit guten Vokabeln reingehen – er hat Phasen und macht richtig Schaden.
