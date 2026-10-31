@@ -1,5 +1,5 @@
 // Sound: alles synthetisch über Web Audio (keine Dateien nötig) – Musik, Ambiente, Effekte.
-let ctx = null, master, musicGain, sfxGain, ambGain, rainGain, windGain, started = false;
+let ctx = null, master, musicGain, sfxGain, ambGain, rainGain, windGain, started = false, droneGain = null, dripT = 1, chainT = 5;
 let vol = { music: .7, sfx: .8 };
 let mode = 'calm', nightMix = 0, stepT = 0, birdT = 2, cricketT = 0, musicTimer = null, nextChord = 0, chordIdx = 0, beatT = 0;
 
@@ -72,8 +72,11 @@ function startAmbient() {
   const wind = ctx.createBufferSource(); wind.buffer = brownBuf; wind.loop = true; const wf = ctx.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 320; windGain = ctx.createGain(); windGain.gain.value = .06; wind.connect(wf); wf.connect(windGain); windGain.connect(ambGain); wind.start();
   const lfo = ctx.createOscillator(); lfo.frequency.value = .11; const lg = ctx.createGain(); lg.gain.value = .035; lfo.connect(lg); lg.connect(windGain.gain); lfo.start();
   const rain = ctx.createBufferSource(); rain.buffer = noiseBuf; rain.loop = true; const rf = ctx.createBiquadFilter(); rf.type = 'bandpass'; rf.frequency.value = 2200; rf.Q.value = .4; rainGain = ctx.createGain(); rainGain.gain.value = 0; rain.connect(rf); rf.connect(rainGain); rainGain.connect(ambGain); rain.start();
+  const drone = ctx.createOscillator(); drone.type = 'sawtooth'; drone.frequency.value = 55; const df = ctx.createBiquadFilter(); df.type = 'lowpass'; df.frequency.value = 140; droneGain = ctx.createGain(); droneGain.gain.value = 0; drone.connect(df); df.connect(droneGain); droneGain.connect(ambGain); drone.start(); const d2 = ctx.createOscillator(); d2.type = 'sine'; d2.frequency.value = 82.4; d2.connect(droneGain); d2.start();
   startMusic();
 }
+function drip() { const f = 1800 + Math.random() * 1600; tone(f, 'sine', .12, .09, ambGain, { to: f * .6 }); tone(f * .5, 'sine', .25, .03, ambGain, { delay: .06 }); }
+function chain() { for (let i = 0; i < 3 + Math.floor(Math.random() * 3); i++) noise(.05, .07, ambGain, { freq: 2400 + Math.random() * 1500, delay: i * (.06 + Math.random() * .05) }); }
 function bird() { const base = 1800 + Math.random() * 1400; for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) tone(base * (1 + Math.random() * .3), 'sine', .09, .05, ambGain, { to: base * 1.25, delay: i * .13 }); }
 function cricket() { for (let i = 0; i < 6; i++) tone(4300 + Math.random() * 300, 'sine', .018, .025, ambGain, { delay: i * .07 }); }
 
@@ -98,10 +101,12 @@ export function setMode(m) { mode = m; }
 export function tick(dt, s) {
   if (!ctx || ctx.state !== 'running') return;
   nightMix = s.night; if (s.battle && mode !== 'battle') mode = 'battle'; else if (!s.battle && mode === 'battle') mode = 'calm';
-  if (rainGain) rainGain.gain.setTargetAtTime(s.rain * .35, ctx.currentTime, .5);
-  if (windGain) windGain.gain.setTargetAtTime(.05 + s.wind * .12, ctx.currentTime, .5);
+  if (rainGain) rainGain.gain.setTargetAtTime(s.dungeon ? 0 : s.rain * .35, ctx.currentTime, .5);
+  if (windGain) windGain.gain.setTargetAtTime(s.dungeon ? .02 : .05 + s.wind * .12, ctx.currentTime, .5);
   if (s.moving && !s.swimming) { stepT -= dt; if (stepT <= 0) { sfx(s.mounted ? 'hoof' : 'step'); stepT = s.mounted ? .26 : .34; } } else stepT = .1;
-  birdT -= dt; if (birdT <= 0) { if (s.night < .4 && s.rain < .2) bird(); birdT = 2 + Math.random() * 6; }
+  if (droneGain) droneGain.gain.setTargetAtTime(s.dungeon ? .11 : s.dark ? .05 * s.dark : 0, ctx.currentTime, 1.2);
+  if (s.dungeon) { dripT -= dt; if (dripT <= 0) { drip(); dripT = .8 + Math.random() * 2.6; } chainT -= dt; if (chainT <= 0) { chain(); chainT = 4 + Math.random() * 7; } birdT = 1; cricketT = 1; return; }
+  birdT -= dt; if (birdT <= 0) { if (s.night < .4 && s.rain < .2 && !(s.dark > .5)) bird(); birdT = 2 + Math.random() * 6; }
   cricketT -= dt; if (cricketT <= 0) { if (s.night > .5) cricket(); cricketT = 1.2 + Math.random() * 2.5; }
 }
 
