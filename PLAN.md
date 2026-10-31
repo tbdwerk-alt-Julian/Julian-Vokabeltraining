@@ -85,6 +85,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Kerkerwachen (dg-Gegner) fahl-grau mit rotem Glühen, Label „Kerkerwache“; Kerkermeister fast schwarz mit rotem Glühen. Kampf gegen den Kerkermeister lokal getestet (Banner, 150 Münzen, Phönix-Trank, Quest-Fortschritt).
 - Gewölbe-Deko: roter Teppich zum Thron, vier Käfige mit Knochen, 14 Ketten an der Decke, Spinnweben in den Ecken, Schädelhaufen, zwei Banner, Goldtruhe hinter dem Thron; Minikarte zeigt im Gewölbe den Grundriss (Wände, Türen rot/grün, Ausgang).
 - Wegweiser „Trollgewölbe →“ bei 20/14 neben der Falltür, Kartenpin „Trollgewölbe“ bei 22/10.
+- Tagesaufgaben um Gewölbe erweitert (2 Schlösser öffnen, 1 Elite/Kerkerwache, Kerkermeister stürzen; Stats locks/kerker). Titelflug weicht auch der Krypta aus. Online-Check der veröffentlichten Version: lädt fehlerfrei.
 - Kerkermeister hat einen Boss-Auftritt (Kinobalken, Kamerafahrt 3 s, Banner „KERKERMEISTER“, Brüllen); Titelflug weicht der Windmühle aus und blickt auf Lager, Windmühle und Hallenturm statt auf die Wasserfläche.
 - Krypta-Eingang statt Falltür bei 27/17 (Front nach Westen, Ausgang landet bei 22,5/17, Bäume/Büsche im Umkreis ausgeschlossen): Sockel, Mauern, Dach, Säulen, dunkles Portal, Stufen, Schädel mit roten Augen, zwei Feuerschalen (E-Radius 3.8).
 - Licht: Umgebungskarte (PMREM aus dem Himmel inkl. Sonne) war die Ursache für weiße Wände und beige Zäune – envDim .45 → .22 in refreshEnv. Tagessonne 1.35 (war 1.9), Palisade dunkler (0x47301c) – Zelte, Hallenwand und Zaun brannten mittags weiß aus.
