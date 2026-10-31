@@ -175,7 +175,7 @@ export function setupGraphics({ renderer, scene, camera, sun, hemi, stage }) {
     U.sunHalo.value.copy(COL.haloDay).lerp(COL.haloLow, low).multiplyScalar(1 - grey * .7); U.sunCol.value.copy(COL.sunDay).lerp(COL.sunLow, low);
     U.cloud.value = wx.cloud; U.cloudDark.value = wx.cloudDark; U.time.value += dt; U.haze.value = .18 + grey * .4;
     // Licht
-    const sunI = (day * 1.9 * (1 - grey * .7) + low * .5) * wx.dim; const moonI = night * .32;
+    const sunI = (day * 1.6 * (1 - grey * .7) + low * .5) * wx.dim; const moonI = night * .32;
     if (e > -.03) { sun.position.copy(U.sunDir.value).multiplyScalar(90).add(playerPos); sun.color.copy(COL.sunDay).lerp(COL.sunLow, low); sun.intensity = Math.max(sunI, .05); }
     else { sun.position.copy(U.moonDir.value).multiplyScalar(90).add(playerPos); sun.color.copy(COL.moon); sun.intensity = moonI + .05; }
     sun.target.position.copy(playerPos); sun.target.updateMatrixWorld();
