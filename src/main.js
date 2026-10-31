@@ -1495,7 +1495,16 @@ import * as A from './audio.js';
   const screens = ['start', 'create', 'battle', 'map', 'win'];
   function show(name) { screens.forEach(s => { $(s).hidden = s !== name; }); $('cinebars').classList.toggle('on', name === 'start'); hud.classList.toggle('on', name === 'world' || name === 'map' || name === 'battle' || name === 'win'); hud.classList.toggle('battle', name === 'battle'); if (name === 'map') { drawWorldMap(); const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0); $('merchant').textContent = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'; } }
   $('newGame').onclick = () => show('create'); $('backStart').onclick = () => show('start');
-  $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; gameStarted = true; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); toast('Willkommen im Lager, ' + state.name + '! Level 1 · Sprich mit Bram (E)'); renderAll(); updateTracker(); show('world'); saveGame(); };
+  // Story-Intro beim neuen Abenteuer: Zeilen nacheinander, Enter/Klick überspringt
+  function playIntro(done) {
+    const lines = ['Es begann mit einem Flüstern in der Nacht.', 'Dann verstummten die Vögel. Dann die Dörfer.', 'Fünf Gebiete. Fünf Herren der Schatten.<br>Und am Ende: Ignatius, der Schattenkönig.', 'Du hast keine Armee. Keinen Zauber.<br>Nur Wörter.', 'Jedes richtige Wort ist ein Schlag.<br>Jeder Fehler kostet dich.', 'Wach auf, ' + state.name + '.<br>Der Wald wartet.'];
+    const box = $('intro'), txt = $('introText'); box.hidden = false; box.classList.remove('fade'); let i = 0, timer = null, finished = false;
+    const finish = () => { if (finished) return; finished = true; clearTimeout(timer); window.removeEventListener('keydown', onKey, true); box.removeEventListener('click', finish); box.classList.add('fade'); setTimeout(() => { box.hidden = true; done(); }, 900); };
+    const onKey = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(); } };
+    const next = () => { if (i >= lines.length) { finish(); return; } txt.classList.remove('show'); setTimeout(() => { txt.innerHTML = lines[i++]; txt.classList.add('show'); A.sfx(i === 3 || i === 6 ? 'thunder' : 'click'); }, 350); timer = setTimeout(next, i === lines.length - 1 ? 3600 : 3000); };
+    window.addEventListener('keydown', onKey, true); box.addEventListener('click', finish); setTimeout(next, 400);
+  }
+  $('startWorld').onclick = () => { const free = listSaves().findIndex(d => !d); curSlot = free < 0 ? 1 : free + 1; gameStarted = true; state.name = $('pname').value.trim() || CHARS[state.charIdx].name; $('pnameHud').textContent = state.name; rebuildHero(); setMount(prefs.tier); renderAll(); updateTracker(); show('create'); $('create').hidden = true; $('start').hidden = true; playIntro(() => { show('world'); toast('Du erwachst im Lager, ' + state.name + '. Sprich mit Bram (E) – er zahlt für Köpfe.'); saveGame(); }); };
 
   // ---------- Speichern / Laden ----------
   let gameStarted = false;
