@@ -1258,8 +1258,8 @@ import * as A from './audio.js';
 
   let heading = Math.PI * .5, vy = 0, rolling = 0, t0 = performance.now(), walkPhase = 0, mountCalled = false, swimming = false;
   // Titelsequenz: Kameraflug über Lager, Hauptweg, Windmühle, See, Steinkreis (nicht in Lava-Gebieten)
-  const menuPath = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 9, 20), new THREE.Vector3(12, 6, 4), new THREE.Vector3(20, 7, 18), new THREE.Vector3(52, 12, 58), new THREE.Vector3(10, 16, 40), new THREE.Vector3(26, 12, -40), new THREE.Vector3(-12, 10, -22)], true, 'catmullrom', .5);
-  const menuLook = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 2, 0), new THREE.Vector3(24, 3, -6), new THREE.Vector3(36, 5, 40), new THREE.Vector3(70, 2, 80), new THREE.Vector3(0, 2, 0), new THREE.Vector3(40, 2, -62), new THREE.Vector3(0, 3, 0)], true, 'catmullrom', .5);
+  const menuPath = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 9, 20), new THREE.Vector3(12, 6, 4), new THREE.Vector3(20, 7, 18), new THREE.Vector3(60, 12, 64), new THREE.Vector3(10, 16, 40), new THREE.Vector3(26, 12, -40), new THREE.Vector3(-12, 10, -22)], true, 'catmullrom', .5);
+  const menuLook = FIERY ? null : new THREE.CatmullRomCurve3([new THREE.Vector3(0, 2, 0), new THREE.Vector3(24, 3, -6), new THREE.Vector3(36, 5, 40), new THREE.Vector3(36, 4, 40), new THREE.Vector3(0, 2, 0), new THREE.Vector3(40, 2, -62), new THREE.Vector3(0, 3, 0)], true, 'catmullrom', .5);
   const camFlyV = new THREE.Vector3(), lookFlyV = new THREE.Vector3();
   camera.position.set(14, 6, 0); if (menuPath) { menuPath.getPointAt(0, camFlyV); camFlyV.y = Math.max(camFlyV.y + 6, groundY(camFlyV.x, camFlyV.z) + 18); camera.position.copy(camFlyV); }
   // Maus / Finger-Wischen: Kamera um den Charakter drehen
