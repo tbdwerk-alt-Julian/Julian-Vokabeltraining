@@ -38,7 +38,7 @@ Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur d
 **Was lohnt sich?**
 - **Bram im Lager (E):** gibt Quests und zahlt für Köpfe. **Kopfgeldtafel** daneben: eine Tagesaufgabe pro Tag.
 - **Elite-Gegner** (roter Ring) haben mehr Leben, lassen aber bessere Sachen fallen. Höhere Level = mehr Schaden.
-- **Trollgewölbe:** Krypta-Eingang östlich vom Lager, dem Wegweiser folgen (E am Portal). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
+- **Gruft (jedes Gebiet):** Krypta-Eingang östlich vom Lager, dem Wegweiser folgen (E am Portal). Im Wald heißt sie Trollgewölbe, das Siegel bricht ab Level 5; in den anderen Gebieten später (Wüste 20, Kirschen 40, Vulkan 60, Schattenfestung 85). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
 - **Fähigkeiten (K):** jedes Level ein Punkt – Klinge (Schaden), Panzer (weniger Schaden, mehr HP), Verstand (mehr Zeit pro Wort).
 - **Händler** im Lager (kommt zu festen Zeiten), **Truhen** in der Welt, **Lagerfeuer** heilt schnell.
 - Der **Boss** jedes Gebiets wartet in der Halle; erst mit guten Vokabeln reingehen – er hat Phasen und macht richtig Schaden.
