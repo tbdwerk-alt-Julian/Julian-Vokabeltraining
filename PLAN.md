@@ -82,6 +82,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 
 ## Freitag, 31. 10. – nachmittags dazu
 - Quellfall am Nordende des Flusses (−40/−72): Felswand aus Brocken, fallendes Wasser mit Streifen-Textur, Gischt-Sprites, Becken (groundY-Senke bei −40/−64), Kartenpin „Quellfall“.
+- Kerkerwachen (dg-Gegner) fahl-grau mit rotem Glühen, Label „Kerkerwache“; Kerkermeister fast schwarz mit rotem Glühen. Kampf gegen den Kerkermeister lokal getestet (Banner, 150 Münzen, Phönix-Trank, Quest-Fortschritt).
 - Gewölbe-Deko: roter Teppich zum Thron, vier Käfige mit Knochen, 14 Ketten an der Decke, Spinnweben in den Ecken, Schädelhaufen, zwei Banner, Goldtruhe hinter dem Thron; Minikarte zeigt im Gewölbe den Grundriss (Wände, Türen rot/grün, Ausgang).
 - Wegweiser „Trollgewölbe →“ bei 20/14 neben der Falltür, Kartenpin „Trollgewölbe“ bei 22/10.
 - Licht: Tagessonne 1.35 (war 1.9), Palisade dunkler (0x47301c) – Zelte, Hallenwand und Zaun brannten mittags weiß aus.
