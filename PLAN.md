@@ -82,11 +82,11 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 
 ## Freitag, 31. 10. – Tagesplan (große, sofort sichtbare Blöcke)
 
-1. **Story-Intro** beim Start eines neuen Abenteuers: düstere Textsequenz mit Kamerafahrt („Die Schatten kommen …“), überspringbar.
+1. ✅ **Story-Intro** beim Start eines neuen Abenteuers: düstere Textsequenz mit Kamerafahrt („Die Schatten kommen …“), überspringbar.
 2. ✅ **Dungeon „Trollgewölbe“** unter der Boss-Halle als eigenes Gebiet: Gänge mit Fackeln, Fallen (Bodenstacheln, einstürzende Decke), verschlossene Türen mit Vokabel-Schlössern, Truhen, Miniboss „Kerkermeister“, Ausgang zurück in den Wald. Zugang über eine Falltür in der Halle nach dem Waldtroll-Sieg.
-3. **Echte Vokabeln**: Julians aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen, Format „der Wald – forest“ pro Zeile).
-4. **Smoke-Test**: alle fünf Gebiete, Handy quer, ein kompletter Boss-Kampf online.
-5. **Kurzanleitung** für Julian (Tasten, Fähigkeiten, Gebiete, wo was ist) als README-Abschnitt.
+3. ⏳ **Echte Vokabeln** (braucht Julians Liste): Julians aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen, Format „der Wald – forest“ pro Zeile).
+4. ✅ **Smoke-Test**: alle fünf Gebiete laden fehlerfrei (lokal), Handy quer geprüft; Boss-Kampf online bereits am 30.10. bestätigt. Dabei gefixt: Sonne mittags gedämpft, Kamera-Schutz gegen NaN beim Drehen des Handys.
+5. ✅ **Kurzanleitung** für Julian (Tasten, Fähigkeiten, Gebiete, wo was ist) als README-Abschnitt.
 
 ## Offen – Reihenfolge bis Sonntag
 
