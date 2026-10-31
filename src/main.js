@@ -36,13 +36,13 @@ import * as A from './audio.js';
   };
   const ZN = ZONES[ZONE];
   // Bram spricht je Gebiet anders
-  { const BRAM = {
+  let BRAM_TXT = ''; { const BRAM = {
       forest: ['Bram, der Waldhüter', '„Du lebst noch? Gut. Troll-Krieger streifen durch den Wald, ihr Häuptling mit der goldenen Krone führt sie, und meine Truhe haben sie auch geplündert. Ich zahle für jeden Kopf. Bist du dabei?“'],
       desert: ['Bram, der Karawanenführer', '„Gut, dass du da bist! Sandräuber überfallen die Karawanen, ihr Sandkönig sitzt irgendwo in den Dünen, und unter dem Sand soll der Sandwurm schlafen. Hilfst du mir?“'],
       cherry: ['Bram, der Tempelwächter', '„Willkommen unter den Kirschblüten! Maskenfüchse stehlen aus den Tempeln, ihr Kitsune-Fürst lacht uns aus, und der Kirschgeist lässt die Blüten nicht mehr fallen. Hilfst du mir?“'],
       volcano: ['Bram, der Aschewanderer', '„Pass auf, wo du hintrittst! Lavagolems wandern durch die Asche, der Magmakönig brodelt im Krater, und der Lavadrache hat sich in der Halle eingenistet. Hilfst du mir?“'],
       shadow: ['Bram, der letzte Wächter', '„Du bist bis hierher gekommen … Schattenritter patrouillieren überall, der Schattengeneral hält den Thronhügel, und Ignatius wartet in seiner Halle. Hilfst du mir, die Festung zu befreien?“']
-    }[ZONE]; const h = document.querySelector('#npc h2'), t = document.getElementById('npcText'); if (h && BRAM) h.textContent = BRAM[0]; if (t && BRAM) t.textContent = BRAM[1]; }
+    }[ZONE]; const h = document.querySelector('#npc h2'), t = document.getElementById('npcText'); if (h && BRAM) h.textContent = BRAM[0]; if (t && BRAM) { BRAM_TXT = BRAM[1]; t.textContent = BRAM[1]; } }
   document.title = 'VocabQuest · ' + ZN.name;
   const CHARS = [
     { name: 'Kai', hair: 0x2a1a12, cloth: 0x2d6fd6, cloth2: 0x1f2a44, cape: 0x8b1f3a, style: 'spiky' },
@@ -1290,7 +1290,7 @@ import * as A from './audio.js';
     { const d = dgDoors.find(d => !d.userData.open && near(d, 3)); if (d) { openLock(d); return; } }
     if (near(forge, 3.8)) { openForge(); return; }
     if (near(stable, 4.2)) { openStable(); return; }
-    if (near(npc, 3.5)) { renderQuests(); $('npc').hidden = false; return; }
+    if (near(npc, 3.5)) { renderQuests(); const qk = qstate.kerker; $('npcText').textContent = BRAM_TXT + (qk && qk.done ? ' Und der ' + DN.boss + ' ist tot – ich hab es gehört. Die Gruft ist dein.' : state.level >= DN.lvl ? ' Noch was: Östlich vom Lager steht die Krypta. Ihr Siegel hält dich nicht mehr auf – unten lauert der ' + DN.boss + '. Drei Schlösser, Fallen, und nur Wörter öffnen den Weg.' : ' Und lass die Finger von der Krypta im Osten – ihr Siegel bricht erst ab Level ' + DN.lvl + '.'); $('npc').hidden = false; return; }
     for (const ch of chests) if (near(ch, 2.5)) { if (ch.userData.open) { toast('Schon geöffnet · Reset um Mitternacht'); return; } ch.userData.open = true; bumpStat('chests'); progress(ZQ.chests); A.sfx('chest'); ch.userData.lid.rotation.x = -1.6; const goldPool = ZONE_SET.length ? [...ZONE_SET, 'phoenix', 'luck', 'shield'] : ['hammer', 'helmI', 'chestI', 'phoenix']; const normPool = ['heal', 'coin', 'coin', 'stam', 'bootsI', 'shield', 'strength']; const loot = ch.userData.gold ? goldPool[Math.floor(Math.random() * goldPool.length)] : normPool[Math.floor(Math.random() * normPool.length)]; if (loot === 'coin') { const cn = Math.round(25 * ZF); state.coins += cn; state.stats.coinsEarned += cn; popDmg(player, '+' + cn + ' 🪙', 'coin'); toast('Truhe · +' + cn + ' Münzen'); } else { addItem(loot); toast((ch.userData.gold ? 'Goldene Truhe · ' : 'Truhe · ') + ITEMS[loot].name); } if (ch === chests[0]) progress('chest'); gainXp(15); return; }
     for (const s of stations) if (near(s.g, 2.5)) { if (s.done) { toast('Station erledigt · kommt morgen wieder'); return; } openStation(s); return; }
     for (const w of wolves) if (w.userData.alive && near(w, 3.5)) { startBattle(w.userData.kind, w); return; }
@@ -1562,6 +1562,7 @@ import * as A from './audio.js';
     if (dgMap) { mctx.fillStyle = '#26282f'; { const [a, b] = P(DG.x - 48, DG.z - 48); mctx.fillRect(a, b, 96 * k, 96 * k); } mctx.fillStyle = '#5a5d66'; dgWalls.forEach(w => { const [a, b] = P(w.x - w.w / 2, w.z - w.d / 2); mctx.fillRect(a, b, Math.max(1.5, w.w * k), Math.max(1.5, w.d * k)); }); dgDoors.forEach(d => { const [a, b] = P(d.position.x - 3, d.position.z); mctx.fillStyle = d.userData.open ? '#7cff9b' : '#ff4d6d'; mctx.fillRect(a, b - 1, 6 * k, 2.5); }); if (dgExit) { const [a, b] = P(dgExit.position.x, dgExit.position.z); mctx.fillStyle = '#7cff9b'; mctx.beginPath(); mctx.arc(a, b, 3.5, 0, 7); mctx.fill(); } }
     if (!dgMap) { mctx.fillStyle = '#2a7fb8'; let [lx, lz] = P(LAKE.x, LAKE.z); mctx.beginPath(); mctx.arc(lx, lz, LAKE.r * k * .92, 0, 7); mctx.fill(); mctx.fillRect(P(RIVER_X - 4, 0)[0], 0, 8 * k, S); }
     mctx.fillStyle = '#163a1f'; if (!dgMap) treeSpots.forEach(([x, z]) => { if (Math.abs(x - px) < R && Math.abs(z - pz) < R) { const [a, b] = P(x, z); mctx.fillRect(a - 1, b - 1, 2, 2); } });
+    if (!dgMap) { const [a, b] = P(27, 17); mctx.fillStyle = state.level >= DN.lvl ? '#c9a24a' : '#ff4d6d'; mctx.fillRect(a - 3, b - 3, 6, 6); mctx.fillStyle = '#000'; mctx.fillRect(a - 1, b - 1, 2, 2); }
     chests.forEach(ch => { const [a, b] = P(ch.position.x, ch.position.z); mctx.fillStyle = ch.userData.open ? '#777' : ch.userData.gold ? '#ffd166' : '#e6a23c'; mctx.fillRect(a - 2.5, b - 2.5, 5, 5); });
     stations.forEach(s => { const [a, b] = P(s.g.position.x, s.g.position.z); mctx.fillStyle = s.done ? '#4a7' : '#7cff9b'; mctx.beginPath(); mctx.arc(a, b, 2.5, 0, 7); mctx.fill(); });
     wolves.forEach(w => { if (!w.userData.alive) return; const [a, b] = P(w.position.x, w.position.z); mctx.fillStyle = w.userData.alpha ? '#ff2a3c' : w.userData.elite ? '#ff3040' : '#ff6b6b'; mctx.beginPath(); mctx.arc(a, b, w.userData.alpha ? 3.5 : w.userData.elite ? 3 : 2.5, 0, 7); mctx.fill(); if (w.userData.elite) { mctx.strokeStyle = '#ff3040'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(a, b, 5, 0, 7); mctx.stroke(); } });
