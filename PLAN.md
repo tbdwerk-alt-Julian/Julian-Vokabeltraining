@@ -94,6 +94,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Kerkerwachen (dg-Gegner) fahl-grau mit rotem Glühen, Label „Kerkerwache“; Kerkermeister fast schwarz mit rotem Glühen. Kampf gegen den Kerkermeister lokal getestet (Banner, 150 Münzen, Phönix-Trank, Quest-Fortschritt).
 - Gewölbe-Deko: roter Teppich zum Thron, vier Käfige mit Knochen, 14 Ketten an der Decke, Spinnweben in den Ecken, Schädelhaufen, zwei Banner, Goldtruhe hinter dem Thron; Minikarte zeigt im Gewölbe den Grundriss (Wände, Türen rot/grün, Ausgang).
 - Wegweiser „Trollgewölbe →“ bei 20/14 neben der Falltür, Kartenpin „Trollgewölbe“ bei 22/10.
+- Gruft-Atmosphäre: 420 Staubpartikel schweben im Gewölbe (nur drinnen sichtbar), zwei Inschrift-Tafeln „Nur wer die Worte der Alten spricht, tritt ein“ neben dem ersten Gitter. README um Gruft, Geheimkammer, Dunkelwald ergänzt.
 - Geheimkammer in jeder Gruft: Ostwand der Schatzkammer hat eine hohle Wandplatte mit Rissen (Tür mit Vokabel-Schloss „Geheimkammer“, senkrecht), dahinter 12×12-Raum mit Goldtruhe, Münzhaufen, zwei Fackeln. inDungeon() jetzt rechteckig (±63/±52), damit die Kammer dazugehört.
 - Tod in der Gruft geprüft: Todesbildschirm, Münzbeutel bleibt am Sterbeort in der Gruft, Wiederbelebung am Lagerfeuer. Todesursache jetzt „Stachelfalle“/„Steinschlag“ statt englischer Schlüssel.
 - Kampfkamera in der Gruft: sucht eine wandfreie Position (über der Schulter bevorzugt, dann seitlich, mit kürzeren Abständen), bleibt unter der Decke – vorher stand sie im Gang in der Wand.

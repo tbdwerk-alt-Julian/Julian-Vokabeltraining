@@ -39,6 +39,9 @@ Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur d
 - **Bram im Lager (E):** gibt Quests und zahlt für Köpfe. **Kopfgeldtafel** daneben: eine Tagesaufgabe pro Tag.
 - **Elite-Gegner** (roter Ring) haben mehr Leben, lassen aber bessere Sachen fallen. Höhere Level = mehr Schaden.
 - **Gruft (jedes Gebiet):** Krypta-Eingang östlich vom Lager, dem Wegweiser folgen (E am Portal). Im Wald heißt sie Trollgewölbe, das Siegel bricht ab Level 5; in den anderen Gebieten später (Wüste 20, Kirschen 40, Vulkan 60, Schattenfestung 85). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
+- **In der Gruft:** drei Gitter mit Vokabel-Schloss (deutsches Wort lesen, englisches tippen), Stachelfallen in den Gängen (warten, bis sie unten sind), einstürzende Decke in der Schatzkammer, Kerkerwachen und ganz hinten der Wächter mit Boss-Auftritt. Sieg: Phönix-Trank, 150 Münzen, Quest-Belohnung bei Bram und ein Schädel auf der Trophäenwand im Lager.
+- **Geheimkammer:** In der Schatzkammer klingt eine rissige Wand hohl. Vokabel-Schloss öffnen, dahinter wartet eine Goldtruhe.
+- **Dunkelwald (Wald):** südlich liegt die Trollgrube mit Elite-Trollen, im Norden der Quellfall am Fluss.
 - **Fähigkeiten (K):** jedes Level ein Punkt – Klinge (Schaden), Panzer (weniger Schaden, mehr HP), Verstand (mehr Zeit pro Wort).
 - **Händler** im Lager (kommt zu festen Zeiten), **Truhen** in der Welt, **Lagerfeuer** heilt schnell.
 - Der **Boss** jedes Gebiets wartet in der Halle; erst mit guten Vokabeln reingehen – er hat Phasen und macht richtig Schaden.
