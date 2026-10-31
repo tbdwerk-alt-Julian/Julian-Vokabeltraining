@@ -3,6 +3,51 @@
 Vokabeltrainer als 3D-Abenteuer (Web-App für PC, Handy und Tablet).
 Das vollständige Konzept steht in [KONZEPT.md](KONZEPT.md).
 
+**Online spielen:** https://tbdwerk-alt-julian.github.io/Julian-Vokabeltraining/ (PC, Handy, Tablet – am Handy im Querformat, „Zum Home-Bildschirm hinzufügen“ macht daraus eine App).
+
+## Kurzanleitung für Julian
+
+**Worum geht es?** Fünf Gebiete, fünf Bosse, am Ende Ignatius der Schattenkönig. Deine einzige Waffe sind Wörter: Im Kampf erscheint ein deutsches Wort, du tippst das englische. Richtig = Treffer, falsch = der Gegner trifft dich. Schnell antworten gibt mehr Schaden, Kombos (5/10/15 Treffer in Folge) noch mehr.
+
+**Erst Vokabeln eintragen:** Taste **V** (oder Knopf „Vokabeln“) → Reiter **„Liste einfügen“** → die Wörter deiner Unit reinkopieren, eine pro Zeile, z. B.
+
+```
+der Wald - forest
+gefährlich = dangerous
+die Umwelt; environment; We must protect the environment.
+```
+
+Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur die Units, die du im Vokabel-Fenster angehakt hast. Jedes Wort sammelt Sterne; erst bei drei Sternen gilt es als sicher.
+
+**Steuerung (PC)**
+
+| Taste | Was passiert |
+|---|---|
+| W / S, A / D | laufen, drehen · Shift = rennen |
+| Maus ziehen | Kamera drehen |
+| E | benutzen: Gegner angreifen, mit Bram reden, Truhen, Händler, Falltür, Vokabel-Schlösser |
+| Leertaste | Ausweichrolle |
+| 1–9 | Schnellleiste: Tränke, Waffen |
+| I / V / K / M / Q / L | Inventar · Vokabeln · Fähigkeiten · Karte · Aufgabe · Saison |
+| B / T / G / H | Emotes: nächstes · jubeln · winken · sitzen |
+| F | Reittier auf- und absteigen (sobald du eins hast) · Esc = Pause |
+| Enter | im Kampf Antwort abschicken · Knopf „Hinweis“ = Tipp (halber Schaden) |
+
+**Handy:** Joystick links, Knöpfe rechts, über den Bildschirm wischen dreht die Kamera.
+
+**Was lohnt sich?**
+- **Bram im Lager (E):** gibt Quests und zahlt für Köpfe. **Kopfgeldtafel** daneben: eine Tagesaufgabe pro Tag.
+- **Elite-Gegner** (roter Ring) haben mehr Leben, lassen aber bessere Sachen fallen. Höhere Level = mehr Schaden.
+- **Trollgewölbe:** Falltür neben der Boss-Halle im Wald (E). Drei Gitter mit Vokabel-Schloss, zwei Goldtruhen, am Ende der **Kerkermeister** (Phönix-Trank + 150 Münzen). Grünes Podest = zurück nach oben.
+- **Fähigkeiten (K):** jedes Level ein Punkt – Klinge (Schaden), Panzer (weniger Schaden, mehr HP), Verstand (mehr Zeit pro Wort).
+- **Händler** im Lager (kommt zu festen Zeiten), **Truhen** in der Welt, **Lagerfeuer** heilt schnell.
+- Der **Boss** jedes Gebiets wartet in der Halle; erst mit guten Vokabeln reingehen – er hat Phasen und macht richtig Schaden.
+- Nach dem Tod: Münzbeutel bleibt liegen, hol ihn dir zurück.
+
+**Speicherstand:** liegt im Browser (drei Slots). Handy und PC haben getrennte Spielstände.
+
+
+
 ## Starten
 
 ```bash
