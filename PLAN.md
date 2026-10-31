@@ -80,7 +80,16 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
 - Ladehänger: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme (Intel-Laptop 20–40 s). Dafür bleibt jetzt der Ladebildschirm stehen, bis das Bild flüssig läuft, und nach „Spielen“ erscheint „Welt wird vorbereitet …“ statt eines eingefrorenen Bilds.
 
+## Samstag, 1. 11. – Tagesplan
+
+1. **Julians Vokabeln** eintragen, sobald die Liste da ist (📚 Vokabeln → Liste einfügen, „de – en“ pro Zeile, Unit-Name). Danach Beispiel-Unit löschen (Unit-Filter → „Unit löschen“).
+2. **Julian spielen lassen** (Handy quer oder PC, online-Adresse aus der README) und zuschauen: Wo hakt es? Steuerung, Tempo, Verständlichkeit der Texte. Notizen hier unten eintragen.
+3. **Balance nach echtem Spiel**: Level 5 schlägt den Kerkermeister mit 5 richtigen Wörtern (60 Schaden/Treffer mit guter Waffe); Fehler kosten ~27 HP von 112. Falls zu leicht/schwer: Trefferschaden in `applied` bzw. Kerker-Faktor 1.8 anpassen.
+4. **Online-Handy-Check**: auf dem echten Handy laden, Querformat, Gruft betreten, Schloss tippen (Tastatur über dem Fenster?).
+5. **Feinschliff** nach Beobachtung; abends alles pushen, PLAN.md und Notizen aktualisieren.
+
 ## Freitag, 31. 10. – nachmittags dazu
+- Balance-Test Level 5 vs. Kerkermeister: 5 Treffer à 60 (mit Boss-Waffe), kein Schaden bei schnellen richtigen Antworten – schaffbar, Fehler sind die Gefahr.
 - Quellfall am Nordende des Flusses (−40/−72): Felswand aus Brocken, fallendes Wasser mit Streifen-Textur, Gischt-Sprites, Becken (groundY-Senke bei −40/−64), Kartenpin „Quellfall“.
 - Kerkerwachen (dg-Gegner) fahl-grau mit rotem Glühen, Label „Kerkerwache“; Kerkermeister fast schwarz mit rotem Glühen. Kampf gegen den Kerkermeister lokal getestet (Banner, 150 Münzen, Phönix-Trank, Quest-Fortschritt).
 - Gewölbe-Deko: roter Teppich zum Thron, vier Käfige mit Knochen, 14 Ketten an der Decke, Spinnweben in den Ecken, Schädelhaufen, zwei Banner, Goldtruhe hinter dem Thron; Minikarte zeigt im Gewölbe den Grundriss (Wände, Türen rot/grün, Ausgang).
