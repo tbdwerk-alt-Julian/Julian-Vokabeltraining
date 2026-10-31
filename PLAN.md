@@ -85,6 +85,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Kerkerwachen (dg-Gegner) fahl-grau mit rotem Glühen, Label „Kerkerwache“; Kerkermeister fast schwarz mit rotem Glühen. Kampf gegen den Kerkermeister lokal getestet (Banner, 150 Münzen, Phönix-Trank, Quest-Fortschritt).
 - Gewölbe-Deko: roter Teppich zum Thron, vier Käfige mit Knochen, 14 Ketten an der Decke, Spinnweben in den Ecken, Schädelhaufen, zwei Banner, Goldtruhe hinter dem Thron; Minikarte zeigt im Gewölbe den Grundriss (Wände, Türen rot/grün, Ausgang).
 - Wegweiser „Trollgewölbe →“ bei 20/14 neben der Falltür, Kartenpin „Trollgewölbe“ bei 22/10.
+- Handy quer geprüft: Schloss-Fenster, Boss-Auftritt und Kampf passen. Kampfkopf zeigt jetzt „Kerkermeister · Herr der Gruft“, Wachen „Kerkerwache · Troll-Krieger“, Elite „Elite · …“.
 - Gruft-Trophäen: Sieg über den Gruft-Wächter setzt state.gruft[zone] (gespeichert); Trophäenwand listet „💀 Kerkermeister“ usw., daneben ein Schädel auf einem Pfahl je bezwungener Gruft (Augenfarbe je Gebiet).
 - Bram erwähnt die Krypta im Gespräch (unter Siegel-Level: Warnung; ab Siegel-Level: Hinweis auf den Wächter; nach dem Sieg: Glückwunsch). Minikarte zeigt die Krypta als Quadrat (rot = versiegelt, gold = offen).
 - Gruft-Deko je Gebiet: Wüste Sarkophage und Sandhaufen, Vulkan glühende Lavarisse und Glutbrocken, Kirschen Papierlaternen und Blütenblätter, Schattenfestung violette Kristalle. Fackeln heller (2.0/18 m), Himmelslicht im Gewölbe .4. Kirschen- und Schatten-Gruft geprüft.
