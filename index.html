@@ -693,6 +693,14 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <p class="hint" style="padding:0 20px 16px;margin:0;">Kristalle 💎 gibt es im Saison-Pass und für Tagesaufgaben. Das Angebot wechselt jede Stunde.</p>
     </div>
   </div>
+  <div class="overlay" id="lock" hidden>
+    <div class="card stack" style="width:min(460px,100%);text-align:center;">
+      <div class="eyebrow" id="lockTitle">Vokabel-Schloss</div>
+      <h2 style="margin:0">Sprich das Wort, und das Gitter hebt sich</h2>
+      <div class="word" id="lockWord">—</div>
+      <form id="lockForm" class="stack"><input type="text" id="lockInput" autocomplete="off" placeholder="Englisch tippen … Enter = öffnen"><div class="feedback bad" id="lockMsg"></div><div class="row" style="justify-content:center;"><button class="btn primary" type="submit">Öffnen</button><button class="btn" type="button" id="closeLock">Zurück</button></div></form>
+    </div>
+  </div>
   <div class="overlay" id="skills" hidden>
     <div class="card wide sp">
       <div class="sp-head" style="--sp-bg:linear-gradient(135deg,#1a0d2a 0%,#5a2a8a 55%,#0f0620 100%);">

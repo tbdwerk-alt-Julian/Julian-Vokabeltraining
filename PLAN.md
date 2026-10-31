@@ -40,6 +40,8 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Grafik-Automatik senkt die Stufe nur noch bei dauerhaft niedriger Bildrate (6 s unter 28 FPS, nie in den ersten 20 s, Shader-Hänger zählen nicht) – vorher wurde beim ersten Start fälschlich auf „Niedrig“ gestellt
 - Bildrate auf dem Intel-Laptop bei „Schön“: ca. 45 FPS
 - Ton Richtung USK 12–16 (Wunsch von Julian/Torsten, ausdrücklich ohne Blut): Funken- und Staubpartikel bei Treffern, Knurren/Brüllen der Gegner, Schrei des Helden, härtere Kampf-, Sieg- und Todestexte ohne Kinder-Emojis
+- Story-Intro beim neuen Abenteuer: sechs düstere Zeilen mit Donner, Enter überspringt, danach Erwachen im Lager
+- Trollgewölbe (Wald): Falltür neben der Boss-Halle bei 22/10 führt in ein Gewölbe mit vier Räumen (Eingangshalle, Wachraum, Schatzkammer, Thronraum), Wände mit Kollision, 20 Fackeln, drei Gittertüren mit Vokabel-Schloss (richtiges Wort öffnet, falsches kostet 8 HP), zwei goldene Truhen, zwei Elite-Wachen und der Kerkermeister (4× HP, 1,55× groß, Phönix-Trank und 150 Münzen), leuchtendes Ausgangspodest zurück in die Halle
 - Fähigkeitsbaum (Taste K, auch im Pausemenü): ein Punkt pro Level ab Level 2, rückwirkend für alte Spielstände. Klinge +8 % Schaden je Stufe, Panzer −6 % Kampfschaden und +10 HP je Stufe, Verstand +1 s pro Wort je Stufe und ab Stufe 3 Revanche-Wörter +50 % Schaden; je 5 Stufen, wird gespeichert
 - Titelsequenz: Auf dem Startbildschirm fliegt die Kamera 75 s lang über Lager, Hauptweg, Windmühle, See und Steinkreis (über den Baumkronen), mit Kinobalken
 - Neuer Look: Held 23 % größer (Modell 0,92 statt 0,75), Kamera näher (7 statt 8,5 m), Bäume 35 % größer, filmische Farbkorrektur (mehr Kontrast, kühle Schatten, warme Lichter), dichterer Tiefennebel, Belichtung leicht gesenkt
@@ -81,7 +83,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 ## Freitag, 31. 10. – Tagesplan (große, sofort sichtbare Blöcke)
 
 1. **Story-Intro** beim Start eines neuen Abenteuers: düstere Textsequenz mit Kamerafahrt („Die Schatten kommen …“), überspringbar.
-2. **Dungeon „Trollgewölbe“** unter der Boss-Halle als eigenes Gebiet: Gänge mit Fackeln, Fallen (Bodenstacheln, einstürzende Decke), verschlossene Türen mit Vokabel-Schlössern, Truhen, Miniboss „Kerkermeister“, Ausgang zurück in den Wald. Zugang über eine Falltür in der Halle nach dem Waldtroll-Sieg.
+2. ✅ **Dungeon „Trollgewölbe“** unter der Boss-Halle als eigenes Gebiet: Gänge mit Fackeln, Fallen (Bodenstacheln, einstürzende Decke), verschlossene Türen mit Vokabel-Schlössern, Truhen, Miniboss „Kerkermeister“, Ausgang zurück in den Wald. Zugang über eine Falltür in der Halle nach dem Waldtroll-Sieg.
 3. **Echte Vokabeln**: Julians aktuelle Unit eintragen (📚 Vokabeln → Liste einfügen, Format „der Wald – forest“ pro Zeile).
 4. **Smoke-Test**: alle fünf Gebiete, Handy quer, ein kompletter Boss-Kampf online.
 5. **Kurzanleitung** für Julian (Tasten, Fähigkeiten, Gebiete, wo was ist) als README-Abschnitt.
