@@ -80,7 +80,7 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
 - Ladehänger: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme (Intel-Laptop 20–40 s). Dafür bleibt jetzt der Ladebildschirm stehen, bis das Bild flüssig läuft, und nach „Spielen“ erscheint „Welt wird vorbereitet …“ statt eines eingefrorenen Bilds.
 
-## Samstag, 1. 11. – Tagesplan
+## Sonntag, 1. 11. – Tagesplan (Abgabetag)
 
 1. **Julians Vokabeln** eintragen, sobald die Liste da ist (📚 Vokabeln → Liste einfügen, „de – en“ pro Zeile, Unit-Name). Danach Beispiel-Unit löschen (Unit-Filter → „Unit löschen“).
 2. **Julian spielen lassen** (Handy quer oder PC, online-Adresse aus der README) und zuschauen: Wo hakt es? Steuerung, Tempo, Verständlichkeit der Texte. Notizen hier unten eintragen.
