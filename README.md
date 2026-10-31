@@ -42,7 +42,7 @@ Unit-Namen eintragen (z. B. „Unit 3“) → **Einfügen**. Geübt werden nur d
 - **In der Gruft:** drei Gitter mit Vokabel-Schloss (deutsches Wort lesen, englisches tippen), Stachelfallen in den Gängen (warten, bis sie unten sind), einstürzende Decke in der Schatzkammer, Kerkerwachen und ganz hinten der Wächter mit Boss-Auftritt. Sieg: Phönix-Trank, 150 Münzen, Quest-Belohnung bei Bram und ein Schädel auf der Trophäenwand im Lager.
 - **Geheimkammer:** In der Schatzkammer klingt eine rissige Wand hohl. Vokabel-Schloss öffnen, dahinter wartet eine Goldtruhe.
 - **Dunkelwald (Wald):** südlich liegt die Trollgrube mit Elite-Trollen, im Norden der Quellfall am Fluss – und hinter dem Wasserfall ein Geheimnis.
-- **Wahrzeichen:** jedes Gebiet hat eines (Obeliskenfeld, Torii-Pfad, Obsidiannadeln, Galgenfeld), alle auf der Karte (M) markiert.
+- **Wahrzeichen:** jedes Gebiet hat eines (Obeliskenfeld, Torii-Pfad, Obsidiannadeln, Galgenfeld), auf Karte (M) und Minikarte markiert. Bram gibt die Entdecker-Quest, Elite-Gegner bewachen den Ort, irgendwo dort steht eine goldene Truhe mit geheimer Quest.
 - **Fähigkeiten (K):** jedes Level ein Punkt – Klinge (Schaden), Panzer (weniger Schaden, mehr HP), Verstand (mehr Zeit pro Wort).
 - **Händler** im Lager (kommt zu festen Zeiten), **Truhen** in der Welt, **Lagerfeuer** heilt schnell.
 - Der **Boss** jedes Gebiets wartet in der Halle; erst mit guten Vokabeln reingehen – er hat Phasen und macht richtig Schaden.
