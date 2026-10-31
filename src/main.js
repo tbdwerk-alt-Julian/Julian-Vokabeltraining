@@ -88,7 +88,7 @@ import * as A from './audio.js';
   function groundY(x, z) {
     let y = DESERT ? 4.6 + Math.sin(x * .028 + Math.sin(z * .017) * 2.2) * 2.6 + Math.sin(z * .041 + x * .012) * 1.7 + Math.sin(x * .16) * Math.cos(z * .13) * .22 : 1.2 + Math.sin(x * .05) * Math.cos(z * .04) * 1.1 + Math.sin(x * .18) * Math.cos(z * .15) * .35 + Math.sin(x * .6 + z * .4) * .08;
     const d = Math.hypot(x - LAKE.x, z - LAKE.z); if (d < LAKE.r) y -= 5 * (1 - (d / LAKE.r) ** 2);
-    const rd = Math.abs(x - RIVER_X); if (rd < 7) y -= 2.4 * (1 - (rd / 7) ** 2);
+    const rd = Math.abs(x - RIVER_X); if (rd < 7) y -= 2.4 * (1 - (rd / 7) ** 2); if (rd < 12) { const pd = Math.hypot(x - RIVER_X, z + 64); if (pd < 10) y -= 2.6 * (1 - (pd / 10) ** 2); }
     const c = Math.hypot(x, z); if (c < 16) y = y * clamp((c - 8) / 8, 0, 1) + 1.2 * (1 - clamp((c - 8) / 8, 0, 1));
     // Berge: Gebirgsring am Kartenrand + drei Hügelketten im Inneren
     if (c > 240) y += Math.pow((c - 240) / 70, 2) * 32 + Math.sin(x * .07) * Math.cos(z * .06) * Math.min(12, (c - 240) * .2);
@@ -455,7 +455,7 @@ import * as A from './audio.js';
   const campFlames = [];
   if (!FIERY) {
     const PAL_R = 21, PAL_N = 72; const logGeo = new THREE.CylinderGeometry(.22, .28, 3.4, 7); const tipGeo = new THREE.ConeGeometry(.24, .6, 7);
-    const palMat = new THREE.MeshStandardMaterial({ color: DESERT ? 0xb08a58 : 0x5a3f26, roughness: 1 });
+    const palMat = new THREE.MeshStandardMaterial({ color: DESERT ? 0x9a7748 : 0x47301c, roughness: 1, envMapIntensity: .4 });
     const palOk = (a) => { const q = Math.PI / 2; const r = ((a % q) + q) % q; return Math.min(r, q - r) > .2; }; // Lücken an N/O/S/W
     instanced(logGeo, palMat, PAL_N, put => { for (let i = 0; i < PAL_N; i++) { const a = i / PAL_N * Math.PI * 2; if (!palOk(a)) continue; const x = Math.cos(a) * PAL_R, z = Math.sin(a) * PAL_R; put(x, groundY(x, z) + 1.5 + rng(-.1, .1), z, rng(-.04, .04), a, rng(-.04, .04), 1, 1 + rng(-.05, .08), 1); } });
     instanced(tipGeo, palMat, PAL_N, put => { for (let i = 0; i < PAL_N; i++) { const a = i / PAL_N * Math.PI * 2; if (!palOk(a)) continue; const x = Math.cos(a) * PAL_R, z = Math.sin(a) * PAL_R; put(x, groundY(x, z) + 3.5, z, 0, a, 0, 1, 1, 1); } }, false);
@@ -632,7 +632,19 @@ import * as A from './audio.js';
     // Falltür in der Boss-Halle
     trap = new THREE.Group(); trap.position.set(22, groundY(22, 10), 10); scene.add(trap); const tf = new THREE.Mesh(new THREE.BoxGeometry(2.6, .14, 2.6), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 })); tf.position.y = .08; trap.add(tf); const th = new THREE.Mesh(new THREE.BoxGeometry(2.0, .06, 2.0), new THREE.MeshBasicMaterial({ color: 0x050607 })); th.position.y = .16; trap.add(th); const tr = new THREE.Mesh(new THREE.TorusGeometry(.22, .05, 6, 12), new THREE.MeshStandardMaterial({ color: 0x55585e, metalness: .8, roughness: .4 })); tr.position.set(.6, .22, 0); tr.rotation.x = Math.PI / 2; trap.add(tr);
   }
-  const rotors = [];
+  const rotors = []; const waterfalls = [];
+  if (ZONE === 'forest') {
+    // Wegweiser am Weg zur Halle
+    { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const c2 = cv.getContext('2d'); c2.fillStyle = '#6a4a28'; c2.fillRect(0, 0, 256, 64); c2.fillStyle = '#f1e2c0'; c2.font = 'bold 30px sans-serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle'; c2.fillText('Trollgewölbe →', 128, 34); const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; const g = new THREE.Group(); const sx = 20, sz = 14; g.position.set(sx, groundY(sx, sz), sz); g.rotation.y = 2.36; const post = new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 2.4, 6), new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 })); post.position.y = 1.2; g.add(post); const plank = new THREE.Mesh(new THREE.BoxGeometry(2, .5, .08), new THREE.MeshStandardMaterial({ map: tex, roughness: .9 })); plank.position.set(.6, 2, 0); g.add(plank); const plank2 = plank.clone(); plank2.rotation.y = Math.PI; plank2.position.set(.6, 2, -.08); g.add(plank2); scene.add(g); }
+    // Quellfall: Felswand, fallendes Wasser, Gischt und Becken am Nordende des Flusses
+    { const wx = RIVER_X, wz = -72; const rockM = new THREE.MeshStandardMaterial({ color: 0x34393a, roughness: 1, flatShading: true, envMapIntensity: .25 }); [[-4.5, -1, 3.2], [4.5, -1, 3.4], [0, -3, 4.2], [-2.5, -4.5, 3], [2.8, -4.8, 3.1], [0, -6.5, 2.6], [-6, -4, 2.4], [6, -4.2, 2.5]].forEach(([ox, oz, r]) => { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), rockM); rk.position.set(wx + ox, groundY(wx + ox, wz + oz) + r * .55, wz + oz); rk.rotation.set(Math.random(), Math.random(), Math.random()); rk.castShadow = true; rk.receiveShadow = true; scene.add(rk); });
+      const cv = document.createElement('canvas'); cv.width = 64; cv.height = 256; const c2 = cv.getContext('2d'); c2.fillStyle = 'rgba(200,230,255,.35)'; c2.fillRect(0, 0, 64, 256); for (let i = 0; i < 40; i++) { c2.fillStyle = 'rgba(255,255,255,' + (0.25 + Math.random() * .5) + ')'; const x = Math.random() * 64, w = 1 + Math.random() * 3, y = Math.random() * 256, h = 20 + Math.random() * 80; c2.fillRect(x, y, w, h); if (y + h > 256) c2.fillRect(x, y + h - 256 - h, w, h); } const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 1.5);
+      const top = groundY(wx, wz - 4) + 5.2, bottom = groundY(wx, wz + 6) - .2; const sheet = new THREE.Mesh(new THREE.PlaneGeometry(5.4, top - bottom, 1, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .7, depthWrite: false, side: THREE.DoubleSide })); sheet.position.set(wx, (top + bottom) / 2, wz + 1.5); scene.add(sheet); waterfalls.push({ tex, sheet });
+      const foam = new THREE.Mesh(new THREE.CircleGeometry(4.5, 20), new THREE.MeshBasicMaterial({ color: 0xdde8ee, transparent: true, opacity: .2, depthWrite: false })); foam.rotation.x = -Math.PI / 2; foam.position.set(wx, WATER_Y + .06, wz + 5); scene.add(foam); waterfalls[0].foam = foam;
+      for (let k = 0; k < 6; k++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xdff4ff, transparent: true, opacity: .22, depthWrite: false })); sp.scale.set(5, 3.5, 1); sp.position.set(wx + rng(-3, 3), WATER_Y + 1 + rng(0, 2), wz + 3 + rng(0, 4)); sp.userData.ph = Math.random() * 6; scene.add(sp); waterfalls.push({ mist: sp }); }
+      const wl = new THREE.PointLight(0x9fd8ff, .6, 16, 2); wl.position.set(wx, 3, wz + 4); scene.add(wl);
+    }
+  }
   if (!FIERY) {
     // Windmühle am Seeweg
     { const wx = 36, wz = 40, wy = groundY(wx, wz); const g = new THREE.Group(); g.position.set(wx, wy, wz); g.rotation.y = -.6; scene.add(g);
@@ -1411,7 +1423,7 @@ import * as A from './audio.js';
     campFlames.forEach((f, i) => { if (f.userData.banner) { f.rotation.z = Math.sin(clock.t * 1.7 + i) * .06; } else { f.scale.y = 1 + Math.sin(clock.t * 11 + i * 1.7) * .22; f.rotation.y += dt * 2.5; } });
     howlT -= dt; if (inWorld && !battleOn && WORLD_U.night.value > .5 && howlT <= 0) { howlT = 35 + Math.random() * 45; A.sfx('howl'); }
     bloodTick(dt);
-    rotors.forEach(r => { r.rotation.z += dt * .9; });
+    rotors.forEach(r => { r.rotation.z += dt * .9; }); waterfalls.forEach(w => { if (w.tex) { w.tex.offset.y -= dt * 1.4; w.foam.material.opacity = .18 + Math.sin(clock.t * 5) * .05; } if (w.mist) { w.mist.material.opacity = .08 + Math.sin(clock.t * 1.7 + w.mist.userData.ph) * .05; w.mist.position.y += Math.sin(clock.t * .9 + w.mist.userData.ph) * dt * .3; } });
     spinners.forEach(o => { o.rotation.y += dt * 1.2; o.position.y += Math.sin(clock.t * 2 + o.position.x) * dt * .15; });
     if (inWorld && !battleOn && state.hp > 0 && state.hp < state.maxHp) { const px = player.position.x, pz = player.position.z; const foeNear = wolves.some(w => w.userData.alive && Math.hypot(w.position.x - px, w.position.z - pz) < 10); if (!foeNear) { const atFire = Math.hypot(px, pz) < 7 || campFires.some(g => Math.hypot(g.position.x - px, g.position.z - pz) < 5); state.hp = Math.min(state.maxHp, state.hp + state.maxHp * (atFire ? .08 : .012) * dt); regenT = (regenT || 0) + dt; if (regenT > .5) { regenT = 0; hpUI(); } } }
     { // Regenbogen
@@ -1505,7 +1517,7 @@ import * as A from './audio.js';
     stations.forEach(st => dot(st.g.position.x, st.g.position.z, st.done ? '#7fa58a' : '#35d6a0', 3.5));
     wolves.forEach(w => { if (w.userData.alive) dot(w.position.x, w.position.z, w.userData.alpha ? '#ff2a3c' : '#ff6b6b', w.userData.alpha ? 4 : 2.8); });
     pin(CAVE.x, CAVE.z, '💀', '#ff4d6d', 13); label(CAVE.x, CAVE.z, (gate.userData.open ? '' : '🔒 ') + ZN.boss + ' · Lvl ' + ZN.bossLvl, 24, 12);
-    pin(0, 0, '🏕️', '#7cff9b', 12); label(0, 0, CAMPS[0].name, 22, 12);
+    pin(0, 0, '🏕️', '#7cff9b', 12); label(0, 0, CAMPS[0].name, 22, 12); if (ZONE === 'forest') { pin(22, 10, '🕳️', '#c9a24a', 11); label(22, 10, 'Trollgewölbe', 20, 11); pin(RIVER_X, -70, '💧', '#6cc7ff', 10); label(RIVER_X, -70, 'Quellfall', 18, 11); }
     mapPins.length = 0; CAMPS.forEach(c => { const found = !!state.camps[c.id]; const [a, b] = P(c.x, c.z); mapPins.push({ x: a, y: b, c, found }); if (c.id !== 'lager') { pin(c.x, c.z, found ? '🔥' : '❔', found ? '#ffb13d' : '#777', 9); if (found) label(c.x, c.z, c.name, 18, 11); } else mapPins[mapPins.length - 1].found = true; });
     const [px, pz] = P(player.position.x, player.position.z); c.save(); c.translate(px, pz); c.rotate(-heading + Math.PI); const cone = c.createRadialGradient(0, 0, 2, 0, 0, 26); cone.addColorStop(0, 'rgba(90,160,255,.55)'); cone.addColorStop(1, 'rgba(90,160,255,0)'); c.fillStyle = cone; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 26, -Math.PI / 2 - .55, -Math.PI / 2 + .55); c.closePath(); c.fill(); c.restore();
     c.fillStyle = '#fff'; c.beginPath(); c.arc(px, pz, 8, 0, 7); c.fill(); c.fillStyle = '#4a9bff'; c.beginPath(); c.arc(px, pz, 5.5, 0, 7); c.fill();

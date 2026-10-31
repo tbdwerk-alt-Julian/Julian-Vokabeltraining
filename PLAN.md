@@ -80,6 +80,11 @@ Stand: Freitag, 31. 10. 2026. Alles unten ist im Spiel und committet, außer die
 - Handy quer (z. B. 844×390): Joystick, kompakte Hotbar, Aktionsknöpfe zweispaltig – nichts überlappt mehr mit der Minimap
 - Ladehänger: beim Laden eines Gebiets kompiliert der Browser ca. 53 Shader-Programme (Intel-Laptop 20–40 s). Dafür bleibt jetzt der Ladebildschirm stehen, bis das Bild flüssig läuft, und nach „Spielen“ erscheint „Welt wird vorbereitet …“ statt eines eingefrorenen Bilds.
 
+## Freitag, 31. 10. – nachmittags dazu
+- Quellfall am Nordende des Flusses (−40/−72): Felswand aus Brocken, fallendes Wasser mit Streifen-Textur, Gischt-Sprites, Becken (groundY-Senke bei −40/−64), Kartenpin „Quellfall“.
+- Wegweiser „Trollgewölbe →“ bei 20/14 neben der Falltür, Kartenpin „Trollgewölbe“ bei 22/10.
+- Licht: Tagessonne 1.35 (war 1.9), Palisade dunkler (0x47301c) – Zelte, Hallenwand und Zaun brannten mittags weiß aus.
+
 ## Freitag, 31. 10. – Tagesplan (große, sofort sichtbare Blöcke)
 
 1. ✅ **Story-Intro** beim Start eines neuen Abenteuers: düstere Textsequenz mit Kamerafahrt („Die Schatten kommen …“), überspringbar.
